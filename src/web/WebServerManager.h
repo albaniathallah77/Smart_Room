@@ -188,7 +188,7 @@ private:
     <article class="card"><h2>Smart Door <span class="state" id="door">--</span></h2><button class="primary" onclick="send({device:'door',state:'open'})">OPEN</button><button class="dark" onclick="send({device:'door',state:'close'})">CLOSE</button></article>
     <article class="card"><h2>Smart TV <span class="state" id="tv">--</span></h2><button class="primary" onclick="send({device:'tv',state:'on'})">ON</button><button class="dark" onclick="send({device:'tv',state:'off'})">OFF</button></article>
     <article class="card"><h2>Alarm <span class="state" id="alarm">--</span></h2><div class="row"><input id="alarmTime" type="time" value="06:00"><button class="blue" onclick="setAlarm()">SET</button></div><button class="dark" onclick="send({device:'buzzer',state:'off'})">STOP</button></article>
-    <article class="card"><h2>AI Command</h2><input id="cmd" placeholder="mode tidur"><button class="primary" onclick="askAi()">ASK AI</button><button class="dark" onclick="sendText()">LOCAL</button><div class="ai-reply" id="aiReply">Gateway ready</div></article>
+    <article class="card"><h2>AI Command</h2><input id="cmd" placeholder="mode tidur"><button class="primary" onclick="askAi()">ASK AI</button><button class="blue" onclick="voiceAi()">VOICE AI</button><button class="dark" onclick="sendText()">LOCAL</button><div class="ai-reply" id="aiReply">Gateway ready</div></article>
   </section>
 </main>
 <script>
@@ -300,12 +300,43 @@ private:
       const result = await response.json();
       if (!response.ok || !result.ok) throw new Error(result.reply || result.error || 'AI failed');
       aiReply.textContent = result.reply || 'Siap.';
+      if (result.reply) speak(result.reply);
       const commands = Array.isArray(result.commands) ? result.commands : (result.command ? [result.command] : []);
       for (const command of commands) send(command);
     } catch (error) {
       aiReply.textContent = 'AI offline, pakai local command.';
       sendTextPayload(message);
     }
+  }
+  function speak(text) {
+    if (!('speechSynthesis' in window) || !text) return;
+    speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'id-ID';
+    utterance.rate = 1;
+    speechSynthesis.speak(utterance);
+  }
+  function voiceAi() {
+    if (!isUnlocked()) return;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      aiReply.textContent = 'Voice belum didukung browser ini.';
+      return;
+    }
+    const rec = new SpeechRecognition();
+    rec.lang = 'id-ID';
+    rec.interimResults = false;
+    rec.maxAlternatives = 1;
+    aiReply.textContent = 'Mendengarkan...';
+    rec.onresult = (event) => {
+      const text = event.results[0][0].transcript;
+      cmd.value = text;
+      aiReply.textContent = text;
+      askAi();
+    };
+    rec.onerror = () => { aiReply.textContent = 'Voice gagal. Coba lagi.'; };
+    rec.onend = () => { if (aiReply.textContent === 'Mendengarkan...') aiReply.textContent = 'Voice selesai.'; };
+    rec.start();
   }
   function rgbColor() {
     const hex = color.value.slice(1);

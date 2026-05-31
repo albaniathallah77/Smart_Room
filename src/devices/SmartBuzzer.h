@@ -12,10 +12,11 @@ public:
 
   void startAlarm() {
     _ringing = true;
-    _beepOn = false;
+    _beepOn = true;
     _pinHigh = false;
     _lastBeepToggleAt = 0;
     _lastWaveToggleAt = micros();
+    _waveHalfPeriodUs = 380;
   }
 
   void stop() {
@@ -31,7 +32,7 @@ public:
     }
 
     unsigned long now = millis();
-    if (now - _lastBeepToggleAt >= 450) {
+    if (now - _lastBeepToggleAt >= 120) {
       _lastBeepToggleAt = now;
       _beepOn = !_beepOn;
       if (!_beepOn) {
@@ -45,7 +46,8 @@ public:
     }
 
     unsigned long waveNow = micros();
-    if (waveNow - _lastWaveToggleAt >= 500) {
+    _waveHalfPeriodUs = _beepOn ? 380 : 500;
+    if (waveNow - _lastWaveToggleAt >= _waveHalfPeriodUs) {
       _lastWaveToggleAt = waveNow;
       _pinHigh = !_pinHigh;
       digitalWrite(_pin, _pinHigh ? HIGH : LOW);
@@ -63,4 +65,5 @@ private:
   bool _pinHigh = false;
   unsigned long _lastBeepToggleAt = 0;
   unsigned long _lastWaveToggleAt = 0;
+  unsigned int _waveHalfPeriodUs = 380;
 };

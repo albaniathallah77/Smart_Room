@@ -90,7 +90,7 @@ app.get('/', (req, res) => {
             <article class="card"><h2>Smart Door</h2><button class="primary" onclick="queue({device:'door',state:'open'})">OPEN</button><button class="dark" onclick="queue({device:'door',state:'close'})">CLOSE</button></article>
             <article class="card"><h2>Smart TV</h2><button class="primary" onclick="queue({device:'tv',state:'on'})">ON</button><button class="dark" onclick="queue({device:'tv',state:'off'})">OFF</button></article>
             <article class="card"><h2>Alarm</h2><div class="row"><input id="alarmTime" type="time" value="06:00"><button class="blue" onclick="setAlarm()">SET</button></div><button class="dark" onclick="queue({device:'buzzer',state:'off'})">STOP</button></article>
-            <article class="card"><h2>AI Command</h2><input id="cmd" placeholder="mode tidur"><button class="primary" onclick="askAi()">ASK AI</button><button class="dark" onclick="clearPending()">CLEAR PENDING</button><div id="reply">Gateway ready</div></article>
+            <article class="card"><h2>AI Command</h2><input id="cmd" placeholder="mode tidur"><button class="primary" onclick="askAi()">ASK AI</button><button class="blue" onclick="voiceAi()">VOICE AI</button><button class="dark" onclick="clearPending()">CLEAR PENDING</button><div id="reply">Gateway ready</div></article>
           </section>
         </main>
         <script>
@@ -154,7 +154,38 @@ app.get('/', (req, res) => {
             });
             const result = await response.json().catch(() => ({}));
             reply.textContent = result.reply || result.error || 'AI failed';
+            if (result.reply) speak(result.reply);
             status.textContent = response.ok && result.ok ? 'AI command queued' : 'AI failed';
+          }
+          function speak(text) {
+            if (!('speechSynthesis' in window) || !text) return;
+            speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'id-ID';
+            utterance.rate = 1;
+            speechSynthesis.speak(utterance);
+          }
+          function voiceAi() {
+            if (!unlocked()) return;
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+              reply.textContent = 'Voice belum didukung browser ini.';
+              return;
+            }
+            const rec = new SpeechRecognition();
+            rec.lang = 'id-ID';
+            rec.interimResults = false;
+            rec.maxAlternatives = 1;
+            reply.textContent = 'Mendengarkan...';
+            rec.onresult = (event) => {
+              const text = event.results[0][0].transcript;
+              cmd.value = text;
+              reply.textContent = text;
+              askAi();
+            };
+            rec.onerror = () => { reply.textContent = 'Voice gagal. Coba lagi.'; };
+            rec.onend = () => { if (reply.textContent === 'Mendengarkan...') reply.textContent = 'Voice selesai.'; };
+            rec.start();
           }
           async function clearPending() {
             if (!unlocked()) return;
