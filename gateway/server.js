@@ -10,6 +10,46 @@ const supabase = createSupabaseClient();
 app.use(cors());
 app.use(express.json());
 
+app.get('/', (req, res) => {
+  res.type('html').send(`
+    <!doctype html>
+    <html>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Smart Room AI Gateway</title>
+        <style>
+          body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            background: radial-gradient(circle at 50% 20%, #0b7185 0, #03151c 38%, #02070b 80%);
+            color: #e9fbff;
+            font-family: Inter, system-ui, sans-serif;
+          }
+          main {
+            width: min(520px, calc(100% - 32px));
+            border: 1px solid #20e8ff66;
+            border-radius: 8px;
+            padding: 26px;
+            background: linear-gradient(180deg, #08232e, #030b10);
+            box-shadow: 0 24px 70px #000b, 0 0 46px #10ddea33;
+          }
+          h1 { margin: 0 0 8px; font-size: 30px; }
+          p { color: #7fefff; line-height: 1.5; }
+          code { color: #20f3ff; }
+        </style>
+      </head>
+      <body>
+        <main>
+          <h1>Smart Room AI Gateway</h1>
+          <p>Gateway is online. Use <code>/health</code> to check Groq and Supabase env status.</p>
+        </main>
+      </body>
+    </html>
+  `);
+});
+
 app.get('/health', (req, res) => {
   res.json({
     ok: true,

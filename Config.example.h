@@ -10,6 +10,9 @@
 // Example Vercel gateway: https://your-smart-room-gateway.vercel.app
 #define AI_GATEWAY_URL "https://your-smart-room-gateway.vercel.app"
 
+// Local dashboard PIN. Change this in Config.h.
+#define WEB_DASHBOARD_PIN "1234"
+
 #define ROOM_NAME "Smart Room AI System"
 #define TIMEZONE_OFFSET_SECONDS 25200
 #define NTP_SERVER_1 "pool.ntp.org"
