@@ -18,6 +18,7 @@ enum class RoomActionType {
 struct RoomAction {
   RoomActionType type = RoomActionType::None;
   bool enabled = false;
+  bool hasTime = false;
   RgbColor color;
   uint8_t hour = 0;
   uint8_t minute = 0;
@@ -73,6 +74,7 @@ public:
     if (device == "alarm") {
       action.type = RoomActionType::SetAlarm;
       action.enabled = doc["enabled"] | true;
+      action.hasTime = doc.containsKey("hour") && doc.containsKey("minute");
       action.hour = doc["hour"] | 6;
       action.minute = doc["minute"] | 0;
       return true;

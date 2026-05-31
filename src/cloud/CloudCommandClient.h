@@ -80,6 +80,8 @@ private:
   String _latestState = "{}";
   portMUX_TYPE _mux = portMUX_INITIALIZER_UNLOCKED;
   unsigned long _lastErrorLogAt = 0;
+  uint8_t _consecutiveErrors = 0;
+  bool _cloudConnected = false;
 
   static void taskFunction(void* parameter) {
     CloudCommandClient* client = (CloudCommandClient*)parameter;
@@ -136,6 +138,8 @@ private:
       return;
     }
 
+    markSuccess();
+
     StaticJsonDocument<2048> doc;
     if (deserializeJson(doc, response)) {
       return;
@@ -182,10 +186,25 @@ private:
 
   void logError(const String& message) {
     unsigned long now = millis();
+    _consecutiveErrors++;
+
+    if (now < 20000 || _consecutiveErrors < 3) {
+      return;
+    }
+
     if (now - _lastErrorLogAt < 15000) {
       return;
     }
     _lastErrorLogAt = now;
+    _cloudConnected = false;
     Serial.println(message);
+  }
+
+  void markSuccess() {
+    if (!_cloudConnected && millis() > 20000) {
+      Serial.println("[Cloud] Connected");
+    }
+    _cloudConnected = true;
+    _consecutiveErrors = 0;
   }
 };

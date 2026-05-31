@@ -131,7 +131,7 @@ app.get('/', (req, res) => {
         </div>
         <main class="app-shell">
           <aside class="sidebar">
-            <div class="brand-row"><div class="logo-mark"><img src="/assets/logo.png" alt="Smart Room logo"></div><div><b>Smart Room</b><div class="sub">AI Cloud</div></div></div>
+            <div class="brand-row"><div class="logo-mark"><img src="/assets/logo.png" alt="Smart Room logo"></div><div><b>Smart Room</b><div class="sub">Cloud Remote Dashboard</div></div></div>
             <button class="nav-item active" data-page="chat" onclick="showPage('chat')">Chat AI</button>
             <button class="nav-item" data-page="tools" onclick="showPage('tools')">Tools</button>
             <button class="nav-item" data-page="alarm" onclick="showPage('alarm')">Alarm</button>
@@ -162,6 +162,7 @@ app.get('/', (req, res) => {
                 <article class="tool-card"><div class="tool-title">RGB Room <span class="state-chip" id="rgbState">OFF</span></div><div class="row"><input id="color" type="color" value="#10ddea"><button class="blue" onclick="rgbColor()">SET COLOR</button></div><div class="tool-actions"><button class="primary" onclick="queue({device:'rgb',state:'on'})">ON</button><button class="dark" onclick="queue({device:'rgb',state:'off'})">OFF</button></div></article>
                 <article class="tool-card"><div class="tool-title">Smart Door <span class="state-chip" id="doorState">CLOSED</span></div><div class="tool-actions"><button class="primary" onclick="queue({device:'door',state:'open'})">OPEN</button><button class="dark" onclick="queue({device:'door',state:'close'})">CLOSE</button></div></article>
                 <article class="tool-card"><div class="tool-title">Smart TV <span class="state-chip" id="tvState">OFF</span></div><div class="tool-actions"><button class="primary" onclick="queue({device:'tv',state:'on'})">ON</button><button class="dark" onclick="queue({device:'tv',state:'off'})">OFF</button></div></article>
+                <article class="tool-card"><div class="tool-title">Demo Mode <span class="state-chip on">EXPO</span></div><button class="primary" onclick="demoMode()">RUN DEMO</button><div class="sub">RGB, Smart TV, and door sequence</div></article>
               </div>
             </section>
             <section class="page alarm-page" id="alarmPage">
@@ -176,13 +177,13 @@ app.get('/', (req, res) => {
                 <div class="alarm-settings">
                   <div class="days"><span class="active">M</span><span class="active">T</span><span class="active">W</span><span class="active">T</span><span class="active">F</span><span>S</span><span>S</span></div>
                   <label class="field">Alarm name <input id="alarmName" value="Smart Room Alarm"></label>
-                  <div class="alarm-actions"><button class="primary" onclick="saveAlarm()">SAVE ALARM</button><button class="dark" onclick="queue({device:'buzzer',state:'off'})">STOP BUZZER</button></div>
+                  <div class="alarm-actions"><button class="primary" onclick="saveAlarm()">SAVE</button><button class="primary" onclick="enableAlarm()">ON</button><button class="dark" onclick="disableAlarm()">OFF</button><button class="dark" onclick="queue({device:'buzzer',state:'off'})">STOP</button></div>
                 </div>
               </div>
             </section>
             <section class="page" id="settingsPage">
               <div class="settings-list">
-                <div class="settings-row"><div><b>Cloud Gateway</b><div class="sub">Vercel remote control</div></div><span class="state-chip on">ACTIVE</span></div>
+                <div class="settings-row"><div><b>Cloud Remote Dashboard</b><div class="sub">Vercel remote control from inside or outside network</div></div><span class="state-chip on">ACTIVE</span></div>
                 <div class="settings-row"><div><b>Realtime Polling</b><div class="sub">ESP checks cloud about every 2 seconds</div></div><span class="state-chip on">2 SEC</span></div>
                 <div class="settings-row"><div><b>Local ESP Dashboard</b><div class="sub">IP address shows firmware dashboard, so upload sketch after local UI changes</div></div><span class="state-chip">LOCAL</span></div>
                 <button class="dark" onclick="clearPending()">CLEAR PENDING COMMANDS</button>
@@ -362,7 +363,41 @@ app.get('/', (req, res) => {
               body:JSON.stringify({pin:pinValue(), command})
             });
             const result = await response.json().catch(() => ({}));
-            setStatus(response.ok && result.ok ? 'Command queued' : (result.error || 'Failed'));
+            if (response.ok && result.ok) {
+              setStatus('Queued');
+              const id = result.queued?.[0]?.id;
+              if (id) trackCommand(id);
+            } else {
+              setStatus(result.error || 'Failed');
+            }
+          }
+          function trackCommand(id) {
+            let checks = 0;
+            const timer = setInterval(async () => {
+              checks++;
+              try {
+                const response = await fetch('/remote/status', {
+                  method:'POST',
+                  headers:{'Content-Type':'application/json'},
+                  body:JSON.stringify({pin:pinValue(), id})
+                });
+                const result = await response.json();
+                if (result.status === 'done') {
+                  setStatus('Sent to ESP / Done');
+                  clearInterval(timer);
+                } else if (checks > 12) {
+                  setStatus('Queued, waiting ESP');
+                  clearInterval(timer);
+                }
+              } catch (error) {
+                if (checks > 12) clearInterval(timer);
+              }
+            }, 1500);
+          }
+          function demoMode() {
+            queue({device:'rgb', r:0, g:220, b:255});
+            setTimeout(() => queue({device:'tv', state:'on'}), 700);
+            setTimeout(() => queue({device:'door', state:'open'}), 1400);
           }
           function rgbColor() {
             const hex = color.value.slice(1);
@@ -384,6 +419,13 @@ app.get('/', (req, res) => {
             const { hour, minute } = clampAlarmInputs('page');
             alarmEditing = false;
             queue({device:'alarm', enabled:true, hour, minute});
+          }
+          function enableAlarm() {
+            saveAlarm();
+          }
+          function disableAlarm() {
+            alarmEditing = false;
+            queue({device:'alarm', enabled:false});
           }
           function saveAlarmSheet() {
             const { hour, minute } = clampAlarmInputs('sheet');
@@ -410,6 +452,8 @@ app.get('/', (req, res) => {
             loadingBubble.textContent = result.reply || result.error || 'AI failed';
             if (result.reply) speak(result.reply);
             setStatus(response.ok && result.ok ? 'AI command queued' : 'AI failed');
+            const id = result.queued?.[0]?.id;
+            if (id) trackCommand(id);
           }
           function speak(text) {
             if (!('speechSynthesis' in window) || !text) return;
@@ -718,10 +762,10 @@ function formatMemories(memories = [], maxChars = 1200) {
 
 async function loadAiContext(message) {
   if (!supabase) {
-    return { history: [], memories: [], memoryText: '' };
+    return { history: [], memories: [], memoryText: '', deviceText: '' };
   }
 
-  const [{ data: historyData }, { data: memoryData }] = await Promise.all([
+  const [{ data: historyData }, { data: memoryData }, { data: statusData }] = await Promise.all([
     supabase
       .from('conversation')
       .select('role, content')
@@ -731,7 +775,12 @@ async function loadAiContext(message) {
       .from('user_memory')
       .select('memory_text')
       .order('created_at', { ascending: false })
-      .limit(80)
+      .limit(80),
+    supabase
+      .from('device_status')
+      .select('state,last_seen')
+      .eq('id', 'esp32')
+      .maybeSingle()
   ]);
 
   const history = (historyData || [])
@@ -740,7 +789,25 @@ async function loadAiContext(message) {
     .map((item) => ({ role: item.role, content: item.content }));
   const memories = pickRelevantMemories(message, memoryData || []);
 
-  return { history, memories, memoryText: formatMemories(memories) };
+  return { history, memories, memoryText: formatMemories(memories), deviceText: formatDeviceState(statusData?.state, statusData?.last_seen) };
+}
+
+function formatDeviceState(state = {}, lastSeen = '') {
+  if (!state || typeof state !== 'object') {
+    return '';
+  }
+
+  const alarmTime = `${String(state.alarmHour ?? 6).padStart(2, '0')}:${String(state.alarmMinute ?? 0).padStart(2, '0')}`;
+  const parts = [
+    `lampu meja ${state.lamp ? 'nyala' : 'mati'}`,
+    `RGB ${state.rgb ? 'nyala' : 'mati'} warna ${state.r ?? 90},${state.g ?? 160},${state.b ?? 255}`,
+    `pintu ${state.door ? 'terbuka' : 'tertutup'}`,
+    `smart TV/OLED ${state.tv ? 'nyala' : 'mati'}`,
+    `alarm ${state.alarmEnabled ? 'aktif' : 'mati'} jam ${alarmTime}`,
+    state.alarmRinging ? 'alarm sedang berbunyi' : 'alarm tidak berbunyi'
+  ];
+
+  return `${parts.join(', ')}${lastSeen ? `. Last seen: ${lastSeen}` : ''}`;
 }
 
 async function saveConversation(role, content) {
@@ -931,6 +998,37 @@ app.post('/remote/clear', async (req, res) => {
   }
 });
 
+app.post('/remote/status', async (req, res) => {
+  try {
+    if (!validateDashboardPin(req.body.pin)) {
+      res.status(401).json({ ok: false, error: 'PIN salah' });
+      return;
+    }
+    if (!supabase) {
+      res.status(500).json({ ok: false, error: 'Supabase env belum lengkap.' });
+      return;
+    }
+
+    const id = String(req.body.id || '').trim();
+    if (!id) {
+      res.status(400).json({ ok: false, error: 'command id is required' });
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('commands')
+      .select('id')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (error) throw error;
+    res.json({ ok: true, status: data ? 'queued' : 'done' });
+  } catch (error) {
+    console.error('Remote status failed:', error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
 app.post('/device/poll', async (req, res) => {
   try {
     if (!validateDeviceToken(getDeviceToken(req))) {
@@ -1026,7 +1124,7 @@ app.post('/chat', async (req, res) => {
 
     const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
     const teachMemory = extractTeachMemory(userMessage, Boolean(req.body.teachMode));
-    const { history, memoryText } = await loadAiContext(userMessage);
+    const { history, memoryText, deviceText } = await loadAiContext(userMessage);
 
     await saveConversation('user', userMessage);
 
@@ -1048,11 +1146,13 @@ app.post('/chat', async (req, res) => {
             '{"device":"door","state":"open|close"}',
             '{"device":"tv","state":"on|off"}',
             '{"device":"alarm","enabled":true,"hour":0-23,"minute":0-59}',
+            '{"device":"alarm","enabled":false}',
             '{"device":"buzzer","state":"off"}',
             'Do not use fan or relay commands.',
             'If user gives a name, preference, or rule to remember, include "memory":"short memory text" in the JSON.',
             'For "mode tidur", turn lamp/rgb/tv off and optionally set alarm if user asks.',
             'For "buka pintu", use {"device":"door","state":"open"}.',
+            deviceText ? `Current device state: ${deviceText}` : '',
             memoryText ? `Relevant long-term memories: ${memoryText}` : '',
             realtime ? `Realtime search context: ${JSON.stringify(realtime).slice(0, 3500)}` : ''
           ].join('\n')
@@ -1068,13 +1168,14 @@ app.post('/chat', async (req, res) => {
     const commands = normalizeCommands(parsed.commands || parsed.command);
     const reply = String(parsed.reply || 'Siap.');
     const memoryToSave = teachMemory || parsed.memory || '';
+    let queued = [];
 
     if (req.body.queue === true) {
       if (!validateDashboardPin(req.body.pin)) {
         res.status(401).json({ ok: false, reply: 'PIN salah.', commands: [] });
         return;
       }
-      await queueCommands(commands, 'ai', userMessage);
+      queued = await queueCommands(commands, 'ai', userMessage);
     }
 
     if (commands.length && process.env.ESP32_BASE_URL) {
@@ -1089,7 +1190,7 @@ app.post('/chat', async (req, res) => {
       saveDeviceEvent(userMessage, commands)
     ]);
 
-    res.json({ ok: true, reply, commands, memorySaved: Boolean(memoryToSave) });
+    res.json({ ok: true, reply, commands, queued, memorySaved: Boolean(memoryToSave) });
   } catch (error) {
     console.error('AI chat failed:', error);
     res.status(500).json({ ok: false, reply: 'AI gateway sedang bermasalah.', commands: [], error: error.message });
@@ -1143,6 +1244,9 @@ function normalizeCommand(command) {
   if (device === 'alarm') {
     const hour = Number(command.hour);
     const minute = Number(command.minute);
+    if (command.enabled === false && (command.hour === undefined || command.minute === undefined)) {
+      return { device, enabled: false };
+    }
     if (Number.isInteger(hour) && hour >= 0 && hour <= 23 && Number.isInteger(minute) && minute >= 0 && minute <= 59) {
       return { device, enabled: command.enabled !== false, hour, minute };
     }

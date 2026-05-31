@@ -130,8 +130,10 @@ private:
         break;
       case RoomActionType::SetAlarm:
         _state.alarm.enabled = action.enabled;
-        _state.alarm.hour = action.hour;
-        _state.alarm.minute = action.minute;
+        if (action.hasTime) {
+          _state.alarm.hour = action.hour;
+          _state.alarm.minute = action.minute;
+        }
         _state.alarm.ringing = false;
         _buzzer.stop();
         break;
