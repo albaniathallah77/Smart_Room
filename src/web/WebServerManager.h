@@ -133,12 +133,12 @@ private:
     .ai-reply { min-height:18px; margin-top:10px; color:#7fefff; font-size:13px; line-height:1.35; }
     .alarm-card { grid-column:span 2; }
     .alarm-picker { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:10px 0 12px; }
-    .picker-column { background:#eaf4f7; color:#132027; border-radius:8px; padding:10px 8px; min-width:0; }
-    .picker-label { text-align:center; color:#e89b00; font-size:11px; font-weight:900; margin-bottom:7px; }
+    .picker-column { background:#061821; color:#e9fbff; border:1px solid #174a5a; border-radius:8px; padding:10px 8px; min-width:0; }
+    .picker-label { text-align:center; color:#7fefff; font-size:11px; font-weight:900; margin-bottom:7px; }
     .picker-list { height:136px; overflow:auto; display:grid; gap:6px; padding:0 2px; scrollbar-width:none; }
     .picker-list::-webkit-scrollbar { display:none; }
-    .picker-option { min-height:34px; margin:0; border:0; background:transparent; color:#758188; border-radius:7px; font-size:16px; font-weight:900; padding:0; }
-    .picker-option.active { color:#132027; background:white; box-shadow:inset 3px 0 #ffb21a, inset -3px 0 #ffb21a; }
+    .picker-option { min-height:34px; margin:0; border:0; background:transparent; color:#5f7f89; border-radius:7px; font-size:16px; font-weight:900; padding:0; }
+    .picker-option.active { color:#001015; background:#10ddea; box-shadow:inset 3px 0 #b8fbff, inset -3px 0 #b8fbff; }
     .alarm-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
     .alarm-hidden { display:none; }
     .locked main { filter:blur(12px); pointer-events:none; user-select:none; }
@@ -216,6 +216,7 @@ private:
   const AUTH_KEY = 'smart_room_unlocked';
   let ws;
   let alarmEditing = false;
+  let pickerScrollTimer = 0;
   function isUnlocked() { return sessionStorage.getItem(AUTH_KEY) === '1'; }
   function refreshLock() {
     const unlocked = isUnlocked();
@@ -299,6 +300,27 @@ private:
     }
     renderAlarmPicker();
   }
+  function syncPickerFromScroll(part) {
+    const list = part === 'hour' ? hourPicker : minutePicker;
+    const buttons = [...list.querySelectorAll('.picker-option')];
+    const listCenter = list.getBoundingClientRect().top + list.clientHeight / 2;
+    let closest = buttons[0];
+    let closestDistance = Infinity;
+    buttons.forEach((button) => {
+      const rect = button.getBoundingClientRect();
+      const distance = Math.abs((rect.top + rect.height / 2) - listCenter);
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closest = button;
+      }
+    });
+    if (closest) setAlarmPicker(part, Number(closest.dataset.value));
+  }
+  function onPickerScroll(part) {
+    alarmEditing = true;
+    clearTimeout(pickerScrollTimer);
+    pickerScrollTimer = setTimeout(() => syncPickerFromScroll(part), 180);
+  }
   function renderAlarmPicker() {
     const selectedHour = Number(alarmHour.value) || 0;
     const selectedMinute = Number(alarmMinute.value) || 0;
@@ -307,6 +329,7 @@ private:
     for (let hour = 0; hour < 24; hour++) {
       const button = document.createElement('button');
       button.className = 'picker-option' + (hour === selectedHour ? ' active' : '');
+      button.dataset.value = String(hour);
       button.textContent = two(hour);
       button.onclick = () => setAlarmPicker('hour', hour);
       hourPicker.appendChild(button);
@@ -314,6 +337,7 @@ private:
     for (let minute = 0; minute < 60; minute++) {
       const button = document.createElement('button');
       button.className = 'picker-option' + (minute === selectedMinute ? ' active' : '');
+      button.dataset.value = String(minute);
       button.textContent = two(minute);
       button.onclick = () => setAlarmPicker('minute', minute);
       minutePicker.appendChild(button);
@@ -414,6 +438,8 @@ private:
     renderAlarmPicker();
     send({device:'alarm', enabled:true, hour, minute});
   }
+  hourPicker.addEventListener('scroll', () => onPickerScroll('hour'));
+  minutePicker.addEventListener('scroll', () => onPickerScroll('minute'));
   renderAlarmPicker();
 </script>
 </body>

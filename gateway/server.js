@@ -79,12 +79,12 @@ app.get('/', (req, res) => {
           .alarm-page { max-width:760px; margin:0 auto; }
           .alarm-hero { border:1px solid #174a5a; background:radial-gradient(circle at 50% 0,#0a3140 0,#07131a 42%,#03080c 100%); border-radius:8px; padding:24px; box-shadow:0 24px 70px #0008, inset 0 1px #5befff22; }
           .alarm-picker { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:22px 0 24px; }
-          .picker-column { background:#eaf4f7; color:#132027; border-radius:8px; padding:12px 10px; min-width:0; box-shadow:inset 0 1px #fff, 0 16px 34px #0006; }
-          .picker-label { text-align:center; color:#e89b00; font-size:12px; font-weight:900; margin-bottom:8px; }
+          .picker-column { background:#061821; color:#e9fbff; border:1px solid #174a5a; border-radius:8px; padding:12px 10px; min-width:0; box-shadow:inset 0 1px #52eaff18, 0 16px 34px #0007; }
+          .picker-label { text-align:center; color:#7fefff; font-size:12px; font-weight:900; margin-bottom:8px; }
           .picker-list { height:170px; overflow:auto; scroll-snap-type:y mandatory; display:grid; gap:7px; padding:0 2px; scrollbar-width:none; }
           .picker-list::-webkit-scrollbar { display:none; }
-          .picker-option { min-height:40px; margin:0; border:0; background:transparent; color:#77838a; border-radius:7px; font-size:18px; font-weight:900; scroll-snap-align:center; transition:background .16s ease, color .16s ease, transform .16s ease, box-shadow .16s ease; }
-          .picker-option.active { color:#132027; background:white; transform:scale(1.02); box-shadow:inset 3px 0 #ffb21a, inset -3px 0 #ffb21a, 0 8px 18px #0001; }
+          .picker-option { min-height:40px; margin:0; border:0; background:transparent; color:#5f7f89; border-radius:7px; font-size:18px; font-weight:900; scroll-snap-align:center; transition:background .16s ease, color .16s ease, transform .16s ease, box-shadow .16s ease; }
+          .picker-option.active { color:#001015; background:#10ddea; transform:scale(1.02); box-shadow:inset 3px 0 #b8fbff, inset -3px 0 #b8fbff, 0 8px 18px #10ddea22; }
           .alarm-hidden { display:none; }
           .alarm-settings { border-top:1px solid #26343b; padding-top:16px; display:grid; gap:14px; }
           .alarm-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
@@ -204,6 +204,7 @@ app.get('/', (req, res) => {
           const unlocked = () => sessionStorage.getItem(AUTH) === '1';
           const pinValue = () => sessionStorage.getItem('smart_room_pin') || '';
           let alarmEditing = false;
+          let pickerScrollTimer = 0;
           function redraw() {
             const isOpen = unlocked();
             document.body.classList.toggle('locked', !isOpen);
@@ -272,6 +273,27 @@ app.get('/', (req, res) => {
             }
             renderAlarmPicker();
           }
+          function syncPickerFromScroll(part) {
+            const list = part === 'hour' ? hourPicker : minutePicker;
+            const buttons = [...list.querySelectorAll('.picker-option')];
+            const listCenter = list.getBoundingClientRect().top + list.clientHeight / 2;
+            let closest = buttons[0];
+            let closestDistance = Infinity;
+            buttons.forEach((button) => {
+              const rect = button.getBoundingClientRect();
+              const distance = Math.abs((rect.top + rect.height / 2) - listCenter);
+              if (distance < closestDistance) {
+                closestDistance = distance;
+                closest = button;
+              }
+            });
+            if (closest) setAlarmPicker(part, Number(closest.dataset.value));
+          }
+          function onPickerScroll(part) {
+            alarmEditing = true;
+            clearTimeout(pickerScrollTimer);
+            pickerScrollTimer = setTimeout(() => syncPickerFromScroll(part), 180);
+          }
           function renderAlarmPicker() {
             const selectedHour = Number(alarmHour.value) || 0;
             const selectedMinute = Number(alarmMinute.value) || 0;
@@ -280,6 +302,7 @@ app.get('/', (req, res) => {
             for (let hour = 0; hour < 24; hour++) {
               const button = document.createElement('button');
               button.className = 'picker-option' + (hour === selectedHour ? ' active' : '');
+              button.dataset.value = String(hour);
               button.textContent = two(hour);
               button.onclick = () => setAlarmPicker('hour', hour);
               hourPicker.appendChild(button);
@@ -287,6 +310,7 @@ app.get('/', (req, res) => {
             for (let minute = 0; minute < 60; minute++) {
               const button = document.createElement('button');
               button.className = 'picker-option' + (minute === selectedMinute ? ' active' : '');
+              button.dataset.value = String(minute);
               button.textContent = two(minute);
               button.onclick = () => setAlarmPicker('minute', minute);
               minutePicker.appendChild(button);
@@ -459,6 +483,8 @@ app.get('/', (req, res) => {
             input.addEventListener('input', () => { alarmEditing = true; });
             input.addEventListener('blur', () => { if (input !== alarmNameSheet) clampAlarmInputs('sheet'); });
           });
+          hourPicker.addEventListener('scroll', () => onPickerScroll('hour'));
+          minutePicker.addEventListener('scroll', () => onPickerScroll('minute'));
           alarmModal.addEventListener('click', (event) => { if (event.target === alarmModal) closeAlarmSheet(); });
           renderAlarmPicker();
           setInterval(checkEspStatus, 2000);
