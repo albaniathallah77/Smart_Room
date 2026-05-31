@@ -5,6 +5,7 @@ import Groq from 'groq-sdk';
 import { createClient } from '@supabase/supabase-js';
 
 const app = express();
+const supabaseConfig = getSupabaseConfig();
 const supabase = createSupabaseClient();
 
 app.use(cors());
@@ -166,7 +167,9 @@ app.get('/health', (req, res) => {
     ok: true,
     service: 'smart-room-ai-gateway',
     groq: Boolean(process.env.GROQ_API_KEY),
-    supabase: Boolean(supabase)
+    supabase: Boolean(supabase),
+    supabaseHost: supabaseConfig.host,
+    supabaseKeyPrefix: supabaseConfig.keyPrefix
   });
 });
 
@@ -196,11 +199,38 @@ async function searchRealtime(query) {
   return response.json();
 }
 
-function createSupabaseClient() {
-  const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ||
+function cleanEnv(value) {
+  return String(value || '').trim().replace(/^["']|["']$/g, '');
+}
+
+function getSupabaseConfig() {
+  const url = cleanEnv(process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL).replace(/\/+$/, '');
+  const key = cleanEnv(
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
     process.env.SUPABASE_ANON_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
+
+  let host = '';
+  try {
+    host = url ? new URL(url).host : '';
+  } catch (error) {
+    host = 'invalid-url';
+  }
+
+  return {
+    url,
+    key,
+    host,
+    keyPrefix: key ? key.slice(0, 16) : ''
+  };
+}
+
+function createSupabaseClient() {
+  const { url, key, host } = supabaseConfig;
+  if (!url || !key || host === 'invalid-url') {
+    return null;
+  }
 
   return url && key ? createClient(url, key) : null;
 }
