@@ -79,6 +79,7 @@ app.get('/', (req, res) => {
               <div class="sub">Remote control via Vercel + Supabase</div>
             </div>
             <div class="row" style="flex:0 0 auto">
+              <div class="pill" id="espStatus" style="border-color:#551111;color:#ff5555;background:#1a0505;">ESP Offline</div>
               <div class="pill" id="status">Cloud ready</div>
               <button class="dark" onclick="lockAgain()" style="margin:0;max-width:92px">LOCK</button>
             </div>
@@ -155,6 +156,28 @@ app.get('/', (req, res) => {
             reply.textContent = result.reply || result.error || 'AI failed';
             status.textContent = response.ok && result.ok ? 'AI command queued' : 'AI failed';
           }
+          
+          async function checkEspStatus() {
+            if (!unlocked()) return;
+            try {
+              const res = await fetch('/device/status');
+              const data = await res.json();
+              if (data.online) {
+                espStatus.textContent = 'ESP Online';
+                espStatus.style.background = '#021a0f';
+                espStatus.style.color = '#10ea7a';
+                espStatus.style.borderColor = '#0a522b';
+              } else {
+                espStatus.textContent = 'ESP Offline';
+                espStatus.style.background = '#1a0505';
+                espStatus.style.color = '#ff5555';
+                espStatus.style.borderColor = '#551111';
+              }
+            } catch (e) {}
+          }
+          setInterval(checkEspStatus, 5000);
+          checkEspStatus();
+          
           redraw();
         </script>
       </body>
@@ -549,6 +572,9 @@ app.post('/device/poll', async (req, res) => {
       return;
     }
 
+    // Update ESP32 last seen status (fire and forget)
+    supabase.from('device_status').upsert({ id: 'esp32', last_seen: new Date().toISOString() }).then();
+
     const { data, error } = await supabase
       .from('commands')
       .select('id, payload, source, message, created_at')
@@ -561,6 +587,25 @@ app.post('/device/poll', async (req, res) => {
   } catch (error) {
     console.error('Device poll failed:', error);
     res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+app.get('/device/status', async (req, res) => {
+  if (!supabase) {
+    res.json({ online: false, error: 'no supabase' });
+    return;
+  }
+  try {
+    const { data } = await supabase.from('device_status').select('last_seen').eq('id', 'esp32').single();
+    if (!data) {
+      res.json({ online: false });
+      return;
+    }
+    const lastSeen = new Date(data.last_seen).getTime();
+    const now = Date.now();
+    res.json({ online: (now - lastSeen) < 15000, lastSeen: data.last_seen });
+  } catch (err) {
+    res.json({ online: false, error: err.message });
   }
 });
 

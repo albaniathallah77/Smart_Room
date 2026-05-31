@@ -66,3 +66,9 @@ alter table conversation disable row level security;
 alter table user_memory disable row level security;
 alter table device_events disable row level security;
 alter table commands disable row level security;
+
+create table if not exists device_status (
+  id text primary key,
+  last_seen timestamp with time zone default timezone('utc'::text, now()) not null
+);
+alter table device_status disable row level security;
