@@ -21,29 +21,50 @@ public:
   void begin(CommandCallback callback, void* context) {
     _callback = callback;
     _context = context;
+    
+    if (isConfigured()) {
+      xTaskCreatePinnedToCore(
+        CloudCommandClient::taskFunction,
+        "CloudTask",
+        8192,
+        this,
+        1,
+        &_taskHandle,
+        0 // Jalankan di Core 0 agar tidak mengganggu Core 1 (Main Loop)
+      );
+    }
   }
 
   void loop() {
-    if (!_callback || WiFi.status() != WL_CONNECTED || !isConfigured()) {
-      return;
+    String pending = "";
+    portENTER_CRITICAL(&_mux);
+    if (_pendingPayload.length() > 0) {
+      pending = _pendingPayload;
+      _pendingPayload = "";
     }
+    portEXIT_CRITICAL(&_mux);
 
-    const unsigned long now = millis();
-    if (_busy || now - _lastPollAt < 3000) {
-      return;
+    if (pending.length() > 0 && _callback) {
+      _callback(pending, _context);
     }
-
-    _busy = true;
-    _lastPollAt = now;
-    pollCommands();
-    _busy = false;
   }
 
 private:
   CommandCallback _callback = nullptr;
   void* _context = nullptr;
-  unsigned long _lastPollAt = 0;
-  bool _busy = false;
+  TaskHandle_t _taskHandle = NULL;
+  String _pendingPayload = "";
+  portMUX_TYPE _mux = portMUX_INITIALIZER_UNLOCKED;
+
+  static void taskFunction(void* parameter) {
+    CloudCommandClient* client = (CloudCommandClient*)parameter;
+    while (true) {
+      if (WiFi.status() == WL_CONNECTED) {
+        client->pollCommands();
+      }
+      vTaskDelay(5000 / portTICK_PERIOD_MS);
+    }
+  }
 
   bool isConfigured() const {
     return strlen(AI_GATEWAY_URL) > 0 && strlen(CLOUD_DEVICE_TOKEN) > 0;
@@ -62,8 +83,9 @@ private:
     client.setInsecure();
 
     HTTPClient http;
-    http.setTimeout(2500);
+    http.setTimeout(8000); 
     if (!http.begin(client, endpoint("/device/poll"))) {
+      Serial.println("[Cloud] Error: Unable to begin HTTP connection to Vercel");
       return;
     }
 
@@ -74,6 +96,11 @@ private:
     http.end();
 
     if (status != 200 || response.length() == 0) {
+      if (status < 0) {
+        Serial.printf("[Cloud] Poll failed. HTTP Error: %s\n", http.errorToString(status).c_str());
+      } else if (status != 200) {
+        Serial.printf("[Cloud] Poll rejected. Status: %d, Response: %s\n", status, response.c_str());
+      }
       return;
     }
 
@@ -91,8 +118,16 @@ private:
       }
 
       String payloadText;
-      serializeJson(payload, payloadText);
-      _callback(payloadText, _context);
+      if (payload.is<const char*>()) {
+        payloadText = payload.as<const char*>();
+      } else {
+        serializeJson(payload, payloadText);
+      }
+      
+      portENTER_CRITICAL(&_mux);
+      _pendingPayload = payloadText;
+      portEXIT_CRITICAL(&_mux);
+      
       ackCommand(id);
     }
   }
@@ -102,7 +137,7 @@ private:
     client.setInsecure();
 
     HTTPClient http;
-    http.setTimeout(2000);
+    http.setTimeout(5000);
     if (!http.begin(client, endpoint("/device/ack"))) {
       return;
     }

@@ -90,7 +90,7 @@ app.get('/', (req, res) => {
             <article class="card"><h2>Smart Door</h2><button class="primary" onclick="queue({device:'door',state:'open'})">OPEN</button><button class="dark" onclick="queue({device:'door',state:'close'})">CLOSE</button></article>
             <article class="card"><h2>Smart TV</h2><button class="primary" onclick="queue({device:'tv',state:'on'})">ON</button><button class="dark" onclick="queue({device:'tv',state:'off'})">OFF</button></article>
             <article class="card"><h2>Alarm</h2><div class="row"><input id="alarmTime" type="time" value="06:00"><button class="blue" onclick="setAlarm()">SET</button></div><button class="dark" onclick="queue({device:'buzzer',state:'off'})">STOP</button></article>
-            <article class="card"><h2>AI Command</h2><input id="cmd" placeholder="mode tidur"><button class="primary" onclick="askAi()">ASK AI</button><div id="reply">Gateway ready</div></article>
+            <article class="card"><h2>AI Command</h2><input id="cmd" placeholder="mode tidur"><button class="primary" onclick="askAi()">ASK AI</button><button class="dark" onclick="clearPending()">CLEAR PENDING</button><div id="reply">Gateway ready</div></article>
           </section>
         </main>
         <script>
@@ -155,6 +155,17 @@ app.get('/', (req, res) => {
             const result = await response.json().catch(() => ({}));
             reply.textContent = result.reply || result.error || 'AI failed';
             status.textContent = response.ok && result.ok ? 'AI command queued' : 'AI failed';
+          }
+          async function clearPending() {
+            if (!unlocked()) return;
+            status.textContent = 'Clearing...';
+            const response = await fetch('/remote/clear', {
+              method:'POST',
+              headers:{'Content-Type':'application/json'},
+              body:JSON.stringify({pin:pinValue()})
+            });
+            const result = await response.json().catch(() => ({}));
+            status.textContent = response.ok && result.ok ? 'Pending cleared' : (result.error || 'Clear failed');
           }
           
           async function checkEspStatus() {
@@ -479,6 +490,19 @@ async function queueCommands(commands, source = 'remote', message = '') {
   return data || [];
 }
 
+function normalizeQueuedCommand(row) {
+  let payload = row.payload;
+  if (typeof payload === 'string') {
+    try {
+      payload = JSON.parse(payload);
+    } catch (error) {
+      payload = null;
+    }
+  }
+
+  return { ...row, payload };
+}
+
 app.post('/auth', (req, res) => {
   if (!validateDashboardPin(req.body.pin)) {
     res.status(401).json({ ok: false, error: 'PIN salah' });
@@ -561,6 +585,30 @@ app.post('/remote/command', async (req, res) => {
   }
 });
 
+app.post('/remote/clear', async (req, res) => {
+  try {
+    if (!validateDashboardPin(req.body.pin)) {
+      res.status(401).json({ ok: false, error: 'PIN salah' });
+      return;
+    }
+    if (!supabase) {
+      res.status(500).json({ ok: false, error: 'Supabase env belum lengkap.' });
+      return;
+    }
+
+    const { error } = await supabase
+      .from('commands')
+      .update({ executed: true })
+      .eq('executed', false);
+
+    if (error) throw error;
+    res.json({ ok: true });
+  } catch (error) {
+    console.error('Remote clear failed:', error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
 app.post('/device/poll', async (req, res) => {
   try {
     if (!validateDeviceToken(getDeviceToken(req))) {
@@ -583,7 +631,11 @@ app.post('/device/poll', async (req, res) => {
     const [statusRes, { data, error }] = await Promise.all([p1, p2]);
 
     if (error) throw error;
-    res.json({ ok: true, commands: data || [] });
+    const commands = (data || [])
+      .map(normalizeQueuedCommand)
+      .filter((row) => row.payload && typeof row.payload === 'object');
+
+    res.json({ ok: true, commands });
   } catch (error) {
     console.error('Device poll failed:', error);
     res.status(500).json({ ok: false, error: error.message });
@@ -623,7 +675,7 @@ app.post('/device/ack', async (req, res) => {
 
     const { error } = await supabase
       .from('commands')
-      .update({ executed: true, executed_at: new Date().toISOString() })
+      .update({ executed: true })
       .eq('id', id);
 
     if (error) throw error;

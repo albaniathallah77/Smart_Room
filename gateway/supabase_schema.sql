@@ -34,6 +34,11 @@ create table if not exists commands (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
+alter table commands add column if not exists source text default 'remote';
+alter table commands add column if not exists message text default '';
+alter table commands add column if not exists executed boolean default false not null;
+alter table commands add column if not exists executed_at timestamp with time zone;
+
 do $$
 begin
   alter publication supabase_realtime add table conversation;
