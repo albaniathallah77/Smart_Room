@@ -131,6 +131,16 @@ private:
     input[type=color] { height:42px; padding:2px; }
     #cmd { width:100%; }
     .ai-reply { min-height:18px; margin-top:10px; color:#7fefff; font-size:13px; line-height:1.35; }
+    .alarm-card { grid-column:span 2; }
+    .alarm-picker { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:10px 0 12px; }
+    .picker-column { background:#eaf4f7; color:#132027; border-radius:8px; padding:10px 8px; min-width:0; }
+    .picker-label { text-align:center; color:#e89b00; font-size:11px; font-weight:900; margin-bottom:7px; }
+    .picker-list { height:136px; overflow:auto; display:grid; gap:6px; padding:0 2px; scrollbar-width:none; }
+    .picker-list::-webkit-scrollbar { display:none; }
+    .picker-option { min-height:34px; margin:0; border:0; background:transparent; color:#758188; border-radius:7px; font-size:16px; font-weight:900; padding:0; }
+    .picker-option.active { color:#132027; background:white; box-shadow:inset 3px 0 #ffb21a, inset -3px 0 #ffb21a; }
+    .alarm-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .alarm-hidden { display:none; }
     .locked main { filter:blur(12px); pointer-events:none; user-select:none; }
     .lock-screen { position:fixed; inset:0; z-index:10; display:grid; place-items:center; padding:18px; background:radial-gradient(circle at 50% 18%,#0b7185 0,#03151c 34%,#02070b 72%); }
     .lock-screen.hidden { display:none; }
@@ -148,7 +158,7 @@ private:
     .pin-pad button.primary { background:#08cfe3; border-color:#14efff; color:#001015; }
     .pin-error { min-height:18px; margin-top:12px; text-align:center; color:#ff8b8b; font-size:13px; }
     .logout { max-width:96px; margin-top:0; padding:8px 10px; min-height:36px; font-size:12px; }
-    @media (max-width:560px) { header { align-items:flex-start; flex-direction:column; } #net { width:100%; text-align:center; } .logo { width:56px; height:62px; } }
+    @media (max-width:560px) { header { align-items:flex-start; flex-direction:column; } #net { width:100%; text-align:center; } .logo { width:56px; height:62px; } .alarm-card { grid-column:auto; } .alarm-actions { grid-template-columns:1fr; } }
   </style>
 </head>
 <body class="locked">
@@ -187,7 +197,16 @@ private:
     <article class="card"><h2>RGB Room <span class="state" id="rgb">--</span></h2><div class="row"><input id="color" type="color" value="#10ddea"><button class="blue" onclick="rgbColor()">SET</button></div><button class="primary" onclick="send({device:'rgb',state:'on'})">ON</button><button class="dark" onclick="send({device:'rgb',state:'off'})">OFF</button></article>
     <article class="card"><h2>Smart Door <span class="state" id="door">--</span></h2><button class="primary" onclick="send({device:'door',state:'open'})">OPEN</button><button class="dark" onclick="send({device:'door',state:'close'})">CLOSE</button></article>
     <article class="card"><h2>Smart TV <span class="state" id="tv">--</span></h2><button class="primary" onclick="send({device:'tv',state:'on'})">ON</button><button class="dark" onclick="send({device:'tv',state:'off'})">OFF</button></article>
-    <article class="card"><h2>Alarm <span class="state" id="alarm">--</span></h2><div class="row"><input id="alarmTime" type="time" value="06:00"><button class="blue" onclick="setAlarm()">SET</button></div><button class="dark" onclick="send({device:'buzzer',state:'off'})">STOP</button></article>
+    <article class="card alarm-card">
+      <h2>Alarm <span class="state" id="alarm">--</span></h2>
+      <input class="alarm-hidden" id="alarmHour" type="number" min="0" max="23" value="06">
+      <input class="alarm-hidden" id="alarmMinute" type="number" min="0" max="59" value="00">
+      <div class="alarm-picker">
+        <div class="picker-column"><div class="picker-label">JAM</div><div class="picker-list" id="hourPicker"></div></div>
+        <div class="picker-column"><div class="picker-label">MENIT</div><div class="picker-list" id="minutePicker"></div></div>
+      </div>
+      <div class="alarm-actions"><button class="blue" onclick="setAlarm()">Pilih Waktu</button><button class="dark" onclick="send({device:'buzzer',state:'off'})">STOP</button></div>
+    </article>
     <article class="card"><h2>AI Command</h2><input id="cmd" placeholder="mode tidur"><button class="primary" onclick="askAi()">ASK AI</button><button class="blue" onclick="voiceAi()">VOICE AI</button><button class="dark" onclick="sendText()">LOCAL</button><div class="ai-reply" id="aiReply">Gateway ready</div></article>
   </section>
 </main>
@@ -196,6 +215,7 @@ private:
   const WEB_PIN = ")HTML" WEB_DASHBOARD_PIN R"HTML(";
   const AUTH_KEY = 'smart_room_unlocked';
   let ws;
+  let alarmEditing = false;
   function isUnlocked() { return sessionStorage.getItem(AUTH_KEY) === '1'; }
   function refreshLock() {
     const unlocked = isUnlocked();
@@ -260,8 +280,51 @@ private:
     door.textContent = s.door ? 'OPEN' : 'CLOSED';
     tv.textContent = s.tv ? 'ON' : 'OFF';
     alarm.textContent = s.alarmRinging ? 'RINGING' : `${String(s.alarmHour).padStart(2,'0')}:${String(s.alarmMinute).padStart(2,'0')}`;
+    if (!alarmEditing && Number.isFinite(Number(s.alarmHour)) && Number.isFinite(Number(s.alarmMinute))) {
+      alarmHour.value = two(s.alarmHour);
+      alarmMinute.value = two(s.alarmMinute);
+      renderAlarmPicker();
+    }
   }
   connectWs();
+  function two(value) {
+    return String(Math.max(0, Math.min(99, Number(value) || 0))).padStart(2, '0');
+  }
+  function setAlarmPicker(part, value) {
+    alarmEditing = true;
+    if (part === 'hour') {
+      alarmHour.value = two(value);
+    } else {
+      alarmMinute.value = two(value);
+    }
+    renderAlarmPicker();
+  }
+  function renderAlarmPicker() {
+    const selectedHour = Number(alarmHour.value) || 0;
+    const selectedMinute = Number(alarmMinute.value) || 0;
+    hourPicker.innerHTML = '';
+    minutePicker.innerHTML = '';
+    for (let hour = 0; hour < 24; hour++) {
+      const button = document.createElement('button');
+      button.className = 'picker-option' + (hour === selectedHour ? ' active' : '');
+      button.textContent = two(hour);
+      button.onclick = () => setAlarmPicker('hour', hour);
+      hourPicker.appendChild(button);
+    }
+    for (let minute = 0; minute < 60; minute++) {
+      const button = document.createElement('button');
+      button.className = 'picker-option' + (minute === selectedMinute ? ' active' : '');
+      button.textContent = two(minute);
+      button.onclick = () => setAlarmPicker('minute', minute);
+      minutePicker.appendChild(button);
+    }
+    setTimeout(() => {
+      const selectedHourButton = hourPicker.querySelector('.active');
+      const selectedMinuteButton = minutePicker.querySelector('.active');
+      if (selectedHourButton) selectedHourButton.scrollIntoView({ block:'center' });
+      if (selectedMinuteButton) selectedMinuteButton.scrollIntoView({ block:'center' });
+    }, 0);
+  }
   function send(payload) {
     if (!isUnlocked()) return;
     const body = JSON.stringify(payload);
@@ -343,9 +406,15 @@ private:
     send({device:'rgb', r:parseInt(hex.slice(0,2),16), g:parseInt(hex.slice(2,4),16), b:parseInt(hex.slice(4,6),16)});
   }
   function setAlarm() {
-    const [hour, minute] = alarmTime.value.split(':').map(Number);
+    const hour = Math.max(0, Math.min(23, Number(alarmHour.value) || 0));
+    const minute = Math.max(0, Math.min(59, Number(alarmMinute.value) || 0));
+    alarmHour.value = two(hour);
+    alarmMinute.value = two(minute);
+    alarmEditing = false;
+    renderAlarmPicker();
     send({device:'alarm', enabled:true, hour, minute});
   }
+  renderAlarmPicker();
 </script>
 </body>
 </html>
