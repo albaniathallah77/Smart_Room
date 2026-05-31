@@ -10,6 +10,7 @@ const supabase = createSupabaseClient();
 
 app.use(cors());
 app.use(express.json());
+app.use('/assets', express.static(new URL('./public/assets', import.meta.url).pathname));
 
 app.get('/', (req, res) => {
   res.type('html').send(`
@@ -46,6 +47,7 @@ app.get('/', (req, res) => {
           .panel { width:min(420px,100%); border:1px solid #20e8ff66; background:linear-gradient(180deg,#08232e,#030b10); border-radius:8px; padding:24px; box-shadow:0 24px 70px #000b, 0 0 46px #10ddea33, inset 0 1px #69f6ff33; }
           .panel h1 { text-align:center; font-size:28px; }
           .panel p { text-align:center; color:#7fefff; }
+          .lock-logo { width:76px; height:76px; border-radius:50%; display:block; object-fit:cover; margin:0 auto 14px; box-shadow:0 0 28px #10ddea66; }
           .dots { display:flex; justify-content:center; gap:9px; margin:12px 0 16px; }
           .dots span { width:13px; height:13px; border-radius:50%; border:1px solid #21e9ff99; background:#03131a; }
           .dots span.on { background:#10ddea; box-shadow:0 0 16px #10ddea; }
@@ -53,12 +55,48 @@ app.get('/', (req, res) => {
           .pad { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px; }
           .pad button { margin:0; min-height:48px; font-size:18px; }
           #error { min-height:18px; margin-top:12px; text-align:center; color:#ff8b8b; font-size:13px; }
-          @media (max-width:560px) { header { align-items:flex-start; flex-direction:column; } .pill { width:100%; text-align:center; } }
+          .app-shell { width:min(1440px,100%); height:100vh; display:grid; grid-template-columns:260px minmax(0,1fr) 340px; gap:0; padding:0; }
+          .sidebar { border-right:1px solid #103848; background:#020609; padding:18px 14px; display:flex; flex-direction:column; gap:14px; }
+          .brand-row { display:flex; align-items:center; gap:11px; padding:4px 6px 14px; border-bottom:1px solid #103848; }
+          .logo-mark { width:42px; height:42px; border-radius:50%; display:grid; place-items:center; overflow:hidden; background:#10ddea; box-shadow:0 0 22px #10ddea77; }
+          .logo-mark img { width:100%; height:100%; object-fit:cover; }
+          .nav-item { padding:12px; border-radius:8px; color:#e9fbff; background:transparent; border:0; text-align:left; margin:0; min-height:0; font-weight:700; }
+          .nav-item.active, .nav-item:hover { background:#16242b; }
+          .side-bottom { margin-top:auto; display:grid; gap:8px; }
+          .chat-pane { display:grid; grid-template-rows:auto 1fr auto; min-width:0; background:#05090d; }
+          .topbar { height:62px; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:0 22px; border-bottom:1px solid #12222b; }
+          .chat-log { overflow:auto; padding:28px max(22px,8vw); display:flex; flex-direction:column; gap:18px; }
+          .bubble { max-width:760px; line-height:1.55; padding:14px 16px; border-radius:8px; white-space:pre-wrap; }
+          .bubble.assistant { align-self:flex-start; background:transparent; border-left:2px solid #10ddea; }
+          .bubble.user { align-self:flex-end; background:#2c2d30; }
+          .composer { margin:0 max(16px,8vw) 22px; background:#202124; border:1px solid #33383d; border-radius:8px; padding:10px; display:grid; grid-template-columns:1fr auto auto; gap:8px; align-items:center; }
+          .composer input { border:0; background:transparent; min-height:44px; font-size:16px; }
+          .icon-btn { width:48px; min-width:48px; border-radius:50%; margin:0; padding:0; }
+          .tools-pane { border-left:1px solid #103848; background:#03080c; padding:16px; overflow:auto; }
+          .tools-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; }
+          .tool-card { border:1px solid #173746; background:#07131a; border-radius:8px; padding:13px; margin-bottom:10px; }
+          .tool-title { display:flex; justify-content:space-between; align-items:center; gap:8px; font-weight:900; margin-bottom:9px; }
+          .state-chip { font-size:12px; color:#8fb6c0; border:1px solid #234b58; border-radius:999px; padding:3px 8px; }
+          .state-chip.on { color:#001015; background:#10ddea; border-color:#10ddea; }
+          .tool-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+          .alarm-display { font-size:34px; letter-spacing:2px; margin:8px 0 10px; color:#e9fbff; }
+          .modal { position:fixed; inset:0; z-index:8; display:none; place-items:end center; background:#0009; padding:18px; }
+          .modal.open { display:grid; }
+          .sheet { width:min(520px,100%); background:#202124; border:1px solid #34383d; border-radius:8px; padding:18px; box-shadow:0 20px 60px #000c; }
+          .time-row { display:flex; justify-content:center; align-items:center; gap:12px; font-size:54px; margin:8px 0 18px; }
+          .time-row input { width:88px; text-align:center; font-size:44px; padding:4px; border:0; background:#111; }
+          .days { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin:12px 0; }
+          .days span { text-align:center; color:#aaa; font-size:13px; }
+          .field { display:grid; gap:6px; margin:12px 0; color:#aaa; }
+          .field input { width:100%; }
+          @media (max-width:980px) { .app-shell { height:auto; min-height:100vh; grid-template-columns:1fr; } .sidebar { display:none; } .tools-pane { border-left:0; border-top:1px solid #103848; } .chat-pane { min-height:68vh; } }
+          @media (max-width:560px) { header { align-items:flex-start; flex-direction:column; } .pill { width:100%; text-align:center; } .composer { grid-template-columns:1fr auto; } .composer .primary { grid-column:1 / -1; width:100%; border-radius:7px; } .time-row { font-size:42px; } .time-row input { width:72px; font-size:36px; } }
         </style>
       </head>
       <body class="locked">
         <div class="lock" id="lock">
           <section class="panel">
+            <img class="lock-logo" src="/assets/logo.png" alt="Smart Room logo">
             <h1>Smart Room</h1>
             <p>Enter PIN to control from cloud</p>
             <div class="dots" id="dots"><span></span><span></span><span></span><span></span></div>
@@ -72,27 +110,49 @@ app.get('/', (req, res) => {
             <div id="error"></div>
           </section>
         </div>
-        <main>
-          <header>
-            <div>
-              <h1>Smart Room Cloud</h1>
-              <div class="sub">Remote control via Vercel + Supabase</div>
-            </div>
-            <div class="row" style="flex:0 0 auto">
+        <main class="app-shell">
+          <aside class="sidebar">
+            <div class="brand-row"><div class="logo-mark"><img src="/assets/logo.png" alt="Smart Room logo"></div><div><b>Smart Room</b><div class="sub">AI Cloud</div></div></div>
+            <button class="nav-item active">Chat AI</button>
+            <button class="nav-item">Tools</button>
+            <button class="nav-item">Alarm</button>
+            <button class="nav-item">Settings</button>
+            <div class="side-bottom">
               <div class="pill" id="espStatus" style="border-color:#551111;color:#ff5555;background:#1a0505;">ESP Offline</div>
               <div class="pill" id="status">Cloud ready</div>
-              <button class="dark" onclick="lockAgain()" style="margin:0;max-width:92px">LOCK</button>
+              <button class="dark" onclick="lockAgain()">LOCK</button>
             </div>
-          </header>
-          <section class="grid">
-            <article class="card"><h2>Desk Lamp</h2><button class="primary" onclick="queue({device:'lamp',state:'on'})">ON</button><button class="dark" onclick="queue({device:'lamp',state:'off'})">OFF</button></article>
-            <article class="card"><h2>RGB Room</h2><div class="row"><input id="color" type="color" value="#10ddea"><button class="blue" onclick="rgbColor()">SET</button></div><button class="primary" onclick="queue({device:'rgb',state:'on'})">ON</button><button class="dark" onclick="queue({device:'rgb',state:'off'})">OFF</button></article>
-            <article class="card"><h2>Smart Door</h2><button class="primary" onclick="queue({device:'door',state:'open'})">OPEN</button><button class="dark" onclick="queue({device:'door',state:'close'})">CLOSE</button></article>
-            <article class="card"><h2>Smart TV</h2><button class="primary" onclick="queue({device:'tv',state:'on'})">ON</button><button class="dark" onclick="queue({device:'tv',state:'off'})">OFF</button></article>
-            <article class="card"><h2>Alarm</h2><div class="row"><input id="alarmTime" type="time" value="06:00"><button class="blue" onclick="setAlarm()">SET</button></div><button class="dark" onclick="queue({device:'buzzer',state:'off'})">STOP</button></article>
-            <article class="card"><h2>AI Command</h2><input id="cmd" placeholder="mode tidur"><button class="primary" onclick="askAi()">ASK AI</button><button class="blue" onclick="voiceAi()">VOICE AI</button><button class="dark" onclick="clearPending()">CLEAR PENDING</button><div id="reply">Gateway ready</div></article>
+          </aside>
+          <section class="chat-pane">
+            <div class="topbar"><div><b>Smart Room AI</b><div class="sub">Ask, command, or use voice</div></div><button class="dark" onclick="clearPending()" style="max-width:150px;margin:0">CLEAR PENDING</button></div>
+            <div class="chat-log" id="chatLog">
+              <div class="bubble assistant">Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk memberi perintah.</div>
+            </div>
+            <div class="composer">
+              <input id="cmd" placeholder="Ask anything or command your room">
+              <button class="icon-btn blue" onclick="voiceAi()" title="Voice AI">🎙</button>
+              <button class="icon-btn primary" onclick="askAi()" title="Send">➜</button>
+            </div>
+            <div id="reply" style="display:none">Gateway ready</div>
           </section>
+          <aside class="tools-pane">
+            <div class="tools-head"><h2 style="margin:0">Tools</h2><button class="dark" onclick="checkEspStatus()" style="max-width:96px;margin:0">REFRESH</button></div>
+            <article class="tool-card"><div class="tool-title">Desk Lamp <span class="state-chip" id="lampState">OFF</span></div><div class="tool-actions"><button class="primary" onclick="queue({device:'lamp',state:'on'})">ON</button><button class="dark" onclick="queue({device:'lamp',state:'off'})">OFF</button></div></article>
+            <article class="tool-card"><div class="tool-title">RGB Room <span class="state-chip" id="rgbState">OFF</span></div><div class="row"><input id="color" type="color" value="#10ddea"><button class="blue" onclick="rgbColor()">SET</button></div><div class="tool-actions"><button class="primary" onclick="queue({device:'rgb',state:'on'})">ON</button><button class="dark" onclick="queue({device:'rgb',state:'off'})">OFF</button></div></article>
+            <article class="tool-card"><div class="tool-title">Smart Door <span class="state-chip" id="doorState">CLOSED</span></div><div class="tool-actions"><button class="primary" onclick="queue({device:'door',state:'open'})">OPEN</button><button class="dark" onclick="queue({device:'door',state:'close'})">CLOSE</button></div></article>
+            <article class="tool-card"><div class="tool-title">Smart TV <span class="state-chip" id="tvState">OFF</span></div><div class="tool-actions"><button class="primary" onclick="queue({device:'tv',state:'on'})">ON</button><button class="dark" onclick="queue({device:'tv',state:'off'})">OFF</button></div></article>
+            <article class="tool-card"><div class="tool-title">Alarm <span class="state-chip" id="alarmState">OFF</span></div><div class="alarm-display" id="alarmDisplay">06:00</div><button class="primary" onclick="openAlarmSheet()">ADD ALARM</button><button class="dark" onclick="queue({device:'buzzer',state:'off'})">STOP BUZZER</button></article>
+          </aside>
         </main>
+        <div class="modal" id="alarmModal">
+          <section class="sheet">
+            <div class="tools-head"><h2 style="margin:0">Alarm</h2><button class="dark" onclick="closeAlarmSheet()" style="max-width:82px;margin:0">CLOSE</button></div>
+            <div class="time-row"><input id="alarmHour" type="number" min="0" max="23" value="06"><span>:</span><input id="alarmMinute" type="number" min="0" max="59" value="00"></div>
+            <div class="days"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
+            <label class="field">Alarm name <input id="alarmName" value="Smart Room Alarm"></label>
+            <button class="primary" onclick="saveAlarmSheet()">SAVE ALARM</button>
+          </section>
+        </div>
         <script>
           const AUTH = 'smart_room_cloud_pin';
           const unlocked = () => sessionStorage.getItem(AUTH) === '1';
@@ -123,39 +183,91 @@ app.get('/', (req, res) => {
           function lockAgain() { sessionStorage.removeItem(AUTH); sessionStorage.removeItem('smart_room_pin'); redraw(); }
           pin.addEventListener('input', () => { pin.value = pin.value.replace(/\\D/g, '').slice(0, 4); redraw(); });
           pin.addEventListener('keydown', (event) => { if (event.key === 'Enter') unlock(); });
+          function setStatus(text) {
+            document.getElementById('status').textContent = text;
+          }
+          function addBubble(role, text) {
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble ' + role;
+            bubble.textContent = text;
+            chatLog.appendChild(bubble);
+            chatLog.scrollTop = chatLog.scrollHeight;
+          }
+          function setChip(element, isOn, onText, offText) {
+            element.textContent = isOn ? onText : offText;
+            element.classList.toggle('on', Boolean(isOn));
+          }
+          function two(number) {
+            return String(Math.max(0, Math.min(99, Number(number) || 0))).padStart(2, '0');
+          }
+          function rgbToHex(r, g, b) {
+            return '#' + [r, g, b].map((value) => {
+              const n = Math.max(0, Math.min(255, Number(value) || 0));
+              return n.toString(16).padStart(2, '0');
+            }).join('');
+          }
+          function updateToolStatus(state = {}) {
+            setChip(lampState, state.lamp === true, 'ON', 'OFF');
+            setChip(rgbState, state.rgb === true, 'ON', 'OFF');
+            setChip(doorState, state.door === true, 'OPEN', 'CLOSED');
+            setChip(tvState, state.tv === true, 'ON', 'OFF');
+            setChip(alarmState, state.alarmRinging === true || state.alarmEnabled === true, state.alarmRinging ? 'RINGING' : 'ON', 'OFF');
+            if (Number.isFinite(Number(state.alarmHour)) && Number.isFinite(Number(state.alarmMinute))) {
+              alarmDisplay.textContent = two(state.alarmHour) + ':' + two(state.alarmMinute);
+              alarmHour.value = two(state.alarmHour);
+              alarmMinute.value = two(state.alarmMinute);
+            }
+            if (Number.isFinite(Number(state.r)) && Number.isFinite(Number(state.g)) && Number.isFinite(Number(state.b))) {
+              color.value = rgbToHex(state.r, state.g, state.b);
+            }
+          }
           async function queue(command) {
             if (!unlocked()) return;
-            status.textContent = 'Sending...';
+            setStatus('Sending...');
             const response = await fetch('/remote/command', {
               method:'POST',
               headers:{'Content-Type':'application/json'},
               body:JSON.stringify({pin:pinValue(), command})
             });
             const result = await response.json().catch(() => ({}));
-            status.textContent = response.ok && result.ok ? 'Command queued' : (result.error || 'Failed');
+            setStatus(response.ok && result.ok ? 'Command queued' : (result.error || 'Failed'));
           }
           function rgbColor() {
             const hex = color.value.slice(1);
             queue({device:'rgb', r:parseInt(hex.slice(0,2),16), g:parseInt(hex.slice(2,4),16), b:parseInt(hex.slice(4,6),16)});
           }
-          function setAlarm() {
-            const [hour, minute] = alarmTime.value.split(':').map(Number);
+          function openAlarmSheet() {
+            alarmModal.classList.add('open');
+            alarmHour.focus();
+          }
+          function closeAlarmSheet() {
+            alarmModal.classList.remove('open');
+          }
+          function saveAlarmSheet() {
+            const hour = Math.max(0, Math.min(23, Number(alarmHour.value) || 0));
+            const minute = Math.max(0, Math.min(59, Number(alarmMinute.value) || 0));
+            alarmHour.value = two(hour);
+            alarmMinute.value = two(minute);
+            alarmDisplay.textContent = two(hour) + ':' + two(minute);
             queue({device:'alarm', enabled:true, hour, minute});
+            closeAlarmSheet();
           }
           async function askAi() {
             if (!unlocked() || !cmd.value.trim()) return;
             const message = cmd.value.trim();
             cmd.value = '';
-            reply.textContent = 'AI thinking...';
+            addBubble('user', message);
+            addBubble('assistant', 'AI thinking...');
+            const loadingBubble = chatLog.lastElementChild;
             const response = await fetch('/chat', {
               method:'POST',
               headers:{'Content-Type':'application/json'},
               body:JSON.stringify({pin:pinValue(), message, queue:true})
             });
             const result = await response.json().catch(() => ({}));
-            reply.textContent = result.reply || result.error || 'AI failed';
+            loadingBubble.textContent = result.reply || result.error || 'AI failed';
             if (result.reply) speak(result.reply);
-            status.textContent = response.ok && result.ok ? 'AI command queued' : 'AI failed';
+            setStatus(response.ok && result.ok ? 'AI command queued' : 'AI failed');
           }
           function speak(text) {
             if (!('speechSynthesis' in window) || !text) return;
@@ -169,34 +281,33 @@ app.get('/', (req, res) => {
             if (!unlocked()) return;
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) {
-              reply.textContent = 'Voice belum didukung browser ini.';
+              addBubble('assistant', 'Voice belum didukung browser ini.');
               return;
             }
             const rec = new SpeechRecognition();
             rec.lang = 'id-ID';
             rec.interimResults = false;
             rec.maxAlternatives = 1;
-            reply.textContent = 'Mendengarkan...';
+            setStatus('Listening...');
             rec.onresult = (event) => {
               const text = event.results[0][0].transcript;
               cmd.value = text;
-              reply.textContent = text;
               askAi();
             };
-            rec.onerror = () => { reply.textContent = 'Voice gagal. Coba lagi.'; };
-            rec.onend = () => { if (reply.textContent === 'Mendengarkan...') reply.textContent = 'Voice selesai.'; };
+            rec.onerror = () => { addBubble('assistant', 'Voice gagal. Coba lagi.'); setStatus('Voice failed'); };
+            rec.onend = () => { if (document.getElementById('status').textContent === 'Listening...') setStatus('Voice done'); };
             rec.start();
           }
           async function clearPending() {
             if (!unlocked()) return;
-            status.textContent = 'Clearing...';
+            setStatus('Clearing...');
             const response = await fetch('/remote/clear', {
               method:'POST',
               headers:{'Content-Type':'application/json'},
               body:JSON.stringify({pin:pinValue()})
             });
             const result = await response.json().catch(() => ({}));
-            status.textContent = response.ok && result.ok ? 'Pending cleared' : (result.error || 'Clear failed');
+            setStatus(response.ok && result.ok ? 'Pending cleared' : (result.error || 'Clear failed'));
           }
           
           async function checkEspStatus() {
@@ -215,9 +326,12 @@ app.get('/', (req, res) => {
                 espStatus.style.color = '#ff5555';
                 espStatus.style.borderColor = '#551111';
               }
+              updateToolStatus(data.state || {});
             } catch (e) {}
           }
-          setInterval(checkEspStatus, 5000);
+          cmd.addEventListener('keydown', (event) => { if (event.key === 'Enter') askAi(); });
+          alarmModal.addEventListener('click', (event) => { if (event.target === alarmModal) closeAlarmSheet(); });
+          setInterval(checkEspStatus, 2000);
           checkEspStatus();
           
           redraw();
@@ -672,7 +786,12 @@ app.post('/device/poll', async (req, res) => {
       return;
     }
 
-    const p1 = supabase.from('device_status').upsert({ id: 'esp32', last_seen: new Date().toISOString() });
+    const state = req.body.state && typeof req.body.state === 'object' ? req.body.state : {};
+    const p1 = supabase.from('device_status').upsert({
+      id: 'esp32',
+      state,
+      last_seen: new Date().toISOString()
+    });
     const p2 = supabase
       .from('commands')
       .select('id, payload, source, message, created_at')
@@ -700,14 +819,14 @@ app.get('/device/status', async (req, res) => {
     return;
   }
   try {
-    const { data } = await supabase.from('device_status').select('last_seen').eq('id', 'esp32').single();
+    const { data } = await supabase.from('device_status').select('last_seen,state').eq('id', 'esp32').single();
     if (!data) {
       res.json({ online: false });
       return;
     }
     const lastSeen = new Date(data.last_seen).getTime();
     const now = Date.now();
-    res.json({ online: (now - lastSeen) < 15000, lastSeen: data.last_seen });
+    res.json({ online: (now - lastSeen) < 15000, lastSeen: data.last_seen, state: data.state || {} });
   } catch (err) {
     res.json({ online: false, error: err.message });
   }

@@ -39,6 +39,7 @@ public:
 
   void loop() {
     _web.loop(_state);
+    _cloud.updateState(_state);
     _cloud.loop();
     _door.loop();
     updateDoorAutoClose();

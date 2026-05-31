@@ -5,6 +5,7 @@
 #include <WiFiClientSecure.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
+#include "../SmartRoomState.h"
 
 #ifndef AI_GATEWAY_URL
 #define AI_GATEWAY_URL ""
@@ -49,11 +50,34 @@ public:
     }
   }
 
+  void updateState(const SmartRoomState& state) {
+    StaticJsonDocument<512> doc;
+    doc["lamp"] = state.deskLampOn;
+    doc["rgb"] = state.rgbOn;
+    doc["r"] = state.rgbColor.r;
+    doc["g"] = state.rgbColor.g;
+    doc["b"] = state.rgbColor.b;
+    doc["door"] = state.doorOpen;
+    doc["tv"] = state.tvOn;
+    doc["alarmEnabled"] = state.alarm.enabled;
+    doc["alarmRinging"] = state.alarm.ringing;
+    doc["alarmHour"] = state.alarm.hour;
+    doc["alarmMinute"] = state.alarm.minute;
+
+    String stateText;
+    serializeJson(doc, stateText);
+
+    portENTER_CRITICAL(&_mux);
+    _latestState = stateText;
+    portEXIT_CRITICAL(&_mux);
+  }
+
 private:
   CommandCallback _callback = nullptr;
   void* _context = nullptr;
   TaskHandle_t _taskHandle = NULL;
   String _pendingPayload = "";
+  String _latestState = "{}";
   portMUX_TYPE _mux = portMUX_INITIALIZER_UNLOCKED;
   unsigned long _lastErrorLogAt = 0;
 
@@ -91,7 +115,12 @@ private:
     }
 
     http.addHeader("Content-Type", "application/json");
-    String request = String("{\"token\":\"") + CLOUD_DEVICE_TOKEN + "\"}";
+    String stateText;
+    portENTER_CRITICAL(&_mux);
+    stateText = _latestState;
+    portEXIT_CRITICAL(&_mux);
+
+    String request = String("{\"token\":\"") + CLOUD_DEVICE_TOKEN + "\",\"state\":" + stateText + "}";
     int status = http.POST(request);
     String response = status > 0 ? http.getString() : "";
     http.end();

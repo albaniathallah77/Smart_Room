@@ -74,6 +74,14 @@ alter table commands disable row level security;
 
 create table if not exists device_status (
   id text primary key,
+  state jsonb default '{}'::jsonb,
   last_seen timestamp with time zone default timezone('utc'::text, now()) not null
 );
+alter table device_status add column if not exists state jsonb default '{}'::jsonb;
+do $$
+begin
+  alter publication supabase_realtime add table device_status;
+exception
+  when duplicate_object then null;
+end $$;
 alter table device_status disable row level security;
