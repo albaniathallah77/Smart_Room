@@ -521,6 +521,20 @@ async function queueCommands(commands, source = 'remote', message = '') {
   return data || [];
 }
 
+async function deleteCommandIds(ids) {
+  const cleanIds = ids.filter(Boolean);
+  if (!cleanIds.length) {
+    return;
+  }
+
+  const { error } = await supabase
+    .from('commands')
+    .delete()
+    .in('id', cleanIds);
+
+  if (error) throw error;
+}
+
 function normalizeQueuedCommand(row) {
   let payload = row.payload;
   if (typeof payload === 'string') {
@@ -627,13 +641,20 @@ app.post('/remote/clear', async (req, res) => {
       return;
     }
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('commands')
-      .update({ executed: true })
-      .eq('executed', false);
+      .select('id, payload, executed')
+      .limit(200);
 
     if (error) throw error;
-    res.json({ ok: true });
+
+    const deleteIds = (data || [])
+      .map(normalizeQueuedCommand)
+      .filter((row) => row.executed === true || row.payload?.device !== 'alarm')
+      .map((row) => row.id);
+
+    await deleteCommandIds(deleteIds);
+    res.json({ ok: true, deleted: deleteIds.length });
   } catch (error) {
     console.error('Remote clear failed:', error);
     res.status(500).json({ ok: false, error: error.message });
@@ -704,12 +725,7 @@ app.post('/device/ack', async (req, res) => {
       return;
     }
 
-    const { error } = await supabase
-      .from('commands')
-      .update({ executed: true })
-      .eq('id', id);
-
-    if (error) throw error;
+    await deleteCommandIds([id]);
     res.json({ ok: true });
   } catch (error) {
     console.error('Device ack failed:', error);

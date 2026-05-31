@@ -55,6 +55,7 @@ private:
   TaskHandle_t _taskHandle = NULL;
   String _pendingPayload = "";
   portMUX_TYPE _mux = portMUX_INITIALIZER_UNLOCKED;
+  unsigned long _lastErrorLogAt = 0;
 
   static void taskFunction(void* parameter) {
     CloudCommandClient* client = (CloudCommandClient*)parameter;
@@ -85,7 +86,7 @@ private:
     HTTPClient http;
     http.setTimeout(8000); 
     if (!http.begin(client, endpoint("/device/poll"))) {
-      Serial.println("[Cloud] Error: Unable to begin HTTP connection to Vercel");
+      logError("[Cloud] Error: Unable to begin HTTP connection to Vercel");
       return;
     }
 
@@ -97,9 +98,11 @@ private:
 
     if (status != 200 || response.length() == 0) {
       if (status < 0) {
-        Serial.printf("[Cloud] Poll failed. HTTP Error: %s\n", http.errorToString(status).c_str());
+        String message = String("[Cloud] Poll failed. HTTP Error: ") + http.errorToString(status);
+        logError(message);
       } else if (status != 200) {
-        Serial.printf("[Cloud] Poll rejected. Status: %d, Response: %s\n", status, response.c_str());
+        String message = String("[Cloud] Poll rejected. Status: ") + status + ", Response: " + response;
+        logError(message);
       }
       return;
     }
@@ -146,5 +149,14 @@ private:
     String request = String("{\"token\":\"") + CLOUD_DEVICE_TOKEN + "\",\"id\":\"" + id + "\"}";
     http.POST(request);
     http.end();
+  }
+
+  void logError(const String& message) {
+    unsigned long now = millis();
+    if (now - _lastErrorLogAt < 15000) {
+      return;
+    }
+    _lastErrorLogAt = now;
+    Serial.println(message);
   }
 };
