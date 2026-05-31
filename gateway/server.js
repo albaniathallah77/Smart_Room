@@ -572,15 +572,15 @@ app.post('/device/poll', async (req, res) => {
       return;
     }
 
-    // Update ESP32 last seen status (fire and forget)
-    supabase.from('device_status').upsert({ id: 'esp32', last_seen: new Date().toISOString() }).then();
-
-    const { data, error } = await supabase
+    const p1 = supabase.from('device_status').upsert({ id: 'esp32', last_seen: new Date().toISOString() });
+    const p2 = supabase
       .from('commands')
       .select('id, payload, source, message, created_at')
       .eq('executed', false)
       .order('created_at', { ascending: true })
       .limit(5);
+
+    const [statusRes, { data, error }] = await Promise.all([p1, p2]);
 
     if (error) throw error;
     res.json({ ok: true, commands: data || [] });
