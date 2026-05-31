@@ -132,10 +132,66 @@ public:
       return true;
     }
 
+    if (hasAny(text, "bangun", "alarm", "ingatkan", "wake")) {
+      uint8_t hour = 0;
+      uint8_t minute = 0;
+      if (parseTime(text, hour, minute)) {
+        action.type = RoomActionType::SetAlarm;
+        action.enabled = true;
+        action.hasTime = true;
+        action.hour = hour;
+        action.minute = minute;
+        return true;
+      }
+    }
+
     return false;
   }
 
 private:
+  bool parseTime(const String& text, uint8_t& hour, uint8_t& minute) {
+    int start = -1;
+    for (int i = 0; i < text.length(); i++) {
+      if (isDigit(text[i])) {
+        start = i;
+        break;
+      }
+    }
+
+    if (start < 0) {
+      return false;
+    }
+
+    int endHour = start;
+    while (endHour < text.length() && isDigit(text[endHour])) {
+      endHour++;
+    }
+
+    int h = text.substring(start, endHour).toInt();
+    int m = 0;
+
+    if (endHour < text.length() && (text[endHour] == ':' || text[endHour] == '.')) {
+      int startMinute = endHour + 1;
+      int endMinute = startMinute;
+      while (endMinute < text.length() && isDigit(text[endMinute])) {
+        endMinute++;
+      }
+      m = text.substring(startMinute, endMinute).toInt();
+    }
+
+    if ((text.indexOf("malam") >= 0 || text.indexOf("pm") >= 0) && h >= 1 && h <= 11) {
+      h += 12;
+    }
+
+    if (h < 0 || h > 23 || m < 0 || m > 59) {
+      return false;
+    }
+
+    hour = static_cast<uint8_t>(h);
+    minute = static_cast<uint8_t>(m);
+    return true;
+  }
+
   bool hasAny(const String& text, const char* a, const char* b, const char* c = nullptr, const char* d = nullptr, const char* e = nullptr, const char* f = nullptr) {
     return text.indexOf(a) >= 0 ||
            text.indexOf(b) >= 0 ||

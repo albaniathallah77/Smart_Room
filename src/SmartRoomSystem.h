@@ -38,6 +38,7 @@ public:
   }
 
   void loop() {
+    maintainWifi();
     _web.loop(_state);
     _cloud.updateState(_state);
     _cloud.loop();
@@ -61,9 +62,13 @@ private:
   WebServerManager _web;
   CloudCommandClient _cloud;
   unsigned long _doorOpenedAt = 0;
+  unsigned long _lastWifiReconnectAt = 0;
+  bool _wifiWasConnected = false;
 
   void connectWifi() {
     WiFi.mode(WIFI_STA);
+    WiFi.persistent(false);
+    WiFi.setAutoReconnect(true);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
     Serial.print("Connecting WiFi");
 
@@ -76,11 +81,41 @@ private:
 
     Serial.println();
     if (WiFi.status() == WL_CONNECTED) {
+      _wifiWasConnected = true;
       Serial.print("WiFi connected: ");
       Serial.println(WiFi.localIP());
     } else {
+      _wifiWasConnected = false;
       Serial.println("WiFi failed, dashboard will start after reconnect");
     }
+  }
+
+  void maintainWifi() {
+    if (WiFi.status() == WL_CONNECTED) {
+      if (!_wifiWasConnected) {
+        _wifiWasConnected = true;
+        configTime(TIMEZONE_OFFSET_SECONDS, 0, NTP_SERVER_1, NTP_SERVER_2);
+        Serial.print("WiFi reconnected: ");
+        Serial.println(WiFi.localIP());
+        Serial.print("Dashboard: http://");
+        Serial.println(WiFi.localIP());
+      }
+      return;
+    }
+
+    if (_wifiWasConnected) {
+      _wifiWasConnected = false;
+      Serial.println("WiFi lost, reconnecting in background");
+    }
+
+    unsigned long now = millis();
+    if (now - _lastWifiReconnectAt < 10000) {
+      return;
+    }
+
+    _lastWifiReconnectAt = now;
+    WiFi.disconnect(false);
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   }
 
   void addDefaultSchedules() {

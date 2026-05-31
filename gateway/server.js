@@ -1188,6 +1188,8 @@ app.post('/chat', async (req, res) => {
             'If user gives a name, preference, or rule to remember, include "memory":"short memory text" in the JSON.',
             'For "mode tidur", turn lamp/rgb/tv off and optionally set alarm if user asks.',
             'For "buka pintu", use {"device":"door","state":"open"}.',
+            'If user says they want to wake up at a time, set the alarm to that time. Example: "gua mau bangun jam 04.00" => {"device":"alarm","enabled":true,"hour":4,"minute":0}.',
+            'When setting an alarm, keep reply short and mention the selected time.',
             deviceText ? `Current device state: ${deviceText}` : '',
             memoryText ? `Relevant long-term memories: ${memoryText}` : '',
             realtime ? `Realtime search context: ${JSON.stringify(realtime).slice(0, 3500)}` : ''
@@ -1201,7 +1203,11 @@ app.post('/chat', async (req, res) => {
 
     const raw = completion.choices[0]?.message?.content || '{"reply":"Tidak ada respons.","commands":[]}';
     const parsed = JSON.parse(raw);
-    const commands = normalizeCommands(parsed.commands || parsed.command);
+    let commands = normalizeCommands(parsed.commands || parsed.command);
+    const alarmIntent = extractAlarmIntent(userMessage);
+    if (alarmIntent && !hasAlarmCommand(commands)) {
+      commands.push(alarmIntent);
+    }
     const reply = String(parsed.reply || 'Siap.');
     const memoryToSave = teachMemory || parsed.memory || '';
     let queued = [];
@@ -1236,6 +1242,38 @@ app.post('/chat', async (req, res) => {
 function normalizeCommands(value) {
   const input = Array.isArray(value) ? value : value ? [value] : [];
   return input.map(normalizeCommand).filter(Boolean);
+}
+
+function extractAlarmIntent(message) {
+  const text = String(message || '').toLowerCase();
+  if (!/(bangun|alarm|ingatkan|wake|jadwal)/i.test(text)) {
+    return null;
+  }
+
+  const match = text.match(/(?:jam|pukul|at)?\s*(\d{1,2})(?:[.:](\d{1,2}))?/i);
+  if (!match) {
+    return null;
+  }
+
+  let hour = Number(match[1]);
+  const minute = match[2] === undefined ? 0 : Number(match[2]);
+  if (!Number.isInteger(hour) || !Number.isInteger(minute)) {
+    return null;
+  }
+
+  if (/(malam|pm)/i.test(text) && hour >= 1 && hour <= 11) {
+    hour += 12;
+  }
+
+  if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+    return null;
+  }
+
+  return { device: 'alarm', enabled: true, hour, minute };
+}
+
+function hasAlarmCommand(commands = []) {
+  return commands.some((command) => command.device === 'alarm');
 }
 
 function normalizeCommand(command) {
