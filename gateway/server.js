@@ -55,7 +55,7 @@ app.get('/', (req, res) => {
           .pad { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px; }
           .pad button { margin:0; min-height:48px; font-size:18px; }
           #error { min-height:18px; margin-top:12px; text-align:center; color:#ff8b8b; font-size:13px; }
-          .app-shell { width:min(1440px,100%); height:100vh; display:grid; grid-template-columns:260px minmax(0,1fr) 340px; gap:0; padding:0; }
+          .app-shell { width:min(1440px,100%); height:100vh; display:grid; grid-template-columns:260px minmax(0,1fr); gap:0; padding:0; }
           .sidebar { border-right:1px solid #103848; background:#020609; padding:18px 14px; display:flex; flex-direction:column; gap:14px; }
           .brand-row { display:flex; align-items:center; gap:11px; padding:4px 6px 14px; border-bottom:1px solid #103848; }
           .logo-mark { width:42px; height:42px; border-radius:50%; display:grid; place-items:center; overflow:hidden; background:#10ddea; box-shadow:0 0 22px #10ddea77; }
@@ -63,8 +63,11 @@ app.get('/', (req, res) => {
           .nav-item { padding:12px; border-radius:8px; color:#e9fbff; background:transparent; border:0; text-align:left; margin:0; min-height:0; font-weight:700; }
           .nav-item.active, .nav-item:hover { background:#16242b; }
           .side-bottom { margin-top:auto; display:grid; gap:8px; }
-          .chat-pane { display:grid; grid-template-rows:auto 1fr auto; min-width:0; background:#05090d; }
+          .chat-pane { display:grid; grid-template-rows:auto 1fr; min-width:0; background:#05090d; }
           .topbar { height:62px; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:0 22px; border-bottom:1px solid #12222b; }
+          .page { display:none; min-height:0; overflow:auto; padding:24px; }
+          .page.active { display:block; }
+          .chat-page.active { display:grid; grid-template-rows:1fr auto; padding:0; overflow:hidden; }
           .chat-log { overflow:auto; padding:28px max(22px,8vw); display:flex; flex-direction:column; gap:18px; }
           .bubble { max-width:760px; line-height:1.55; padding:14px 16px; border-radius:8px; white-space:pre-wrap; }
           .bubble.assistant { align-self:flex-start; background:transparent; border-left:2px solid #10ddea; }
@@ -72,7 +75,13 @@ app.get('/', (req, res) => {
           .composer { margin:0 max(16px,8vw) 22px; background:#202124; border:1px solid #33383d; border-radius:8px; padding:10px; display:grid; grid-template-columns:1fr auto auto; gap:8px; align-items:center; }
           .composer input { border:0; background:transparent; min-height:44px; font-size:16px; }
           .icon-btn { width:48px; min-width:48px; border-radius:50%; margin:0; padding:0; }
-          .tools-pane { border-left:1px solid #103848; background:#03080c; padding:16px; overflow:auto; }
+          .tools-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:14px; }
+          .alarm-page { max-width:720px; margin:0 auto; }
+          .alarm-hero { border:1px solid #173746; background:linear-gradient(180deg,#07131a,#03080c); border-radius:8px; padding:22px; }
+          .alarm-time { font-size:clamp(58px,12vw,116px); line-height:1; text-align:center; letter-spacing:4px; margin:26px 0; }
+          .alarm-settings { border-top:1px solid #26343b; padding-top:16px; display:grid; gap:12px; }
+          .settings-list { display:grid; gap:12px; max-width:760px; }
+          .settings-row { border:1px solid #173746; background:#07131a; border-radius:8px; padding:14px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
           .tools-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; }
           .tool-card { border:1px solid #173746; background:#07131a; border-radius:8px; padding:13px; margin-bottom:10px; }
           .tool-title { display:flex; justify-content:space-between; align-items:center; gap:8px; font-weight:900; margin-bottom:9px; }
@@ -89,7 +98,7 @@ app.get('/', (req, res) => {
           .days span { text-align:center; color:#aaa; font-size:13px; }
           .field { display:grid; gap:6px; margin:12px 0; color:#aaa; }
           .field input { width:100%; }
-          @media (max-width:980px) { .app-shell { height:auto; min-height:100vh; grid-template-columns:1fr; } .sidebar { display:none; } .tools-pane { border-left:0; border-top:1px solid #103848; } .chat-pane { min-height:68vh; } }
+          @media (max-width:980px) { .app-shell { height:auto; min-height:100vh; grid-template-columns:1fr; } .sidebar { display:none; } .chat-pane { min-height:100vh; } }
           @media (max-width:560px) { header { align-items:flex-start; flex-direction:column; } .pill { width:100%; text-align:center; } .composer { grid-template-columns:1fr auto; } .composer .primary { grid-column:1 / -1; width:100%; border-radius:7px; } .time-row { font-size:42px; } .time-row input { width:72px; font-size:36px; } }
         </style>
       </head>
@@ -113,10 +122,10 @@ app.get('/', (req, res) => {
         <main class="app-shell">
           <aside class="sidebar">
             <div class="brand-row"><div class="logo-mark"><img src="/assets/logo.png" alt="Smart Room logo"></div><div><b>Smart Room</b><div class="sub">AI Cloud</div></div></div>
-            <button class="nav-item active">Chat AI</button>
-            <button class="nav-item">Tools</button>
-            <button class="nav-item">Alarm</button>
-            <button class="nav-item">Settings</button>
+            <button class="nav-item active" data-page="chat" onclick="showPage('chat')">Chat AI</button>
+            <button class="nav-item" data-page="tools" onclick="showPage('tools')">Tools</button>
+            <button class="nav-item" data-page="alarm" onclick="showPage('alarm')">Alarm</button>
+            <button class="nav-item" data-page="settings" onclick="showPage('settings')">Settings</button>
             <div class="side-bottom">
               <div class="pill" id="espStatus" style="border-color:#551111;color:#ff5555;background:#1a0505;">ESP Offline</div>
               <div class="pill" id="status">Cloud ready</div>
@@ -124,32 +133,55 @@ app.get('/', (req, res) => {
             </div>
           </aside>
           <section class="chat-pane">
-            <div class="topbar"><div><b>Smart Room AI</b><div class="sub">Ask, command, or use voice</div></div><button class="dark" onclick="clearPending()" style="max-width:150px;margin:0">CLEAR PENDING</button></div>
-            <div class="chat-log" id="chatLog">
-              <div class="bubble assistant">Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk memberi perintah.</div>
-            </div>
-            <div class="composer">
-              <input id="cmd" placeholder="Ask anything or command your room">
-              <button class="icon-btn blue" onclick="voiceAi()" title="Voice AI">🎙</button>
-              <button class="icon-btn primary" onclick="askAi()" title="Send">➜</button>
-            </div>
-            <div id="reply" style="display:none">Gateway ready</div>
+            <div class="topbar"><div><b id="pageTitle">Smart Room AI</b><div class="sub" id="pageSubtitle">Ask, command, or use voice</div></div><button class="dark" id="clearButton" onclick="clearPending()" style="max-width:150px;margin:0">CLEAR PENDING</button></div>
+            <section class="page chat-page active" id="chatPage">
+              <div class="chat-log" id="chatLog">
+                <div class="bubble assistant">Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk memberi perintah.</div>
+              </div>
+              <div class="composer">
+                <input id="cmd" placeholder="Ask anything or command your room">
+                <button class="icon-btn blue" onclick="voiceAi()" title="Voice AI">🎙</button>
+                <button class="icon-btn primary" onclick="askAi()" title="Send">➜</button>
+              </div>
+              <div id="reply" style="display:none">Gateway ready</div>
+            </section>
+            <section class="page" id="toolsPage">
+              <div class="tools-head"><h2 style="margin:0">Device Tools</h2><button class="dark" onclick="checkEspStatus()" style="max-width:96px;margin:0">REFRESH</button></div>
+              <div class="tools-grid">
+                <article class="tool-card"><div class="tool-title">Desk Lamp <span class="state-chip" id="lampState">OFF</span></div><div class="tool-actions"><button class="primary" onclick="queue({device:'lamp',state:'on'})">ON</button><button class="dark" onclick="queue({device:'lamp',state:'off'})">OFF</button></div></article>
+                <article class="tool-card"><div class="tool-title">RGB Room <span class="state-chip" id="rgbState">OFF</span></div><div class="row"><input id="color" type="color" value="#10ddea"><button class="blue" onclick="rgbColor()">SET COLOR</button></div><div class="tool-actions"><button class="primary" onclick="queue({device:'rgb',state:'on'})">ON</button><button class="dark" onclick="queue({device:'rgb',state:'off'})">OFF</button></div></article>
+                <article class="tool-card"><div class="tool-title">Smart Door <span class="state-chip" id="doorState">CLOSED</span></div><div class="tool-actions"><button class="primary" onclick="queue({device:'door',state:'open'})">OPEN</button><button class="dark" onclick="queue({device:'door',state:'close'})">CLOSE</button></div></article>
+                <article class="tool-card"><div class="tool-title">Smart TV <span class="state-chip" id="tvState">OFF</span></div><div class="tool-actions"><button class="primary" onclick="queue({device:'tv',state:'on'})">ON</button><button class="dark" onclick="queue({device:'tv',state:'off'})">OFF</button></div></article>
+              </div>
+            </section>
+            <section class="page alarm-page" id="alarmPage">
+              <div class="alarm-hero">
+                <div class="tool-title">Alarm <span class="state-chip" id="alarmState">OFF</span></div>
+                <div class="alarm-time" id="alarmDisplay">06:00</div>
+                <div class="alarm-settings">
+                  <div class="days"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
+                  <label class="field">Alarm name <input id="alarmName" value="Smart Room Alarm"></label>
+                  <button class="primary" onclick="openAlarmSheet()">ADD / EDIT ALARM</button>
+                  <button class="dark" onclick="queue({device:'buzzer',state:'off'})">STOP BUZZER</button>
+                </div>
+              </div>
+            </section>
+            <section class="page" id="settingsPage">
+              <div class="settings-list">
+                <div class="settings-row"><div><b>Cloud Gateway</b><div class="sub">Vercel remote control</div></div><span class="state-chip on">ACTIVE</span></div>
+                <div class="settings-row"><div><b>Realtime Polling</b><div class="sub">ESP checks cloud about every 2 seconds</div></div><span class="state-chip on">2 SEC</span></div>
+                <div class="settings-row"><div><b>Local ESP Dashboard</b><div class="sub">IP address shows firmware dashboard, so upload sketch after local UI changes</div></div><span class="state-chip">LOCAL</span></div>
+                <button class="dark" onclick="clearPending()">CLEAR PENDING COMMANDS</button>
+              </div>
+            </section>
           </section>
-          <aside class="tools-pane">
-            <div class="tools-head"><h2 style="margin:0">Tools</h2><button class="dark" onclick="checkEspStatus()" style="max-width:96px;margin:0">REFRESH</button></div>
-            <article class="tool-card"><div class="tool-title">Desk Lamp <span class="state-chip" id="lampState">OFF</span></div><div class="tool-actions"><button class="primary" onclick="queue({device:'lamp',state:'on'})">ON</button><button class="dark" onclick="queue({device:'lamp',state:'off'})">OFF</button></div></article>
-            <article class="tool-card"><div class="tool-title">RGB Room <span class="state-chip" id="rgbState">OFF</span></div><div class="row"><input id="color" type="color" value="#10ddea"><button class="blue" onclick="rgbColor()">SET</button></div><div class="tool-actions"><button class="primary" onclick="queue({device:'rgb',state:'on'})">ON</button><button class="dark" onclick="queue({device:'rgb',state:'off'})">OFF</button></div></article>
-            <article class="tool-card"><div class="tool-title">Smart Door <span class="state-chip" id="doorState">CLOSED</span></div><div class="tool-actions"><button class="primary" onclick="queue({device:'door',state:'open'})">OPEN</button><button class="dark" onclick="queue({device:'door',state:'close'})">CLOSE</button></div></article>
-            <article class="tool-card"><div class="tool-title">Smart TV <span class="state-chip" id="tvState">OFF</span></div><div class="tool-actions"><button class="primary" onclick="queue({device:'tv',state:'on'})">ON</button><button class="dark" onclick="queue({device:'tv',state:'off'})">OFF</button></div></article>
-            <article class="tool-card"><div class="tool-title">Alarm <span class="state-chip" id="alarmState">OFF</span></div><div class="alarm-display" id="alarmDisplay">06:00</div><button class="primary" onclick="openAlarmSheet()">ADD ALARM</button><button class="dark" onclick="queue({device:'buzzer',state:'off'})">STOP BUZZER</button></article>
-          </aside>
         </main>
         <div class="modal" id="alarmModal">
           <section class="sheet">
             <div class="tools-head"><h2 style="margin:0">Alarm</h2><button class="dark" onclick="closeAlarmSheet()" style="max-width:82px;margin:0">CLOSE</button></div>
             <div class="time-row"><input id="alarmHour" type="number" min="0" max="23" value="06"><span>:</span><input id="alarmMinute" type="number" min="0" max="59" value="00"></div>
             <div class="days"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
-            <label class="field">Alarm name <input id="alarmName" value="Smart Room Alarm"></label>
+            <label class="field">Alarm name <input id="alarmNameSheet" value="Smart Room Alarm"></label>
             <button class="primary" onclick="saveAlarmSheet()">SAVE ALARM</button>
           </section>
         </div>
@@ -183,6 +215,22 @@ app.get('/', (req, res) => {
           function lockAgain() { sessionStorage.removeItem(AUTH); sessionStorage.removeItem('smart_room_pin'); redraw(); }
           pin.addEventListener('input', () => { pin.value = pin.value.replace(/\\D/g, '').slice(0, 4); redraw(); });
           pin.addEventListener('keydown', (event) => { if (event.key === 'Enter') unlock(); });
+          const pageMeta = {
+            chat: ['Smart Room AI', 'Ask, command, or use voice'],
+            tools: ['Tools', 'Control each device and see realtime status'],
+            alarm: ['Alarm', 'Set schedule and stop buzzer'],
+            settings: ['Settings', 'Cloud, realtime, and local dashboard info']
+          };
+          function showPage(name) {
+            const meta = pageMeta[name] || pageMeta.chat;
+            pageTitle.textContent = meta[0];
+            pageSubtitle.textContent = meta[1];
+            clearButton.style.display = name === 'chat' || name === 'settings' ? 'block' : 'none';
+            document.querySelectorAll('.page').forEach((page) => page.classList.remove('active'));
+            document.getElementById(name + 'Page').classList.add('active');
+            document.querySelectorAll('.nav-item').forEach((item) => item.classList.toggle('active', item.dataset.page === name));
+            if (name !== 'chat') checkEspStatus();
+          }
           function setStatus(text) {
             document.getElementById('status').textContent = text;
           }
