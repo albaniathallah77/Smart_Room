@@ -1,4 +1,5 @@
 Config.h
 gateway/.env
 gateway/node_modules/
+gateway/.vercel/
 *.tmp
