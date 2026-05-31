@@ -24,10 +24,45 @@ create table if not exists device_events (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
-alter publication supabase_realtime add table conversation;
-alter publication supabase_realtime add table user_memory;
-alter publication supabase_realtime add table device_events;
+create table if not exists commands (
+  id uuid default gen_random_uuid() primary key,
+  payload jsonb not null,
+  source text default 'remote' not null,
+  message text default '',
+  executed boolean default false not null,
+  executed_at timestamp with time zone,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+do $$
+begin
+  alter publication supabase_realtime add table conversation;
+exception
+  when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table user_memory;
+exception
+  when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table device_events;
+exception
+  when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table commands;
+exception
+  when duplicate_object then null;
+end $$;
 
 alter table conversation disable row level security;
 alter table user_memory disable row level security;
 alter table device_events disable row level security;
+alter table commands disable row level security;

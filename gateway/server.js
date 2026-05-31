@@ -16,35 +16,146 @@ app.get('/', (req, res) => {
     <html>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Smart Room AI Gateway</title>
+        <title>Smart Room Cloud</title>
         <style>
-          body {
-            margin: 0;
-            min-height: 100vh;
-            display: grid;
-            place-items: center;
-            background: radial-gradient(circle at 50% 20%, #0b7185 0, #03151c 38%, #02070b 80%);
-            color: #e9fbff;
-            font-family: Inter, system-ui, sans-serif;
-          }
-          main {
-            width: min(520px, calc(100% - 32px));
-            border: 1px solid #20e8ff66;
-            border-radius: 8px;
-            padding: 26px;
-            background: linear-gradient(180deg, #08232e, #030b10);
-            box-shadow: 0 24px 70px #000b, 0 0 46px #10ddea33;
-          }
-          h1 { margin: 0 0 8px; font-size: 30px; }
-          p { color: #7fefff; line-height: 1.5; }
-          code { color: #20f3ff; }
+          :root { color-scheme: dark; font-family: Inter, system-ui, sans-serif; background:#02070b; color:#e9fbff; }
+          * { box-sizing:border-box; }
+          body { margin:0; min-height:100vh; background:radial-gradient(circle at 24% 8%,#07323b 0,#02070b 38%), linear-gradient(135deg,#02070b,#061019); }
+          main { width:min(980px, calc(100% - 28px)); margin:auto; padding:24px 0 32px; }
+          header { display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:16px; border-bottom:1px solid #103848; padding-bottom:16px; }
+          h1 { margin:0; font-size:clamp(26px,5vw,42px); line-height:1; }
+          .sub { color:#7fefff; margin-top:7px; font-size:14px; }
+          .pill { border:1px solid #126172; color:#7ff7ff; padding:8px 10px; border-radius:7px; background:#061a22; white-space:nowrap; font-size:13px; }
+          .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:12px; }
+          .card { border:1px solid #115468; background:linear-gradient(180deg,#08202a,#061018); border-radius:8px; padding:15px; box-shadow:0 12px 28px #0008, inset 0 1px #22e6ff22; min-height:142px; }
+          h2 { margin:0 0 13px; font-size:17px; display:flex; justify-content:space-between; gap:8px; }
+          button, input { border:1px solid #177189; background:#071822; color:#e9fbff; border-radius:7px; padding:11px 12px; font:inherit; min-height:42px; }
+          button { cursor:pointer; width:100%; margin-top:8px; font-weight:800; }
+          .primary { background:#08cfe3; border-color:#14efff; color:#001015; }
+          .blue { background:#087cff; border-color:#3295ff; color:white; }
+          .dark { background:#020507; border-color:#1a3944; }
+          .row { display:flex; gap:8px; align-items:center; }
+          .row > * { flex:1; min-width:0; }
+          input[type=color] { height:42px; padding:2px; }
+          #cmd { width:100%; }
+          #reply { min-height:18px; margin-top:10px; color:#7fefff; font-size:13px; line-height:1.35; }
+          .locked main { filter:blur(12px); pointer-events:none; user-select:none; }
+          .lock { position:fixed; inset:0; z-index:10; display:grid; place-items:center; padding:18px; background:radial-gradient(circle at 50% 18%,#0b7185 0,#03151c 34%,#02070b 72%); }
+          .lock.hidden { display:none; }
+          .panel { width:min(420px,100%); border:1px solid #20e8ff66; background:linear-gradient(180deg,#08232e,#030b10); border-radius:8px; padding:24px; box-shadow:0 24px 70px #000b, 0 0 46px #10ddea33, inset 0 1px #69f6ff33; }
+          .panel h1 { text-align:center; font-size:28px; }
+          .panel p { text-align:center; color:#7fefff; }
+          .dots { display:flex; justify-content:center; gap:9px; margin:12px 0 16px; }
+          .dots span { width:13px; height:13px; border-radius:50%; border:1px solid #21e9ff99; background:#03131a; }
+          .dots span.on { background:#10ddea; box-shadow:0 0 16px #10ddea; }
+          #pin { width:100%; text-align:center; font-size:22px; letter-spacing:8px; font-weight:800; }
+          .pad { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px; }
+          .pad button { margin:0; min-height:48px; font-size:18px; }
+          #error { min-height:18px; margin-top:12px; text-align:center; color:#ff8b8b; font-size:13px; }
+          @media (max-width:560px) { header { align-items:flex-start; flex-direction:column; } .pill { width:100%; text-align:center; } }
         </style>
       </head>
-      <body>
+      <body class="locked">
+        <div class="lock" id="lock">
+          <section class="panel">
+            <h1>Smart Room</h1>
+            <p>Enter PIN to control from cloud</p>
+            <div class="dots" id="dots"><span></span><span></span><span></span><span></span></div>
+            <input id="pin" inputmode="numeric" maxlength="8" type="password" placeholder="PIN">
+            <div class="pad">
+              <button onclick="press('1')">1</button><button onclick="press('2')">2</button><button onclick="press('3')">3</button>
+              <button onclick="press('4')">4</button><button onclick="press('5')">5</button><button onclick="press('6')">6</button>
+              <button onclick="press('7')">7</button><button onclick="press('8')">8</button><button onclick="press('9')">9</button>
+              <button onclick="back()">DEL</button><button onclick="press('0')">0</button><button class="primary" onclick="unlock()">OK</button>
+            </div>
+            <div id="error"></div>
+          </section>
+        </div>
         <main>
-          <h1>Smart Room AI Gateway</h1>
-          <p>Gateway is online. Use <code>/health</code> to check Groq and Supabase env status.</p>
+          <header>
+            <div>
+              <h1>Smart Room Cloud</h1>
+              <div class="sub">Remote control via Vercel + Supabase</div>
+            </div>
+            <div class="row" style="flex:0 0 auto">
+              <div class="pill" id="status">Cloud ready</div>
+              <button class="dark" onclick="lockAgain()" style="margin:0;max-width:92px">LOCK</button>
+            </div>
+          </header>
+          <section class="grid">
+            <article class="card"><h2>Desk Lamp</h2><button class="primary" onclick="queue({device:'lamp',state:'on'})">ON</button><button class="dark" onclick="queue({device:'lamp',state:'off'})">OFF</button></article>
+            <article class="card"><h2>RGB Room</h2><div class="row"><input id="color" type="color" value="#10ddea"><button class="blue" onclick="rgbColor()">SET</button></div><button class="primary" onclick="queue({device:'rgb',state:'on'})">ON</button><button class="dark" onclick="queue({device:'rgb',state:'off'})">OFF</button></article>
+            <article class="card"><h2>Smart Door</h2><button class="primary" onclick="queue({device:'door',state:'open'})">OPEN</button><button class="dark" onclick="queue({device:'door',state:'close'})">CLOSE</button></article>
+            <article class="card"><h2>Smart TV</h2><button class="primary" onclick="queue({device:'tv',state:'on'})">ON</button><button class="dark" onclick="queue({device:'tv',state:'off'})">OFF</button></article>
+            <article class="card"><h2>Alarm</h2><div class="row"><input id="alarmTime" type="time" value="06:00"><button class="blue" onclick="setAlarm()">SET</button></div><button class="dark" onclick="queue({device:'buzzer',state:'off'})">STOP</button></article>
+            <article class="card"><h2>AI Command</h2><input id="cmd" placeholder="mode tidur"><button class="primary" onclick="askAi()">ASK AI</button><div id="reply">Gateway ready</div></article>
+          </section>
         </main>
+        <script>
+          const AUTH = 'smart_room_cloud_pin';
+          const unlocked = () => sessionStorage.getItem(AUTH) === '1';
+          const pinValue = () => sessionStorage.getItem('smart_room_pin') || '';
+          function redraw() {
+            const isOpen = unlocked();
+            document.body.classList.toggle('locked', !isOpen);
+            lock.classList.toggle('hidden', isOpen);
+            [...dots.children].forEach((dot, i) => dot.classList.toggle('on', i < pin.value.length));
+            if (!isOpen) setTimeout(() => pin.focus(), 80);
+          }
+          function press(n) { pin.value = (pin.value + n).slice(0, 4); error.textContent = ''; redraw(); if (pin.value.length === 4) unlock(); }
+          function back() { pin.value = pin.value.slice(0, -1); error.textContent = ''; redraw(); }
+          async function unlock() {
+            const value = pin.value;
+            const response = await fetch('/auth', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({pin:value})});
+            if (response.ok) {
+              sessionStorage.setItem(AUTH, '1');
+              sessionStorage.setItem('smart_room_pin', value);
+              pin.value = '';
+              redraw();
+            } else {
+              error.textContent = 'PIN salah';
+              pin.value = '';
+              redraw();
+            }
+          }
+          function lockAgain() { sessionStorage.removeItem(AUTH); sessionStorage.removeItem('smart_room_pin'); redraw(); }
+          pin.addEventListener('input', () => { pin.value = pin.value.replace(/\\D/g, '').slice(0, 4); redraw(); });
+          pin.addEventListener('keydown', (event) => { if (event.key === 'Enter') unlock(); });
+          async function queue(command) {
+            if (!unlocked()) return;
+            status.textContent = 'Sending...';
+            const response = await fetch('/remote/command', {
+              method:'POST',
+              headers:{'Content-Type':'application/json'},
+              body:JSON.stringify({pin:pinValue(), command})
+            });
+            const result = await response.json().catch(() => ({}));
+            status.textContent = response.ok && result.ok ? 'Command queued' : (result.error || 'Failed');
+          }
+          function rgbColor() {
+            const hex = color.value.slice(1);
+            queue({device:'rgb', r:parseInt(hex.slice(0,2),16), g:parseInt(hex.slice(2,4),16), b:parseInt(hex.slice(4,6),16)});
+          }
+          function setAlarm() {
+            const [hour, minute] = alarmTime.value.split(':').map(Number);
+            queue({device:'alarm', enabled:true, hour, minute});
+          }
+          async function askAi() {
+            if (!unlocked() || !cmd.value.trim()) return;
+            const message = cmd.value.trim();
+            cmd.value = '';
+            reply.textContent = 'AI thinking...';
+            const response = await fetch('/chat', {
+              method:'POST',
+              headers:{'Content-Type':'application/json'},
+              body:JSON.stringify({pin:pinValue(), message, queue:true})
+            });
+            const result = await response.json().catch(() => ({}));
+            reply.textContent = result.reply || result.error || 'AI failed';
+            status.textContent = response.ok && result.ok ? 'AI command queued' : 'AI failed';
+          }
+          redraw();
+        </script>
       </body>
     </html>
   `);
@@ -96,6 +207,23 @@ function createSupabaseClient() {
 
 function getMessageText(body) {
   return String(body.message || body.prompt || body.text || '').trim();
+}
+
+function validateDashboardPin(pin) {
+  return String(pin || '') === String(process.env.DASHBOARD_PIN || '2407');
+}
+
+function validateDeviceToken(token) {
+  const expected = String(process.env.DEVICE_TOKEN || '').trim();
+  return expected && String(token || '').trim() === expected;
+}
+
+function getDeviceToken(req) {
+  const header = String(req.get('authorization') || '');
+  if (header.toLowerCase().startsWith('bearer ')) {
+    return header.slice(7).trim();
+  }
+  return String(req.body.token || req.query.token || '').trim();
 }
 
 function extractTeachMemory(message, teachMode = false) {
@@ -224,6 +352,40 @@ async function saveDeviceEvent(message, commands) {
   if (rows.length) await supabase.from('device_events').insert(rows);
 }
 
+async function queueCommands(commands, source = 'remote', message = '') {
+  if (!supabase) {
+    throw new Error('Supabase env belum lengkap.');
+  }
+
+  const rows = commands.map((command) => ({
+    payload: command,
+    source,
+    message
+  }));
+
+  if (!rows.length) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from('commands')
+    .insert(rows)
+    .select('id, payload');
+
+  if (error) throw error;
+  await saveDeviceEvent(message, commands);
+  return data || [];
+}
+
+app.post('/auth', (req, res) => {
+  if (!validateDashboardPin(req.body.pin)) {
+    res.status(401).json({ ok: false, error: 'PIN salah' });
+    return;
+  }
+
+  res.json({ ok: true });
+});
+
 app.post('/search', async (req, res) => {
   const query = String(req.body.query || '').trim();
   if (!query) {
@@ -274,6 +436,78 @@ app.delete('/memory', async (req, res) => {
   }
 
   res.json({ ok: true });
+});
+
+app.post('/remote/command', async (req, res) => {
+  try {
+    if (!validateDashboardPin(req.body.pin)) {
+      res.status(401).json({ ok: false, error: 'PIN salah' });
+      return;
+    }
+
+    const command = normalizeCommand(req.body.command || req.body);
+    if (!command) {
+      res.status(400).json({ ok: false, error: 'Command tidak dikenal.' });
+      return;
+    }
+
+    const queued = await queueCommands([command], 'remote', 'remote dashboard');
+    res.json({ ok: true, queued });
+  } catch (error) {
+    console.error('Remote command failed:', error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+app.post('/device/poll', async (req, res) => {
+  try {
+    if (!validateDeviceToken(getDeviceToken(req))) {
+      res.status(401).json({ ok: false, error: 'DEVICE_TOKEN salah atau belum diset.' });
+      return;
+    }
+    if (!supabase) {
+      res.status(500).json({ ok: false, error: 'Supabase env belum lengkap.' });
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('commands')
+      .select('id, payload, source, message, created_at')
+      .eq('executed', false)
+      .order('created_at', { ascending: true })
+      .limit(5);
+
+    if (error) throw error;
+    res.json({ ok: true, commands: data || [] });
+  } catch (error) {
+    console.error('Device poll failed:', error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+app.post('/device/ack', async (req, res) => {
+  try {
+    if (!validateDeviceToken(getDeviceToken(req))) {
+      res.status(401).json({ ok: false, error: 'DEVICE_TOKEN salah atau belum diset.' });
+      return;
+    }
+    const id = String(req.body.id || '').trim();
+    if (!id) {
+      res.status(400).json({ ok: false, error: 'command id is required' });
+      return;
+    }
+
+    const { error } = await supabase
+      .from('commands')
+      .update({ executed: true, executed_at: new Date().toISOString() })
+      .eq('id', id);
+
+    if (error) throw error;
+    res.json({ ok: true });
+  } catch (error) {
+    console.error('Device ack failed:', error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
 });
 
 app.post('/chat', async (req, res) => {
@@ -336,6 +570,14 @@ app.post('/chat', async (req, res) => {
     const commands = normalizeCommands(parsed.commands || parsed.command);
     const reply = String(parsed.reply || 'Siap.');
     const memoryToSave = teachMemory || parsed.memory || '';
+
+    if (req.body.queue === true) {
+      if (!validateDashboardPin(req.body.pin)) {
+        res.status(401).json({ ok: false, reply: 'PIN salah.', commands: [] });
+        return;
+      }
+      await queueCommands(commands, 'ai', userMessage);
+    }
 
     if (commands.length && process.env.ESP32_BASE_URL) {
       for (const command of commands) {

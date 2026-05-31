@@ -13,6 +13,7 @@
 #include "core/CommandParser.h"
 #include "core/Scheduler.h"
 #include "web/WebServerManager.h"
+#include "cloud/CloudCommandClient.h"
 
 class SmartRoomSystem {
 public:
@@ -28,6 +29,7 @@ public:
 
     _scheduler.begin(handleScheduledAction, this);
     _web.begin(handleCommandPayload, this);
+    _cloud.begin(handleCommandPayload, this);
 
     addDefaultSchedules();
     Serial.println("Smart Room AI System ready");
@@ -37,6 +39,7 @@ public:
 
   void loop() {
     _web.loop(_state);
+    _cloud.loop();
     _door.loop();
     updateDoorAutoClose();
     updateAlarm();
@@ -55,6 +58,7 @@ private:
   CommandParser _parser;
   Scheduler _scheduler;
   WebServerManager _web;
+  CloudCommandClient _cloud;
   unsigned long _doorOpenedAt = 0;
 
   void connectWifi() {

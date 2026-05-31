@@ -11,7 +11,10 @@
 #define AI_GATEWAY_URL "https://your-smart-room-gateway.vercel.app"
 
 // Local dashboard PIN. Change this in Config.h.
-#define WEB_DASHBOARD_PIN "1234"
+#define WEB_DASHBOARD_PIN "2008"
+
+// Token for ESP32 cloud command polling. Set the same value in Vercel as DEVICE_TOKEN.
+#define CLOUD_DEVICE_TOKEN "change-this-device-token"
 
 #define ROOM_NAME "Smart Room AI System"
 #define TIMEZONE_OFFSET_SECONDS 25200
