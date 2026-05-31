@@ -1,0 +1,4 @@
+Config.h
+gateway/.env
+gateway/node_modules/
+*.tmp
