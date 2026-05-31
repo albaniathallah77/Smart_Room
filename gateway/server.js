@@ -75,7 +75,22 @@ app.get('/', (req, res) => {
           .composer { margin:0 max(16px,8vw) 22px; background:#202124; border:1px solid #33383d; border-radius:8px; padding:10px; display:grid; grid-template-columns:1fr auto auto; gap:8px; align-items:center; }
           .composer input { border:0; background:transparent; min-height:44px; font-size:16px; }
           .icon-btn { width:48px; min-width:48px; border-radius:50%; margin:0; padding:0; }
-          .tools-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:14px; }
+          .tools-page-head { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:18px; }
+          .tools-page-head h2 { margin:0 0 4px; font-size:24px; }
+          .tools-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(270px,1fr)); gap:16px; }
+          .tool-card.device-card { min-height:210px; display:flex; flex-direction:column; justify-content:space-between; background:linear-gradient(180deg,#081923,#040b10); }
+          .tool-top { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:14px; }
+          .tool-identity { display:flex; gap:12px; align-items:center; min-width:0; }
+          .device-icon { width:44px; height:44px; border-radius:8px; display:grid; place-items:center; flex:0 0 auto; color:#001015; font-size:13px; font-weight:950; background:#10ddea; box-shadow:0 10px 28px #10ddea24; }
+          .device-icon.blue-icon { background:#2087ff; color:white; box-shadow:0 10px 28px #2087ff22; }
+          .device-icon.green-icon { background:#19e58b; color:#00140b; box-shadow:0 10px 28px #19e58b22; }
+          .device-icon.gold-icon { background:#f1b33b; color:#130c00; box-shadow:0 10px 28px #f1b33b22; }
+          .tool-copy b { display:block; font-size:17px; margin-bottom:4px; }
+          .tool-desc { color:#89aab4; font-size:13px; line-height:1.35; }
+          .control-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+          .color-control { display:grid; grid-template-columns:72px 1fr; gap:10px; margin-bottom:10px; }
+          .color-control input[type=color] { width:100%; }
+          .mobile-nav { display:none; }
           .alarm-page { max-width:760px; margin:0 auto; }
           .alarm-hero { border:1px solid #174a5a; background:radial-gradient(circle at 50% 0,#0a3140 0,#07131a 42%,#03080c 100%); border-radius:8px; padding:24px; box-shadow:0 24px 70px #0008, inset 0 1px #5befff22; }
           .alarm-picker { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:22px 0 24px; }
@@ -108,8 +123,8 @@ app.get('/', (req, res) => {
           .days span.active { color:#001015; background:#10ddea; border-color:#10ddea; font-weight:900; }
           .field { display:grid; gap:6px; margin:12px 0; color:#aaa; }
           .field input { width:100%; }
-          @media (max-width:980px) { .app-shell { height:auto; min-height:100vh; grid-template-columns:1fr; } .sidebar { display:none; } .chat-pane { min-height:100vh; } }
-          @media (max-width:560px) { header { align-items:flex-start; flex-direction:column; } .pill { width:100%; text-align:center; } .composer { grid-template-columns:1fr auto; } .composer .primary { grid-column:1 / -1; width:100%; border-radius:7px; } .time-row { font-size:42px; } .time-row input { width:72px; font-size:36px; } .alarm-actions { grid-template-columns:1fr; } .alarm-picker { gap:10px; } .picker-list { height:156px; } }
+          @media (max-width:980px) { body { padding-bottom:72px; } .app-shell { height:auto; min-height:100vh; grid-template-columns:1fr; } .sidebar { display:none; } .chat-pane { min-height:100vh; } .page { padding:18px; } .topbar { height:58px; padding:0 16px; } .mobile-nav { position:fixed; left:12px; right:12px; bottom:12px; z-index:7; display:grid; grid-template-columns:repeat(4,1fr); gap:6px; padding:7px; border:1px solid #174a5a; border-radius:8px; background:#02090dcc; backdrop-filter:blur(12px); box-shadow:0 18px 46px #000c; } .mobile-nav button { min-height:46px; margin:0; padding:8px 4px; font-size:12px; border-radius:7px; } .mobile-nav button.active { background:#10ddea; color:#001015; border-color:#10ddea; } .locked .mobile-nav { display:none; } }
+          @media (max-width:560px) { header { align-items:flex-start; flex-direction:column; } .pill { width:100%; text-align:center; } .composer { grid-template-columns:1fr auto; margin:0 12px 16px; } .composer .primary { grid-column:1 / -1; width:100%; border-radius:7px; } .tools-page-head { align-items:stretch; flex-direction:column; } .tools-page-head button { max-width:none !important; } .tools-grid { grid-template-columns:1fr; gap:12px; } .tool-card.device-card { min-height:190px; padding:15px; } .control-row { gap:8px; } .color-control { grid-template-columns:64px 1fr; } .time-row { font-size:42px; } .time-row input { width:72px; font-size:36px; } .alarm-actions { grid-template-columns:1fr; } .alarm-picker { gap:10px; } .picker-list { height:156px; } }
         </style>
       </head>
       <body class="locked">
@@ -156,13 +171,28 @@ app.get('/', (req, res) => {
               <div id="reply" style="display:none">Gateway ready</div>
             </section>
             <section class="page" id="toolsPage">
-              <div class="tools-head"><h2 style="margin:0">Device Tools</h2><button class="dark" onclick="checkEspStatus()" style="max-width:96px;margin:0">REFRESH</button></div>
+              <div class="tools-page-head"><div><h2>Device Tools</h2><div class="sub">Realtime controls for every smart room device</div></div><button class="dark" onclick="checkEspStatus()" style="max-width:112px;margin:0">REFRESH</button></div>
               <div class="tools-grid">
-                <article class="tool-card"><div class="tool-title">Desk Lamp <span class="state-chip" id="lampState">OFF</span></div><div class="tool-actions"><button class="primary" onclick="queue({device:'lamp',state:'on'})">ON</button><button class="dark" onclick="queue({device:'lamp',state:'off'})">OFF</button></div></article>
-                <article class="tool-card"><div class="tool-title">RGB Room <span class="state-chip" id="rgbState">OFF</span></div><div class="row"><input id="color" type="color" value="#10ddea"><button class="blue" onclick="rgbColor()">SET COLOR</button></div><div class="tool-actions"><button class="primary" onclick="queue({device:'rgb',state:'on'})">ON</button><button class="dark" onclick="queue({device:'rgb',state:'off'})">OFF</button></div></article>
-                <article class="tool-card"><div class="tool-title">Smart Door <span class="state-chip" id="doorState">CLOSED</span></div><div class="tool-actions"><button class="primary" onclick="queue({device:'door',state:'open'})">OPEN</button><button class="dark" onclick="queue({device:'door',state:'close'})">CLOSE</button></div></article>
-                <article class="tool-card"><div class="tool-title">Smart TV <span class="state-chip" id="tvState">OFF</span></div><div class="tool-actions"><button class="primary" onclick="queue({device:'tv',state:'on'})">ON</button><button class="dark" onclick="queue({device:'tv',state:'off'})">OFF</button></div></article>
-                <article class="tool-card"><div class="tool-title">Demo Mode <span class="state-chip on">EXPO</span></div><button class="primary" onclick="demoMode()">RUN DEMO</button><div class="sub">RGB, Smart TV, and door sequence</div></article>
+                <article class="tool-card device-card">
+                  <div><div class="tool-top"><div class="tool-identity"><div class="device-icon">DL</div><div class="tool-copy"><b>Desk Lamp</b><div class="tool-desc">Main desk light control</div></div></div><span class="state-chip" id="lampState">OFF</span></div></div>
+                  <div class="control-row"><button class="primary" onclick="queue({device:'lamp',state:'on'})">ON</button><button class="dark" onclick="queue({device:'lamp',state:'off'})">OFF</button></div>
+                </article>
+                <article class="tool-card device-card">
+                  <div><div class="tool-top"><div class="tool-identity"><div class="device-icon blue-icon">RGB</div><div class="tool-copy"><b>RGB Room</b><div class="tool-desc">Mood light and room color</div></div></div><span class="state-chip" id="rgbState">OFF</span></div><div class="color-control"><input id="color" type="color" value="#10ddea"><button class="blue" onclick="rgbColor()">SET COLOR</button></div></div>
+                  <div class="control-row"><button class="primary" onclick="queue({device:'rgb',state:'on'})">ON</button><button class="dark" onclick="queue({device:'rgb',state:'off'})">OFF</button></div>
+                </article>
+                <article class="tool-card device-card">
+                  <div><div class="tool-top"><div class="tool-identity"><div class="device-icon green-icon">DR</div><div class="tool-copy"><b>Smart Door</b><div class="tool-desc">Servo door with auto close</div></div></div><span class="state-chip" id="doorState">CLOSED</span></div></div>
+                  <div class="control-row"><button class="primary" onclick="queue({device:'door',state:'open'})">OPEN</button><button class="dark" onclick="queue({device:'door',state:'close'})">CLOSE</button></div>
+                </article>
+                <article class="tool-card device-card">
+                  <div><div class="tool-top"><div class="tool-identity"><div class="device-icon blue-icon">TV</div><div class="tool-copy"><b>Smart TV</b><div class="tool-desc">OLED screen and animation</div></div></div><span class="state-chip" id="tvState">OFF</span></div></div>
+                  <div class="control-row"><button class="primary" onclick="queue({device:'tv',state:'on'})">ON</button><button class="dark" onclick="queue({device:'tv',state:'off'})">OFF</button></div>
+                </article>
+                <article class="tool-card device-card">
+                  <div><div class="tool-top"><div class="tool-identity"><div class="device-icon gold-icon">DM</div><div class="tool-copy"><b>Demo Mode</b><div class="tool-desc">RGB, Smart TV, then door sequence</div></div></div><span class="state-chip on">EXPO</span></div></div>
+                  <button class="primary" onclick="demoMode()">RUN DEMO</button>
+                </article>
               </div>
             </section>
             <section class="page alarm-page" id="alarmPage">
@@ -191,6 +221,12 @@ app.get('/', (req, res) => {
             </section>
           </section>
         </main>
+        <nav class="mobile-nav">
+          <button class="active" data-page="chat" onclick="showPage('chat')">Chat</button>
+          <button data-page="tools" onclick="showPage('tools')">Tools</button>
+          <button data-page="alarm" onclick="showPage('alarm')">Alarm</button>
+          <button data-page="settings" onclick="showPage('settings')">Settings</button>
+        </nav>
         <div class="modal" id="alarmModal">
           <section class="sheet">
             <div class="tools-head"><h2 style="margin:0">Alarm</h2><button class="dark" onclick="closeAlarmSheet()" style="max-width:82px;margin:0">CLOSE</button></div>
@@ -245,7 +281,7 @@ app.get('/', (req, res) => {
             clearButton.style.display = name === 'chat' || name === 'settings' ? 'block' : 'none';
             document.querySelectorAll('.page').forEach((page) => page.classList.remove('active'));
             document.getElementById(name + 'Page').classList.add('active');
-            document.querySelectorAll('.nav-item').forEach((item) => item.classList.toggle('active', item.dataset.page === name));
+            document.querySelectorAll('[data-page]').forEach((item) => item.classList.toggle('active', item.dataset.page === name));
             if (name !== 'chat') checkEspStatus();
           }
           function setStatus(text) {
