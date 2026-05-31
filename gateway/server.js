@@ -173,6 +173,55 @@ app.get('/health', (req, res) => {
   });
 });
 
+app.get('/debug', async (req, res) => {
+  const info = {
+    supabaseUrl: supabaseConfig.url || '(not set)',
+    supabaseHost: supabaseConfig.host || '(not set)',
+    supabaseKeyPrefix: supabaseConfig.keyPrefix || '(not set)',
+    supabaseClientCreated: Boolean(supabase),
+    nodeVersion: process.version,
+    fetchTest: null,
+    supabaseTest: null
+  };
+
+  // Test 1: basic fetch
+  try {
+    const r = await fetch('https://example.com', { method: 'HEAD' });
+    info.fetchTest = `ok (status ${r.status})`;
+  } catch (err) {
+    info.fetchTest = `FAILED: ${err.message}`;
+  }
+
+  // Test 2: fetch Supabase URL directly
+  if (supabaseConfig.url) {
+    try {
+      const r = await fetch(`${supabaseConfig.url}/rest/v1/`, {
+        method: 'GET',
+        headers: { 'apikey': supabaseConfig.key || '' }
+      });
+      info.supabaseTest = `ok (status ${r.status})`;
+    } catch (err) {
+      info.supabaseTest = `FAILED: ${err.message} | cause: ${err.cause?.message || err.cause || 'none'}`;
+    }
+  } else {
+    info.supabaseTest = 'skipped (no url)';
+  }
+
+  // Test 3: actual supabase client query
+  if (supabase) {
+    try {
+      const { data, error } = await supabase.from('user_memory').select('id').limit(1);
+      info.supabaseQueryTest = error ? `ERROR: ${error.message} | code: ${error.code}` : `ok (rows: ${data?.length ?? 0})`;
+    } catch (err) {
+      info.supabaseQueryTest = `THREW: ${err.message}`;
+    }
+  } else {
+    info.supabaseQueryTest = 'skipped (no client)';
+  }
+
+  res.json(info);
+});
+
 async function searchRealtime(query) {
   if (!process.env.TAVILY_API_KEY) {
     return null;
