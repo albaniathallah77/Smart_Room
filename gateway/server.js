@@ -76,14 +76,19 @@ app.get('/', (req, res) => {
           .composer input { border:0; background:transparent; min-height:44px; font-size:16px; }
           .icon-btn { width:48px; min-width:48px; border-radius:50%; margin:0; padding:0; }
           .tools-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:14px; }
-          .alarm-page { max-width:720px; margin:0 auto; }
-          .alarm-hero { border:1px solid #173746; background:linear-gradient(180deg,#07131a,#03080c); border-radius:8px; padding:22px; }
-          .alarm-time { font-size:clamp(58px,12vw,116px); line-height:1; text-align:center; letter-spacing:4px; margin:26px 0; }
-          .alarm-settings { border-top:1px solid #26343b; padding-top:16px; display:grid; gap:12px; }
+          .alarm-page { max-width:760px; margin:0 auto; }
+          .alarm-hero { border:1px solid #174a5a; background:radial-gradient(circle at 50% 0,#0a3140 0,#07131a 42%,#03080c 100%); border-radius:8px; padding:24px; box-shadow:0 24px 70px #0008, inset 0 1px #5befff22; }
+          .alarm-time { display:flex; align-items:center; justify-content:center; gap:12px; margin:26px 0 30px; }
+          .alarm-time input { width:clamp(110px,22vw,190px); text-align:center; border:0; background:transparent; color:#e9fbff; font-size:clamp(64px,12vw,118px); line-height:1; padding:0; min-height:0; font-weight:700; }
+          .alarm-time span { color:#e9fbff; font-size:clamp(58px,10vw,96px); line-height:1; transform:translateY(-6px); }
+          .alarm-time input:focus { outline:1px solid #14efff; background:#061a22; border-radius:8px; }
+          .alarm-settings { border-top:1px solid #26343b; padding-top:16px; display:grid; gap:14px; }
+          .alarm-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
           .settings-list { display:grid; gap:12px; max-width:760px; }
           .settings-row { border:1px solid #173746; background:#07131a; border-radius:8px; padding:14px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
           .tools-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; }
-          .tool-card { border:1px solid #173746; background:#07131a; border-radius:8px; padding:13px; margin-bottom:10px; }
+          .tool-card { border:1px solid #173746; background:#07131a; border-radius:8px; padding:13px; margin-bottom:10px; transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+          .tool-card:hover { transform:translateY(-1px); border-color:#1b6e82; box-shadow:0 12px 30px #0007; }
           .tool-title { display:flex; justify-content:space-between; align-items:center; gap:8px; font-weight:900; margin-bottom:9px; }
           .state-chip { font-size:12px; color:#8fb6c0; border:1px solid #234b58; border-radius:999px; padding:3px 8px; }
           .state-chip.on { color:#001015; background:#10ddea; border-color:#10ddea; }
@@ -95,11 +100,12 @@ app.get('/', (req, res) => {
           .time-row { display:flex; justify-content:center; align-items:center; gap:12px; font-size:54px; margin:8px 0 18px; }
           .time-row input { width:88px; text-align:center; font-size:44px; padding:4px; border:0; background:#111; }
           .days { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin:12px 0; }
-          .days span { text-align:center; color:#aaa; font-size:13px; }
+          .days span { text-align:center; color:#aaa; font-size:13px; padding:8px 0; border-radius:8px; background:#071822; border:1px solid #173746; }
+          .days span.active { color:#001015; background:#10ddea; border-color:#10ddea; font-weight:900; }
           .field { display:grid; gap:6px; margin:12px 0; color:#aaa; }
           .field input { width:100%; }
           @media (max-width:980px) { .app-shell { height:auto; min-height:100vh; grid-template-columns:1fr; } .sidebar { display:none; } .chat-pane { min-height:100vh; } }
-          @media (max-width:560px) { header { align-items:flex-start; flex-direction:column; } .pill { width:100%; text-align:center; } .composer { grid-template-columns:1fr auto; } .composer .primary { grid-column:1 / -1; width:100%; border-radius:7px; } .time-row { font-size:42px; } .time-row input { width:72px; font-size:36px; } }
+          @media (max-width:560px) { header { align-items:flex-start; flex-direction:column; } .pill { width:100%; text-align:center; } .composer { grid-template-columns:1fr auto; } .composer .primary { grid-column:1 / -1; width:100%; border-radius:7px; } .time-row { font-size:42px; } .time-row input { width:72px; font-size:36px; } .alarm-actions { grid-template-columns:1fr; } .alarm-time { gap:4px; } .alarm-time input { width:118px; } }
         </style>
       </head>
       <body class="locked">
@@ -157,12 +163,11 @@ app.get('/', (req, res) => {
             <section class="page alarm-page" id="alarmPage">
               <div class="alarm-hero">
                 <div class="tool-title">Alarm <span class="state-chip" id="alarmState">OFF</span></div>
-                <div class="alarm-time" id="alarmDisplay">06:00</div>
+                <div class="alarm-time"><input id="alarmHour" type="number" min="0" max="23" value="06"><span>:</span><input id="alarmMinute" type="number" min="0" max="59" value="00"></div>
                 <div class="alarm-settings">
-                  <div class="days"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
+                  <div class="days"><span class="active">M</span><span class="active">T</span><span class="active">W</span><span class="active">T</span><span class="active">F</span><span>S</span><span>S</span></div>
                   <label class="field">Alarm name <input id="alarmName" value="Smart Room Alarm"></label>
-                  <button class="primary" onclick="openAlarmSheet()">ADD / EDIT ALARM</button>
-                  <button class="dark" onclick="queue({device:'buzzer',state:'off'})">STOP BUZZER</button>
+                  <div class="alarm-actions"><button class="primary" onclick="saveAlarm()">SAVE ALARM</button><button class="dark" onclick="queue({device:'buzzer',state:'off'})">STOP BUZZER</button></div>
                 </div>
               </div>
             </section>
@@ -179,7 +184,7 @@ app.get('/', (req, res) => {
         <div class="modal" id="alarmModal">
           <section class="sheet">
             <div class="tools-head"><h2 style="margin:0">Alarm</h2><button class="dark" onclick="closeAlarmSheet()" style="max-width:82px;margin:0">CLOSE</button></div>
-            <div class="time-row"><input id="alarmHour" type="number" min="0" max="23" value="06"><span>:</span><input id="alarmMinute" type="number" min="0" max="59" value="00"></div>
+            <div class="time-row"><input id="alarmHourSheet" type="number" min="0" max="23" value="06"><span>:</span><input id="alarmMinuteSheet" type="number" min="0" max="59" value="00"></div>
             <div class="days"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
             <label class="field">Alarm name <input id="alarmNameSheet" value="Smart Room Alarm"></label>
             <button class="primary" onclick="saveAlarmSheet()">SAVE ALARM</button>
@@ -189,6 +194,7 @@ app.get('/', (req, res) => {
           const AUTH = 'smart_room_cloud_pin';
           const unlocked = () => sessionStorage.getItem(AUTH) === '1';
           const pinValue = () => sessionStorage.getItem('smart_room_pin') || '';
+          let alarmEditing = false;
           function redraw() {
             const isOpen = unlocked();
             document.body.classList.toggle('locked', !isOpen);
@@ -248,6 +254,15 @@ app.get('/', (req, res) => {
           function two(number) {
             return String(Math.max(0, Math.min(99, Number(number) || 0))).padStart(2, '0');
           }
+          function clampAlarmInputs(source = 'page') {
+            const hourInput = source === 'sheet' ? alarmHourSheet : alarmHour;
+            const minuteInput = source === 'sheet' ? alarmMinuteSheet : alarmMinute;
+            const hour = Math.max(0, Math.min(23, Number(hourInput.value) || 0));
+            const minute = Math.max(0, Math.min(59, Number(minuteInput.value) || 0));
+            hourInput.value = two(hour);
+            minuteInput.value = two(minute);
+            return { hour, minute };
+          }
           function rgbToHex(r, g, b) {
             return '#' + [r, g, b].map((value) => {
               const n = Math.max(0, Math.min(255, Number(value) || 0));
@@ -260,10 +275,11 @@ app.get('/', (req, res) => {
             setChip(doorState, state.door === true, 'OPEN', 'CLOSED');
             setChip(tvState, state.tv === true, 'ON', 'OFF');
             setChip(alarmState, state.alarmRinging === true || state.alarmEnabled === true, state.alarmRinging ? 'RINGING' : 'ON', 'OFF');
-            if (Number.isFinite(Number(state.alarmHour)) && Number.isFinite(Number(state.alarmMinute))) {
-              alarmDisplay.textContent = two(state.alarmHour) + ':' + two(state.alarmMinute);
+            if (!alarmEditing && Number.isFinite(Number(state.alarmHour)) && Number.isFinite(Number(state.alarmMinute))) {
               alarmHour.value = two(state.alarmHour);
               alarmMinute.value = two(state.alarmMinute);
+              alarmHourSheet.value = two(state.alarmHour);
+              alarmMinuteSheet.value = two(state.alarmMinute);
             }
             if (Number.isFinite(Number(state.r)) && Number.isFinite(Number(state.g)) && Number.isFinite(Number(state.b))) {
               color.value = rgbToHex(state.r, state.g, state.b);
@@ -285,18 +301,27 @@ app.get('/', (req, res) => {
             queue({device:'rgb', r:parseInt(hex.slice(0,2),16), g:parseInt(hex.slice(2,4),16), b:parseInt(hex.slice(4,6),16)});
           }
           function openAlarmSheet() {
+            alarmHourSheet.value = alarmHour.value;
+            alarmMinuteSheet.value = alarmMinute.value;
+            alarmNameSheet.value = alarmName.value;
             alarmModal.classList.add('open');
-            alarmHour.focus();
+            alarmEditing = true;
+            alarmHourSheet.focus();
           }
           function closeAlarmSheet() {
             alarmModal.classList.remove('open');
+            alarmEditing = false;
+          }
+          function saveAlarm() {
+            const { hour, minute } = clampAlarmInputs('page');
+            alarmEditing = false;
+            queue({device:'alarm', enabled:true, hour, minute});
           }
           function saveAlarmSheet() {
-            const hour = Math.max(0, Math.min(23, Number(alarmHour.value) || 0));
-            const minute = Math.max(0, Math.min(59, Number(alarmMinute.value) || 0));
+            const { hour, minute } = clampAlarmInputs('sheet');
             alarmHour.value = two(hour);
             alarmMinute.value = two(minute);
-            alarmDisplay.textContent = two(hour) + ':' + two(minute);
+            alarmName.value = alarmNameSheet.value;
             queue({device:'alarm', enabled:true, hour, minute});
             closeAlarmSheet();
           }
@@ -378,6 +403,17 @@ app.get('/', (req, res) => {
             } catch (e) {}
           }
           cmd.addEventListener('keydown', (event) => { if (event.key === 'Enter') askAi(); });
+          [alarmHour, alarmMinute, alarmName].forEach((input) => {
+            input.addEventListener('focus', () => { alarmEditing = true; });
+            input.addEventListener('input', () => { alarmEditing = true; });
+            input.addEventListener('blur', () => { if (input !== alarmName) clampAlarmInputs('page'); });
+            input.addEventListener('keydown', (event) => { if (event.key === 'Enter') saveAlarm(); });
+          });
+          [alarmHourSheet, alarmMinuteSheet, alarmNameSheet].forEach((input) => {
+            input.addEventListener('focus', () => { alarmEditing = true; });
+            input.addEventListener('input', () => { alarmEditing = true; });
+            input.addEventListener('blur', () => { if (input !== alarmNameSheet) clampAlarmInputs('sheet'); });
+          });
           alarmModal.addEventListener('click', (event) => { if (event.target === alarmModal) closeAlarmSheet(); });
           setInterval(checkEspStatus, 2000);
           checkEspStatus();
