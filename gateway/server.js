@@ -153,10 +153,18 @@ app.get('/', (req, res) => {
             .app-shell { height:auto; min-height:100vh; grid-template-columns:1fr; } 
             .sidebar { display:none; } 
             .chat-pane { min-height:100vh; grid-template-rows:72px 1fr; background:#111318; } 
-            .page { padding:20px 16px; } 
-            .tools-grid { grid-template-columns: 1fr !important; gap: 16px; width: 100%; }
-            .tool-card.device-card { grid-column: auto !important; width: 100% !important; min-height: 200px; }
-            .routine-grid { grid-column: auto !important; grid-template-columns: repeat(2, 1fr) !important; gap: 10px; width: 100%; }
+            .page { padding:24px 16px; } 
+            .tools-grid { grid-template-columns: 1fr !important; gap: 20px; width: 100%; padding-bottom: 40px; }
+            .tool-card.device-card { grid-column: auto !important; width: 100% !important; min-height: unset; padding: 20px; border-radius: 16px; }
+            .tool-top { margin-bottom: 16px; }
+            .device-icon { width: 48px; height: 48px; border-radius: 12px; }
+            .tool-copy b { font-size: 20px; margin-bottom: 4px; }
+            .tool-desc { font-size: 11px; }
+            .control-row { gap: 10px; }
+            .control-row button { min-height: 50px; font-size: 14px; }
+            .color-control { grid-template-columns: 60px 1fr; gap: 10px; margin-top: 12px; }
+            .color-control button { min-height: 44px; font-size: 13px; }
+            .routine-grid { grid-column: auto !important; grid-template-columns: repeat(2, 1fr) !important; gap: 12px; width: 100%; margin-bottom: 20px; }
             .routine-grid button:last-child { grid-column: span 2 !important; }
             .system-log-container { grid-column: auto !important; height: 220px; width: 100%; }
             .topbar { position:sticky; top:0; z-index:6; height:72px; padding:0 16px; justify-content:flex-start; background:#111318f2; backdrop-filter:blur(16px); } 
@@ -215,7 +223,17 @@ app.get('/', (req, res) => {
             .routine-grid button:last-child { grid-column: span 2; }
             .system-log-container { grid-column: span 1; }
             .topbar { position:sticky; top:0; z-index:6; height:72px; padding:0 16px; justify-content:flex-start; background:#111318f2; backdrop-filter:blur(16px); } .topbar b { font-family:Inter, system-ui, sans-serif; font-size:20px; letter-spacing:0; color:#f4f7fb; } .topbar > div { min-width:0; flex:1; } .mobile-top-logo { display:block; width:34px; height:34px; border-radius:9px; object-fit:cover; border:1px solid #2b3b4c; box-shadow:0 0 18px rgba(16,216,255,.24); } #clearButton { display:none !important; } .mobile-menu-toggle { display:grid; place-items:center; flex:0 0 auto; width:48px; min-width:48px; height:48px; min-height:48px; margin:0; padding:0; border-radius:12px; font-size:28px; line-height:1; background:#101823; border-color:#2c4358; color:#c9eeff; box-shadow:0 10px 24px #0008; } .chat-page.active { min-height:calc(100vh - 72px); grid-template-rows:1fr auto; } .chat-log { width:100%; padding:22px 16px 18px; gap:18px; } .bubble { max-width:88%; box-shadow:none; font-size:15px; line-height:1.55; } .bubble.assistant { align-self:flex-start; padding:8px 6px 8px 48px; } .bubble.assistant::before { left:0; top:8px; } .bubble.user { align-self:flex-end; background:#2b2f36; border:1px solid #3a404a; border-radius:18px; padding:12px 14px; } .composer { position:sticky; bottom:0; width:100%; margin:0; padding:12px 14px; border-radius:0; border-width:1px 0 0; background:#111318f2; backdrop-filter:blur(16px); grid-template-columns:1fr auto auto; box-shadow:0 -18px 40px #0008; } .composer input { min-height:48px; padding:0 2px; font-size:15px; } .icon-btn { width:46px; min-width:46px; height:46px; min-height:46px; border-radius:999px; font-size:12px; } .tools-grid { grid-template-columns:1fr; } .tool-card.device-card:first-child { grid-column:auto; } .settings-list { grid-template-columns:1fr; } .alarm-page { width:min(100%,420px); padding:18px 12px 40px; } .alarm-hero { padding:22px 20px; border-radius:16px; } .alarm-picker { gap:14px; margin:28px 0 22px; } .picker-column { padding:14px 10px; } .picker-list { height:188px; scroll-behavior:smooth; } .picker-option { min-height:48px; font-size:24px; } .alarm-settings { gap:16px; } .mobile-nav { position:fixed; inset:0 auto 0 0; z-index:7; display:flex; flex-direction:column; gap:14px; width:min(320px,84vw); padding:28px 18px; border-right:1px solid #202833; border-radius:0; background:linear-gradient(90deg,#11151b 0,#0d1117 72%,#070a0f 100%); box-shadow:18px 0 60px #000c; opacity:1; transform:translateX(-104%); pointer-events:none; transition:transform .24s ease; } .mobile-nav.open { transform:translateX(0); pointer-events:auto; } .mobile-drawer-brand { display:flex; align-items:center; gap:14px; padding:0 10px 24px; } .mobile-drawer-brand b { display:block; font-size:29px; line-height:.95; color:#b4dbff; text-shadow:0 0 18px rgba(68,175,255,.22); } .mobile-drawer-bottom { display:grid; gap:10px; margin-top:auto; border-top:1px solid #202833; padding-top:18px; } .mobile-nav button { min-height:0; margin:0; padding:16px 18px; font-size:17px; border-radius:7px; text-align:left; color:#858b97; background:transparent; border:0; } .mobile-nav button.active { background:linear-gradient(90deg,#1d222a,#15191f); color:#a8d6ff; box-shadow:inset 3px 0 #90cfff; } .mobile-drawer-bottom button { text-align:center; color:#edf6ff; border:1px solid #334457; background:#090d12; } .locked .mobile-nav, .locked .mobile-menu-toggle, .locked .mobile-top-logo { display:none; } }
-          @media (max-width:560px) { h1 { font-size:38px; } .pad { grid-template-columns:repeat(3,92px); gap:12px; } .pad button { min-height:92px; font-size:34px; } .pill { width:100%; text-align:center; } .tools-page-head { align-items:stretch; flex-direction:column; margin-bottom:20px; } .tools-page-head h2 { font-size:38px; } .tools-page-head button { max-width:none !important; } .tools-grid { grid-template-columns:1fr; gap:14px; } .tool-card.device-card { min-height:210px; padding:18px; } .tool-copy b { font-size:22px; } .control-row { gap:8px; } .color-control { grid-template-columns:76px 1fr; } .time-row { font-size:42px; } .time-row input { width:72px; font-size:36px; } .alarm-actions { grid-template-columns:1fr; } .settings-row { min-height:unset; flex-direction:column; align-items:flex-start; } }
+          @media (max-width:560px) { 
+            h1 { font-size:32px; } 
+            .pad { grid-template-columns:repeat(3,88px); gap:12px; } 
+            .pad button { min-height:88px; font-size:32px; } 
+            .tools-page-head h2 { font-size:32px; } 
+            .tool-card.device-card { padding: 16px; }
+            .tool-copy b { font-size: 18px; }
+            .control-row button { min-height: 46px; font-size: 13px; }
+            .time-row { font-size:38px; } 
+            .time-row input { width:64px; font-size:32px; } 
+          }
         </style>
       </head>
       <body class="locked">
