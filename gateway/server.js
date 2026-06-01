@@ -74,7 +74,7 @@ app.get('/', (req, res) => {
           .topbar b { font-family:Inter, system-ui, sans-serif; font-size:20px; color:#f4f7fb; letter-spacing:0; }
           .mobile-menu-toggle { display:none; }
           .mobile-top-logo { display:none; }
-          .page { display:none; min-height:0; overflow:auto; padding:42px 48px; height: 100%; }
+          .page { display:none; min-height:0; overflow:auto; padding:42px 48px; }
           .page.active { display:block; }
           .chat-page.active { display:flex; flex-direction:column; padding:0; overflow:hidden; height:100%; }
           .chat-log { flex: 1; overflow-y:auto; width:min(900px,100%); margin:0 auto; padding:48px 24px 24px; display:flex; flex-direction:column; gap:24px; min-height:0; scroll-behavior:smooth; }
@@ -106,7 +106,7 @@ app.get('/', (req, res) => {
           .color-control input[type=color] { width:100%; }
           .mobile-nav { display:none; }
           .mobile-drawer-brand, .mobile-drawer-bottom { display:none; }
-          .alarm-page { width: 100%; max-width: none; padding: 0; height: 100%; display: flex; flex-direction: column; }
+          .alarm-page.active { width: 100%; max-width: none; padding: 0; height: 100%; display: flex; flex-direction: column; }
           .alarm-hero { border: 0; background: transparent; border-radius: 0; padding: 48px; box-shadow: none; display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: start; width: 100%; max-width: 1400px; margin: 0 auto; flex: 1; }
           .alarm-hero > .tool-title { grid-column: 1 / -1; font-size: 48px; margin-bottom: 20px; }
           .alarm-picker { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin: 0; }
@@ -417,10 +417,6 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
             if (!isInitial) {
               updatePickerActiveOnly('hour', selectedHour);
               updatePickerActiveOnly('minute', selectedMinute);
-              if (arguments[0] === 'force_scroll') {
-                hourPicker.querySelector('.picker-option[data-loop="' + (selectedHour + 24) + '"]')?.scrollIntoView({ block:'center', behavior:'smooth' });
-                minutePicker.querySelector('.picker-option[data-loop="' + (selectedMinute + 60) + '"]')?.scrollIntoView({ block:'center', behavior:'smooth' });
-              }
               return;
             }
 
