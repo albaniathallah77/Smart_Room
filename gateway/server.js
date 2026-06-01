@@ -817,7 +817,7 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
           minutePicker.addEventListener('scroll', () => onPickerScroll('minute'));
           alarmModal.addEventListener('click', (event) => { if (event.target === alarmModal) closeAlarmSheet(); });
           renderAlarmPicker();
-          setInterval(checkEspStatus, 1200);
+          setInterval(checkEspStatus, 800);
           checkEspStatus();
           
           redraw();
