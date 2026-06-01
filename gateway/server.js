@@ -72,6 +72,7 @@ app.get('/', (req, res) => {
           .chat-pane { display:grid; grid-template-rows:80px 1fr; min-width:0; background:radial-gradient(circle at 80% 0,rgba(18,70,94,.24),transparent 28%), #080b11; }
           .topbar { height:80px; display:flex; align-items:center; justify-content:space-between; gap:14px; padding:0 40px; border-bottom:1px solid #202833; background:linear-gradient(90deg,rgba(14,19,26,.8),rgba(8,11,17,.96)); }
           .topbar b { font-family:Orbitron, Inter, sans-serif; font-size:28px; color:#c9eeff; }
+          .mobile-menu-toggle { display:none; }
           .page { display:none; min-height:0; overflow:auto; padding:42px 48px; }
           .page.active { display:block; }
           .chat-page.active { display:grid; grid-template-rows:1fr auto; padding:0; overflow:hidden; }
@@ -130,7 +131,7 @@ app.get('/', (req, res) => {
           .days span.active { color:#001015; background:#10ddea; border-color:#10ddea; font-weight:900; box-shadow:0 0 22px rgba(16,216,255,.25); }
           .field { display:grid; gap:8px; margin:12px 0; color:#b9c1cc; }
           .field input { width:100%; }
-          @media (max-width:980px) { body { overflow:auto; padding-bottom:86px; } .app-shell { height:auto; min-height:100vh; grid-template-columns:1fr; } .sidebar { display:none; } .chat-pane { min-height:100vh; grid-template-rows:72px 1fr; } .page { padding:24px 18px; } .topbar { height:72px; padding:0 18px; } .topbar b { font-size:22px; } .tools-grid { grid-template-columns:1fr; } .tool-card.device-card:first-child { grid-column:auto; } .settings-list { grid-template-columns:1fr; } .alarm-page { padding-top:20px; } .mobile-nav { position:fixed; left:12px; right:12px; bottom:12px; z-index:7; display:grid; grid-template-columns:repeat(4,1fr); gap:6px; padding:7px; border:1px solid #26465a; border-radius:12px; background:#0a0f15e8; backdrop-filter:blur(12px); box-shadow:0 18px 46px #000c; } .mobile-nav button { min-height:48px; margin:0; padding:8px 4px; font-size:12px; border-radius:8px; } .mobile-nav button.active { background:#10ddea; color:#001015; border-color:#10ddea; } .locked .mobile-nav { display:none; } }
+          @media (max-width:980px) { body { overflow:auto; padding-bottom:0; } .app-shell { height:auto; min-height:100vh; grid-template-columns:1fr; } .sidebar { display:none; } .chat-pane { min-height:100vh; grid-template-rows:72px 1fr; } .page { padding:24px 18px; } .topbar { position:sticky; top:0; z-index:6; height:72px; padding:0 18px; justify-content:flex-start; } .topbar b { font-size:20px; } .topbar > div { min-width:0; flex:1; } #clearButton { display:none !important; } .mobile-menu-toggle { display:grid; place-items:center; flex:0 0 auto; width:48px; min-width:48px; height:48px; min-height:48px; margin:0; padding:0; border-radius:12px; font-size:28px; line-height:1; background:#101823; border-color:#2c4358; color:#c9eeff; box-shadow:0 10px 24px #0008; } .tools-grid { grid-template-columns:1fr; } .tool-card.device-card:first-child { grid-column:auto; } .settings-list { grid-template-columns:1fr; } .alarm-page { padding-top:20px; } .mobile-nav { position:fixed; top:82px; left:12px; right:auto; bottom:auto; z-index:7; display:grid; grid-template-columns:1fr; gap:8px; width:min(250px,calc(100vw - 24px)); padding:10px; border:1px solid #26465a; border-radius:14px; background:#0a0f15f2; backdrop-filter:blur(14px); box-shadow:0 18px 46px #000d, 0 0 24px rgba(16,216,255,.12); opacity:0; transform:translateY(-8px) scale(.98); pointer-events:none; transition:opacity .16s ease, transform .16s ease; } .mobile-nav.open { opacity:1; transform:translateY(0) scale(1); pointer-events:auto; } .mobile-nav button { min-height:50px; margin:0; padding:10px 14px; font-size:14px; border-radius:10px; text-align:left; } .mobile-nav button.active { background:#10ddea; color:#001015; border-color:#10ddea; } .locked .mobile-nav, .locked .mobile-menu-toggle { display:none; } }
           @media (max-width:560px) { h1 { font-size:38px; } .pad { grid-template-columns:repeat(3,92px); gap:12px; } .pad button { min-height:92px; font-size:34px; } .pill { width:100%; text-align:center; } .composer { grid-template-columns:1fr auto; margin:0 12px 16px; } .composer .primary { grid-column:1 / -1; width:100%; border-radius:7px; } .tools-page-head { align-items:stretch; flex-direction:column; margin-bottom:20px; } .tools-page-head h2 { font-size:38px; } .tools-page-head button { max-width:none !important; } .tools-grid { grid-template-columns:1fr; gap:14px; } .tool-card.device-card { min-height:210px; padding:18px; } .tool-copy b { font-size:22px; } .control-row { gap:8px; } .color-control { grid-template-columns:76px 1fr; } .time-row { font-size:42px; } .time-row input { width:72px; font-size:36px; } .alarm-hero { padding:22px; border-radius:14px; } .alarm-actions { grid-template-columns:1fr; } .alarm-picker { gap:12px; } .picker-list { height:168px; } .picker-option { font-size:24px; } .settings-row { min-height:unset; flex-direction:column; align-items:flex-start; } }
         </style>
       </head>
@@ -165,7 +166,7 @@ app.get('/', (req, res) => {
             </div>
           </aside>
           <section class="chat-pane">
-            <div class="topbar"><div><b id="pageTitle">AI Assistant</b><div class="sub" id="pageSubtitle">Command terminal and voice control</div></div><button class="dark mono" id="clearButton" onclick="clearPending()" style="max-width:170px;margin:0">CLEAR PENDING</button></div>
+            <div class="topbar"><button class="mobile-menu-toggle" onclick="toggleMobileNav()" aria-label="Open navigation">≡</button><div><b id="pageTitle">AI Assistant</b><div class="sub" id="pageSubtitle">Command terminal and voice control</div></div><button class="dark mono" id="clearButton" onclick="clearPending()" style="max-width:170px;margin:0">CLEAR PENDING</button></div>
             <section class="page chat-page active" id="chatPage">
               <div class="chat-log" id="chatLog">
                 <div class="bubble assistant">&gt; Smart Room AI online.
@@ -229,7 +230,7 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
             </section>
           </section>
         </main>
-        <nav class="mobile-nav">
+        <nav class="mobile-nav" id="mobileNav">
           <button class="active" data-page="chat" onclick="showPage('chat')">Chat</button>
           <button data-page="tools" onclick="showPage('tools')">Tools</button>
           <button data-page="alarm" onclick="showPage('alarm')">Alarm</button>
@@ -274,6 +275,9 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
             }
           }
           function lockAgain() { sessionStorage.removeItem(AUTH); sessionStorage.removeItem('smart_room_pin'); redraw(); }
+          function toggleMobileNav() {
+            mobileNav.classList.toggle('open');
+          }
           pin.addEventListener('input', () => { pin.value = pin.value.replace(/\\D/g, '').slice(0, 4); redraw(); });
           pin.addEventListener('keydown', (event) => { if (event.key === 'Enter') unlock(); });
           const pageMeta = {
@@ -290,6 +294,7 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
             document.querySelectorAll('.page').forEach((page) => page.classList.remove('active'));
             document.getElementById(name + 'Page').classList.add('active');
             document.querySelectorAll('[data-page]').forEach((item) => item.classList.toggle('active', item.dataset.page === name));
+            mobileNav.classList.remove('open');
             if (name !== 'chat') checkEspStatus();
           }
           function setStatus(text) {
