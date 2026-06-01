@@ -625,7 +625,7 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
               } catch (error) {
                 if (checks > 20) clearInterval(timer);
               }
-            }, 400);
+            }, 1000);
           }
           function demoMode() {
             queue({device:'rgb', r:0, g:220, b:255});
@@ -766,7 +766,7 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
           minutePicker.addEventListener('scroll', () => onPickerScroll('minute'));
           alarmModal.addEventListener('click', (event) => { if (event.target === alarmModal) closeAlarmSheet(); });
           renderAlarmPicker();
-          setInterval(checkEspStatus, 800);
+          setInterval(checkEspStatus, 1500);
           checkEspStatus();
           
           redraw();
