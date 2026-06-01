@@ -1797,7 +1797,7 @@ app.post('/chat', async (req, res) => {
             '{"device":"alarm","enabled":false}',
             '{"device":"buzzer","state":"off"}',
             'IMPORTANT: For RGB colors, do NOT use "state":"blue", use R,G,B values instead. Default blue is {"r":90,"g":160,"b":255}.',
-            'For fight animation, use {"device":"tv","state":"fight"}. For cat animation, use {"device":"tv","state":"cat"}. For stikman animation, use {"device":"tv","state":"stikman"}. For kacau animation, use {"device":"tv","state":"kacau"}.',
+            'For fight animation, use {"device":"tv","state":"fight"}. For cat animation, use {"device":"tv","state":"cat"}. For stikman animation, use {"device":"tv","state":"stikman"}. For kacau/kicau animation, use {"device":"tv","state":"kacau"}.',
             'Do not use fan or relay commands.',
             'If user gives a name, preference, or rule to remember, include "memory":"short memory text" in the JSON.',
             'For "mode tidur", turn lamp/rgb/tv off and optionally set alarm if user asks.',
@@ -1908,7 +1908,7 @@ function normalizeCommand(command) {
     if (state === 'fight' || state === 'animation') return { device: 'tv', state: 'fight' };
     if (state === 'cat' || state === 'kucing') return { device: 'tv', state: 'cat' };
     if (state === 'stikman' || state === 'stickman') return { device: 'tv', state: 'stikman' };
-    if (state === 'kacau' || state === 'chaos') return { device: 'tv', state: 'kacau' };
+    if (state === 'kacau' || state === 'kicau' || state === 'chaos') return { device: 'tv', state: 'kacau' };
     if (state === 'on' || state === 'nyala' || state === 'hidup') return { device: 'tv', state: 'on' };
     if (state === 'off' || state === 'mati') return { device: 'tv', state: 'off' };
     return null;

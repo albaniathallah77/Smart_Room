@@ -75,7 +75,7 @@ public:
         action.enabled = true;
         return true;
       }
-      if (state == "kacau" || state == "chaos") {
+      if (state == "kacau" || state == "kicau" || state == "chaos") {
         action.type = RoomActionType::SetKacauMode;
         action.enabled = true;
         return true;
@@ -155,7 +155,7 @@ public:
       return true;
     }
 
-    if (text == "kacau" || hasAny(text, "animasi kacau", "mode kacau", "chaos animation", "mode chaos")) {
+    if (text == "kacau" || text == "kicau" || hasAny(text, "animasi kacau", "animasi kicau", "mode kacau", "mode kicau", "chaos animation", "mode chaos")) {
       action.type = RoomActionType::SetKacauMode;
       action.enabled = true;
       return true;
