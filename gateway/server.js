@@ -1316,7 +1316,7 @@ app.get('/device/status', async (req, res) => {
     }
     const lastSeen = new Date(data.last_seen).getTime();
     const now = Date.now();
-    res.json({ online: (now - lastSeen) < 15000, lastSeen: data.last_seen, state: data.state || {} });
+    res.json({ online: (now - lastSeen) < 60000, lastSeen: data.last_seen, state: data.state || {} });
   } catch (err) {
     res.json({ online: false, error: err.message });
   }
