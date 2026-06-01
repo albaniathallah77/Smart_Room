@@ -20,97 +20,104 @@ app.get('/', (req, res) => {
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Smart Room Cloud</title>
         <style>
-          :root { color-scheme: dark; font-family: Inter, system-ui, sans-serif; background:#02070b; color:#e9fbff; }
+          @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Share+Tech+Mono&family=Inter:wght@400;600;800;900&display=swap');
+          :root { color-scheme: dark; font-family: Inter, system-ui, sans-serif; --bg:#080b11; --panel:#15191f; --panel2:#10141a; --line:#2b3645; --cyan:#10d8ff; --blue:#159bff; --muted:#9aa3b2; --text:#edf2ff; --danger:#ff4d75; --good:#35e886; background:var(--bg); color:var(--text); }
           * { box-sizing:border-box; }
-          body { margin:0; min-height:100vh; background:radial-gradient(circle at 24% 8%,#07323b 0,#02070b 38%), linear-gradient(135deg,#02070b,#061019); }
-          main { width:min(980px, calc(100% - 28px)); margin:auto; padding:24px 0 32px; }
-          header { display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:16px; border-bottom:1px solid #103848; padding-bottom:16px; }
-          h1 { margin:0; font-size:clamp(26px,5vw,42px); line-height:1; }
-          .sub { color:#7fefff; margin-top:7px; font-size:14px; }
-          .pill { border:1px solid #126172; color:#7ff7ff; padding:8px 10px; border-radius:7px; background:#061a22; white-space:nowrap; font-size:13px; }
+          body { margin:0; min-height:100vh; overflow:hidden; background:radial-gradient(circle at 74% -8%,#08222e 0,#080b11 36%,#05070b 76%), linear-gradient(90deg,#070a0f,#0b1018 45%,#06080d); }
+          body::before { content:""; position:fixed; inset:0; pointer-events:none; background:linear-gradient(90deg,rgba(255,255,255,.018),transparent 18%,transparent 82%,rgba(16,216,255,.025)), repeating-linear-gradient(0deg,rgba(255,255,255,.016),rgba(255,255,255,.016) 1px,transparent 1px,transparent 5px); opacity:.45; mix-blend-mode:screen; }
+          main { margin:0; padding:0; }
+          h1 { margin:0; font-size:clamp(38px,5vw,68px); letter-spacing:-2px; line-height:.95; font-weight:900; text-shadow:0 2px #000, 0 0 24px rgba(120,205,255,.18); }
+          h2 { margin:0; font-size:clamp(24px,3vw,38px); letter-spacing:-1px; }
+          .sub { color:#9be6ff; margin-top:8px; font-size:14px; line-height:1.35; }
+          .mono { font-family:"Share Tech Mono", ui-monospace, monospace; letter-spacing:1px; text-transform:uppercase; }
+          .pill { border:1px solid #244151; color:#b7dcff; padding:10px 12px; border-radius:7px; background:linear-gradient(180deg,#101923,#0a1118); white-space:nowrap; font-size:13px; font-family:"Share Tech Mono", ui-monospace, monospace; box-shadow:inset 0 1px rgba(255,255,255,.04); }
           .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:12px; }
-          .card { border:1px solid #115468; background:linear-gradient(180deg,#08202a,#061018); border-radius:8px; padding:15px; box-shadow:0 12px 28px #0008, inset 0 1px #22e6ff22; min-height:142px; }
-          h2 { margin:0 0 13px; font-size:17px; display:flex; justify-content:space-between; gap:8px; }
-          button, input { border:1px solid #177189; background:#071822; color:#e9fbff; border-radius:7px; padding:11px 12px; font:inherit; min-height:42px; }
-          button { cursor:pointer; width:100%; margin-top:8px; font-weight:800; }
-          .primary { background:#08cfe3; border-color:#14efff; color:#001015; }
-          .blue { background:#087cff; border-color:#3295ff; color:white; }
-          .dark { background:#020507; border-color:#1a3944; }
+          .card { border:1px solid var(--line); background:linear-gradient(120deg,rgba(28,33,41,.96),rgba(14,18,24,.96)); border-radius:8px; padding:18px; box-shadow:0 20px 44px #0009, inset 0 1px rgba(255,255,255,.04); }
+          button, input { border:1px solid #2a394a; background:#0b1119; color:var(--text); border-radius:7px; padding:12px 14px; font:inherit; min-height:44px; outline:none; }
+          input:focus { border-color:#68cfff; box-shadow:0 0 0 3px rgba(16,216,255,.13); }
+          button { cursor:pointer; width:100%; margin-top:8px; font-weight:900; letter-spacing:.4px; transition:transform .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease; }
+          button:hover { transform:translateY(-1px); border-color:#79caff; }
+          .primary { background:linear-gradient(135deg,#12e6ff,#168bff); border-color:#33e8ff; color:#02070b; box-shadow:0 14px 32px rgba(10,157,255,.26), inset 0 1px rgba(255,255,255,.35); }
+          .blue { background:linear-gradient(135deg,#147dff,#1c5dff); border-color:#48a8ff; color:white; box-shadow:0 12px 28px rgba(24,124,255,.24); }
+          .dark { background:#090d12; border-color:#334457; color:#edf6ff; }
           .row { display:flex; gap:8px; align-items:center; }
           .row > * { flex:1; min-width:0; }
           input[type=color] { height:42px; padding:2px; }
           #cmd { width:100%; }
           #reply { min-height:18px; margin-top:10px; color:#7fefff; font-size:13px; line-height:1.35; }
-          .locked main { filter:blur(12px); pointer-events:none; user-select:none; }
-          .lock { position:fixed; inset:0; z-index:10; display:grid; place-items:center; padding:18px; background:radial-gradient(circle at 50% 18%,#0b7185 0,#03151c 34%,#02070b 72%); }
+          .locked main { filter:blur(16px); pointer-events:none; user-select:none; }
+          .lock { position:fixed; inset:0; z-index:10; display:grid; place-items:center; padding:18px; background:radial-gradient(circle at 50% 36%,rgba(12,57,76,.74) 0,rgba(8,15,25,.94) 32%,#080b11 78%); }
           .lock.hidden { display:none; }
-          .panel { width:min(420px,100%); border:1px solid #20e8ff66; background:linear-gradient(180deg,#08232e,#030b10); border-radius:8px; padding:24px; box-shadow:0 24px 70px #000b, 0 0 46px #10ddea33, inset 0 1px #69f6ff33; }
-          .panel h1 { text-align:center; font-size:28px; }
-          .panel p { text-align:center; color:#7fefff; }
-          .lock-logo { width:76px; height:76px; border-radius:50%; display:block; object-fit:cover; margin:0 auto 14px; box-shadow:0 0 28px #10ddea66; }
-          .dots { display:flex; justify-content:center; gap:9px; margin:12px 0 16px; }
-          .dots span { width:13px; height:13px; border-radius:50%; border:1px solid #21e9ff99; background:#03131a; }
-          .dots span.on { background:#10ddea; box-shadow:0 0 16px #10ddea; }
-          #pin { width:100%; text-align:center; font-size:22px; letter-spacing:8px; font-weight:800; }
-          .pad { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px; }
-          .pad button { margin:0; min-height:48px; font-size:18px; }
+          .panel { width:min(430px,100%); border:0; background:transparent; padding:10px; text-align:center; }
+          .panel h1 { font-family:Orbitron, Inter, sans-serif; text-align:center; font-size:30px; letter-spacing:4px; color:#a9d6ff; text-shadow:0 0 18px rgba(82,190,255,.45); }
+          .panel p { text-align:center; color:#d4d8e3; margin:8px 0 24px; }
+          .lock-logo { width:122px; height:122px; border-radius:12px; display:block; object-fit:cover; margin:0 auto 24px; padding:14px; background:linear-gradient(180deg,#141c25,#0c1219); border:1px solid #253444; box-shadow:0 24px 60px #000a, 0 0 48px rgba(16,216,255,.16); }
+          .dots { display:flex; justify-content:center; gap:26px; margin:14px 0 28px; }
+          .dots span { width:20px; height:20px; border-radius:50%; border:1px solid #496071; background:#101821; box-shadow:inset 0 1px #ffffff12; }
+          .dots span.on { background:#9ad9ff; border-color:#9ad9ff; box-shadow:0 0 18px #1bbfff; }
+          #pin { position:absolute; opacity:0; pointer-events:none; width:1px; height:1px; }
+          .pad { display:grid; grid-template-columns:repeat(3,104px); justify-content:center; gap:20px; margin-top:0; }
+          .pad button { margin:0; min-height:104px; font-size:40px; border-radius:14px; background:linear-gradient(180deg,#142231,#0d1824); border-color:#263949; box-shadow:inset 0 1px rgba(255,255,255,.05), 0 16px 34px #0008; font-weight:900; }
+          .pad button.primary { font-size:18px; background:linear-gradient(135deg,#12e6ff,#168bff); border-color:#33e8ff; color:#02070b; }
           #error { min-height:18px; margin-top:12px; text-align:center; color:#ff8b8b; font-size:13px; }
-          .app-shell { width:min(1440px,100%); height:100vh; display:grid; grid-template-columns:260px minmax(0,1fr); gap:0; padding:0; }
-          .sidebar { border-right:1px solid #103848; background:#020609; padding:18px 14px; display:flex; flex-direction:column; gap:14px; }
-          .brand-row { display:flex; align-items:center; gap:11px; padding:4px 6px 14px; border-bottom:1px solid #103848; }
-          .logo-mark { width:42px; height:42px; border-radius:50%; display:grid; place-items:center; overflow:hidden; background:#10ddea; box-shadow:0 0 22px #10ddea77; }
+          .app-shell { width:100%; height:100vh; display:grid; grid-template-columns:288px minmax(0,1fr); gap:0; padding:0; }
+          .sidebar { border-right:1px solid #202833; background:linear-gradient(90deg,#11151b 0,#0d1117 72%,#070a0f 100%); padding:28px 18px; display:flex; flex-direction:column; gap:20px; box-shadow:18px 0 60px #0008; }
+          .brand-row { display:flex; align-items:center; gap:14px; padding:0 10px 24px; }
+          .brand-row b { display:block; font-size:29px; line-height:.95; color:#b4dbff; text-shadow:0 0 18px rgba(68,175,255,.22); }
+          .logo-mark { width:52px; height:52px; border-radius:11px; display:grid; place-items:center; overflow:hidden; background:#111a23; border:1px solid #2b3b4c; box-shadow:0 0 24px rgba(16,216,255,.28); }
           .logo-mark img { width:100%; height:100%; object-fit:cover; }
-          .nav-item { padding:12px; border-radius:8px; color:#e9fbff; background:transparent; border:0; text-align:left; margin:0; min-height:0; font-weight:700; }
-          .nav-item.active, .nav-item:hover { background:#16242b; }
-          .side-bottom { margin-top:auto; display:grid; gap:8px; }
-          .chat-pane { display:grid; grid-template-rows:auto 1fr; min-width:0; background:#05090d; }
-          .topbar { height:62px; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:0 22px; border-bottom:1px solid #12222b; }
-          .page { display:none; min-height:0; overflow:auto; padding:24px; }
+          .nav-item { padding:16px 18px; border-radius:7px; color:#858b97; background:transparent; border:0; text-align:left; margin:0; min-height:0; font-weight:800; font-size:17px; letter-spacing:.2px; }
+          .nav-item.active, .nav-item:hover { background:linear-gradient(90deg,#1d222a,#15191f); color:#a8d6ff; box-shadow:inset 3px 0 #90cfff; }
+          .side-bottom { margin-top:auto; display:grid; gap:10px; border-top:1px solid #202833; padding-top:18px; }
+          .chat-pane { display:grid; grid-template-rows:80px 1fr; min-width:0; background:radial-gradient(circle at 80% 0,rgba(18,70,94,.24),transparent 28%), #080b11; }
+          .topbar { height:80px; display:flex; align-items:center; justify-content:space-between; gap:14px; padding:0 40px; border-bottom:1px solid #202833; background:linear-gradient(90deg,rgba(14,19,26,.8),rgba(8,11,17,.96)); }
+          .topbar b { font-family:Orbitron, Inter, sans-serif; font-size:28px; color:#c9eeff; }
+          .page { display:none; min-height:0; overflow:auto; padding:42px 48px; }
           .page.active { display:block; }
           .chat-page.active { display:grid; grid-template-rows:1fr auto; padding:0; overflow:hidden; }
-          .chat-log { overflow:auto; padding:28px max(22px,8vw); display:flex; flex-direction:column; gap:18px; }
-          .bubble { max-width:760px; line-height:1.55; padding:14px 16px; border-radius:8px; white-space:pre-wrap; }
-          .bubble.assistant { align-self:flex-start; background:transparent; border-left:2px solid #10ddea; }
-          .bubble.user { align-self:flex-end; background:#2c2d30; }
-          .composer { margin:0 max(16px,8vw) 22px; background:#202124; border:1px solid #33383d; border-radius:8px; padding:10px; display:grid; grid-template-columns:1fr auto auto; gap:8px; align-items:center; }
+          .chat-log { overflow:auto; padding:52px max(24px,9vw) 24px; display:flex; flex-direction:column; gap:26px; }
+          .bubble { max-width:820px; line-height:1.6; padding:18px 20px; border-radius:8px; white-space:pre-wrap; box-shadow:0 18px 40px #0007; }
+          .bubble.assistant { align-self:flex-start; background:#0b0f15; border:1px solid #26384c; color:#e8edf7; box-shadow:0 18px 40px #0007, inset 0 1px rgba(255,255,255,.04); }
+          .bubble.assistant::first-line { color:#9ad3ff; }
+          .bubble.user { align-self:flex-end; background:#2a2d33; border:1px solid #343943; }
+          .composer { margin:0 max(18px,10vw) 28px; background:#10151d; border:1px solid #2b394b; border-radius:8px; padding:10px; display:grid; grid-template-columns:1fr auto auto; gap:9px; align-items:center; box-shadow:0 22px 44px #0009; }
           .composer input { border:0; background:transparent; min-height:44px; font-size:16px; }
-          .icon-btn { width:48px; min-width:48px; border-radius:50%; margin:0; padding:0; }
-          .tools-page-head { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:18px; }
-          .tools-page-head h2 { margin:0 0 4px; font-size:24px; }
-          .tools-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(270px,1fr)); gap:16px; }
-          .tool-card.device-card { min-height:210px; display:flex; flex-direction:column; justify-content:space-between; background:linear-gradient(180deg,#081923,#040b10); }
-          .tool-top { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:14px; }
-          .tool-identity { display:flex; gap:12px; align-items:center; min-width:0; }
-          .device-icon { width:44px; height:44px; border-radius:8px; display:grid; place-items:center; flex:0 0 auto; color:#001015; font-size:13px; font-weight:950; background:#10ddea; box-shadow:0 10px 28px #10ddea24; }
-          .device-icon.blue-icon { background:#2087ff; color:white; box-shadow:0 10px 28px #2087ff22; }
-          .device-icon.green-icon { background:#19e58b; color:#00140b; box-shadow:0 10px 28px #19e58b22; }
-          .device-icon.gold-icon { background:#f1b33b; color:#130c00; box-shadow:0 10px 28px #f1b33b22; }
-          .tool-copy b { display:block; font-size:17px; margin-bottom:4px; }
-          .tool-desc { color:#89aab4; font-size:13px; line-height:1.35; }
-          .control-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-          .color-control { display:grid; grid-template-columns:72px 1fr; gap:10px; margin-bottom:10px; }
+          .icon-btn { width:48px; min-width:48px; border-radius:7px; margin:0; padding:0; }
+          .tools-page-head { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin:0 0 34px; }
+          .tools-page-head h2 { margin:0 0 6px; font-size:clamp(38px,5vw,64px); }
+          .tools-grid { display:grid; grid-template-columns:repeat(2,minmax(260px,1fr)); gap:24px; max-width:1180px; }
+          .tool-card.device-card { min-height:250px; display:flex; flex-direction:column; justify-content:space-between; background:linear-gradient(110deg,rgba(28,33,41,.96),rgba(16,22,30,.96)); border-color:#26384b; }
+          .tool-card.device-card:first-child { grid-column:span 2; min-height:250px; }
+          .tool-top { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:20px; }
+          .tool-identity { display:flex; gap:16px; align-items:center; min-width:0; }
+          .device-icon { width:58px; height:58px; border-radius:16px; display:grid; place-items:center; flex:0 0 auto; color:#13d7ff; font-size:14px; font-weight:950; background:#102337; border:1px solid #0e5a7c; box-shadow:inset 0 1px rgba(255,255,255,.06); }
+          .device-icon.blue-icon, .device-icon.green-icon, .device-icon.gold-icon { background:#2b2d36; border-color:#343946; color:#dbe5f7; box-shadow:none; }
+          .tool-copy b { display:block; font-size:26px; margin-bottom:8px; letter-spacing:-.5px; }
+          .tool-desc { color:#b8bdc7; font-size:13px; line-height:1.45; text-transform:uppercase; letter-spacing:1px; }
+          .control-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+          .color-control { display:grid; grid-template-columns:96px 1fr; gap:12px; margin-bottom:12px; }
           .color-control input[type=color] { width:100%; }
           .mobile-nav { display:none; }
-          .alarm-page { max-width:760px; margin:0 auto; }
-          .alarm-hero { border:1px solid #174a5a; background:radial-gradient(circle at 50% 0,#0a3140 0,#07131a 42%,#03080c 100%); border-radius:8px; padding:24px; box-shadow:0 24px 70px #0008, inset 0 1px #5befff22; }
-          .alarm-picker { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:22px 0 24px; }
-          .picker-column { background:#061821; color:#e9fbff; border:1px solid #174a5a; border-radius:8px; padding:12px 10px; min-width:0; box-shadow:inset 0 1px #52eaff18, 0 16px 34px #0007; }
-          .picker-label { text-align:center; color:#7fefff; font-size:12px; font-weight:900; margin-bottom:8px; }
-          .picker-list { height:170px; overflow:auto; scroll-snap-type:y mandatory; display:grid; gap:7px; padding:0 2px; scrollbar-width:none; }
+          .alarm-page { max-width:960px; margin:0 auto; padding-top:80px; }
+          .alarm-hero { border:1px solid #0a5974; background:radial-gradient(circle at 76% 0,rgba(16,216,255,.14),transparent 26%), linear-gradient(120deg,#0b1119,#061018); border-radius:18px; padding:40px; box-shadow:0 28px 80px #000b, 0 0 40px rgba(16,216,255,.11), inset 0 1px rgba(255,255,255,.06); }
+          .alarm-picker { display:grid; grid-template-columns:1fr 1fr; gap:22px; margin:34px 0 28px; }
+          .picker-column { background:#05080d; color:#e9fbff; border:1px solid #0b88ad; border-radius:12px; padding:16px 14px; min-width:0; box-shadow:inset 0 1px #52eaff18, 0 18px 46px #0009; }
+          .picker-label { text-align:center; color:#00e3ff; font-family:Orbitron, Inter, sans-serif; font-size:14px; font-weight:800; margin-bottom:14px; }
+          .picker-list { height:210px; overflow:auto; scroll-snap-type:y mandatory; display:grid; gap:10px; padding:0 4px; scrollbar-width:none; }
           .picker-list::-webkit-scrollbar { display:none; }
-          .picker-option { min-height:40px; margin:0; border:0; background:transparent; color:#5f7f89; border-radius:7px; font-size:18px; font-weight:900; scroll-snap-align:center; transition:background .16s ease, color .16s ease, transform .16s ease, box-shadow .16s ease; }
-          .picker-option.active { color:#001015; background:#10ddea; transform:scale(1.02); box-shadow:inset 3px 0 #b8fbff, inset -3px 0 #b8fbff, 0 8px 18px #10ddea22; }
+          .picker-option { min-height:52px; margin:0; border:0; background:transparent; color:#5d6672; border-radius:8px; font-family:Orbitron, Inter, sans-serif; font-size:28px; font-weight:800; scroll-snap-align:center; transition:background .16s ease, color .16s ease, transform .16s ease, box-shadow .16s ease; }
+          .picker-option.active { color:#00080d; background:#18d9f4; transform:scale(1.02); box-shadow:0 0 26px rgba(16,216,255,.42); }
           .alarm-hidden { display:none; }
-          .alarm-settings { border-top:1px solid #26343b; padding-top:16px; display:grid; gap:14px; }
-          .alarm-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-          .settings-list { display:grid; gap:12px; max-width:760px; }
-          .settings-row { border:1px solid #173746; background:#07131a; border-radius:8px; padding:14px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+          .alarm-settings { border-top:1px solid #26343b; padding-top:24px; display:grid; gap:18px; }
+          .alarm-actions { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+          .settings-list { display:grid; grid-template-columns:1fr 1fr; gap:24px; max-width:1120px; }
+          .settings-row { border:1px solid #293846; background:linear-gradient(120deg,#11161d,#0a0f15); border-radius:12px; padding:26px; display:flex; align-items:center; justify-content:space-between; gap:16px; min-height:150px; box-shadow:0 18px 44px #0008; }
           .tools-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; }
-          .tool-card { border:1px solid #173746; background:#07131a; border-radius:8px; padding:13px; margin-bottom:10px; transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
-          .tool-card:hover { transform:translateY(-1px); border-color:#1b6e82; box-shadow:0 12px 30px #0007; }
-          .tool-title { display:flex; justify-content:space-between; align-items:center; gap:8px; font-weight:900; margin-bottom:9px; }
-          .state-chip { font-size:12px; color:#8fb6c0; border:1px solid #234b58; border-radius:999px; padding:3px 8px; }
-          .state-chip.on { color:#001015; background:#10ddea; border-color:#10ddea; }
+          .tool-card { border:1px solid #273647; background:linear-gradient(110deg,#171b22,#0f141b); border-radius:8px; padding:24px; margin-bottom:10px; transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+          .tool-card:hover { transform:translateY(-2px); border-color:#49718e; box-shadow:0 18px 46px #0008; }
+          .tool-title { display:flex; justify-content:space-between; align-items:center; gap:8px; font-weight:900; margin-bottom:9px; font-size:28px; }
+          .state-chip { font-size:12px; color:#a7bbca; border:1px solid #34475b; border-radius:999px; padding:5px 10px; background:#111a24; font-family:"Share Tech Mono", ui-monospace, monospace; text-transform:uppercase; }
+          .state-chip.on { color:#001015; background:#13e0ff; border-color:#13e0ff; box-shadow:0 0 18px rgba(16,216,255,.32); }
           .tool-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
           .alarm-display { font-size:34px; letter-spacing:2px; margin:8px 0 10px; color:#e9fbff; }
           .modal { position:fixed; inset:0; z-index:8; display:none; place-items:end center; background:#0009; padding:18px; }
@@ -119,37 +126,37 @@ app.get('/', (req, res) => {
           .time-row { display:flex; justify-content:center; align-items:center; gap:12px; font-size:54px; margin:8px 0 18px; }
           .time-row input { width:88px; text-align:center; font-size:44px; padding:4px; border:0; background:#111; }
           .days { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin:12px 0; }
-          .days span { text-align:center; color:#aaa; font-size:13px; padding:8px 0; border-radius:8px; background:#071822; border:1px solid #173746; }
-          .days span.active { color:#001015; background:#10ddea; border-color:#10ddea; font-weight:900; }
-          .field { display:grid; gap:6px; margin:12px 0; color:#aaa; }
+          .days span { text-align:center; color:#8b93a0; font-size:15px; padding:13px 0; border-radius:8px; background:#0b1118; border:1px solid #273647; font-weight:900; }
+          .days span.active { color:#001015; background:#10ddea; border-color:#10ddea; font-weight:900; box-shadow:0 0 22px rgba(16,216,255,.25); }
+          .field { display:grid; gap:8px; margin:12px 0; color:#b9c1cc; }
           .field input { width:100%; }
-          @media (max-width:980px) { body { padding-bottom:72px; } .app-shell { height:auto; min-height:100vh; grid-template-columns:1fr; } .sidebar { display:none; } .chat-pane { min-height:100vh; } .page { padding:18px; } .topbar { height:58px; padding:0 16px; } .mobile-nav { position:fixed; left:12px; right:12px; bottom:12px; z-index:7; display:grid; grid-template-columns:repeat(4,1fr); gap:6px; padding:7px; border:1px solid #174a5a; border-radius:8px; background:#02090dcc; backdrop-filter:blur(12px); box-shadow:0 18px 46px #000c; } .mobile-nav button { min-height:46px; margin:0; padding:8px 4px; font-size:12px; border-radius:7px; } .mobile-nav button.active { background:#10ddea; color:#001015; border-color:#10ddea; } .locked .mobile-nav { display:none; } }
-          @media (max-width:560px) { header { align-items:flex-start; flex-direction:column; } .pill { width:100%; text-align:center; } .composer { grid-template-columns:1fr auto; margin:0 12px 16px; } .composer .primary { grid-column:1 / -1; width:100%; border-radius:7px; } .tools-page-head { align-items:stretch; flex-direction:column; } .tools-page-head button { max-width:none !important; } .tools-grid { grid-template-columns:1fr; gap:12px; } .tool-card.device-card { min-height:190px; padding:15px; } .control-row { gap:8px; } .color-control { grid-template-columns:64px 1fr; } .time-row { font-size:42px; } .time-row input { width:72px; font-size:36px; } .alarm-actions { grid-template-columns:1fr; } .alarm-picker { gap:10px; } .picker-list { height:156px; } }
+          @media (max-width:980px) { body { overflow:auto; padding-bottom:86px; } .app-shell { height:auto; min-height:100vh; grid-template-columns:1fr; } .sidebar { display:none; } .chat-pane { min-height:100vh; grid-template-rows:72px 1fr; } .page { padding:24px 18px; } .topbar { height:72px; padding:0 18px; } .topbar b { font-size:22px; } .tools-grid { grid-template-columns:1fr; } .tool-card.device-card:first-child { grid-column:auto; } .settings-list { grid-template-columns:1fr; } .alarm-page { padding-top:20px; } .mobile-nav { position:fixed; left:12px; right:12px; bottom:12px; z-index:7; display:grid; grid-template-columns:repeat(4,1fr); gap:6px; padding:7px; border:1px solid #26465a; border-radius:12px; background:#0a0f15e8; backdrop-filter:blur(12px); box-shadow:0 18px 46px #000c; } .mobile-nav button { min-height:48px; margin:0; padding:8px 4px; font-size:12px; border-radius:8px; } .mobile-nav button.active { background:#10ddea; color:#001015; border-color:#10ddea; } .locked .mobile-nav { display:none; } }
+          @media (max-width:560px) { h1 { font-size:38px; } .pad { grid-template-columns:repeat(3,92px); gap:12px; } .pad button { min-height:92px; font-size:34px; } .pill { width:100%; text-align:center; } .composer { grid-template-columns:1fr auto; margin:0 12px 16px; } .composer .primary { grid-column:1 / -1; width:100%; border-radius:7px; } .tools-page-head { align-items:stretch; flex-direction:column; margin-bottom:20px; } .tools-page-head h2 { font-size:38px; } .tools-page-head button { max-width:none !important; } .tools-grid { grid-template-columns:1fr; gap:14px; } .tool-card.device-card { min-height:210px; padding:18px; } .tool-copy b { font-size:22px; } .control-row { gap:8px; } .color-control { grid-template-columns:76px 1fr; } .time-row { font-size:42px; } .time-row input { width:72px; font-size:36px; } .alarm-hero { padding:22px; border-radius:14px; } .alarm-actions { grid-template-columns:1fr; } .alarm-picker { gap:12px; } .picker-list { height:168px; } .picker-option { font-size:24px; } .settings-row { min-height:unset; flex-direction:column; align-items:flex-start; } }
         </style>
       </head>
       <body class="locked">
         <div class="lock" id="lock">
           <section class="panel">
             <img class="lock-logo" src="/assets/logo.png" alt="Smart Room logo">
-            <h1>Smart Room</h1>
-            <p>Enter PIN to control from cloud</p>
+            <h1>SYSTEM CORE</h1>
+            <p>Authentication Required</p>
             <div class="dots" id="dots"><span></span><span></span><span></span><span></span></div>
             <input id="pin" inputmode="numeric" maxlength="8" type="password" placeholder="PIN">
             <div class="pad">
               <button onclick="press('1')">1</button><button onclick="press('2')">2</button><button onclick="press('3')">3</button>
               <button onclick="press('4')">4</button><button onclick="press('5')">5</button><button onclick="press('6')">6</button>
               <button onclick="press('7')">7</button><button onclick="press('8')">8</button><button onclick="press('9')">9</button>
-              <button onclick="back()">DEL</button><button onclick="press('0')">0</button><button class="primary" onclick="unlock()">OK</button>
+              <button onclick="back()">DEL</button><button onclick="press('0')">0</button><button class="primary" onclick="unlock()">ENTER</button>
             </div>
             <div id="error"></div>
           </section>
         </div>
         <main class="app-shell">
           <aside class="sidebar">
-            <div class="brand-row"><div class="logo-mark"><img src="/assets/logo.png" alt="Smart Room logo"></div><div><b>Smart Room</b><div class="sub">Cloud Remote Dashboard</div></div></div>
-            <button class="nav-item active" data-page="chat" onclick="showPage('chat')">Chat AI</button>
-            <button class="nav-item" data-page="tools" onclick="showPage('tools')">Tools</button>
-            <button class="nav-item" data-page="alarm" onclick="showPage('alarm')">Alarm</button>
+            <div class="brand-row"><div class="logo-mark"><img src="/assets/logo.png" alt="Smart Room logo"></div><div><b>KEMI OS</b><div class="sub mono">Online</div></div></div>
+            <button class="nav-item active" data-page="chat" onclick="showPage('chat')">AI Assistant</button>
+            <button class="nav-item" data-page="tools" onclick="showPage('tools')">Devices</button>
+            <button class="nav-item" data-page="alarm" onclick="showPage('alarm')">Scheduler</button>
             <button class="nav-item" data-page="settings" onclick="showPage('settings')">Settings</button>
             <div class="side-bottom">
               <div class="pill" id="espStatus" style="border-color:#551111;color:#ff5555;background:#1a0505;">ESP Offline</div>
@@ -158,23 +165,24 @@ app.get('/', (req, res) => {
             </div>
           </aside>
           <section class="chat-pane">
-            <div class="topbar"><div><b id="pageTitle">Smart Room AI</b><div class="sub" id="pageSubtitle">Ask, command, or use voice</div></div><button class="dark" id="clearButton" onclick="clearPending()" style="max-width:150px;margin:0">CLEAR PENDING</button></div>
+            <div class="topbar"><div><b id="pageTitle">AI Assistant</b><div class="sub" id="pageSubtitle">Command terminal and voice control</div></div><button class="dark mono" id="clearButton" onclick="clearPending()" style="max-width:170px;margin:0">CLEAR PENDING</button></div>
             <section class="page chat-page active" id="chatPage">
               <div class="chat-log" id="chatLog">
-                <div class="bubble assistant">Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk memberi perintah.</div>
+                <div class="bubble assistant">&gt; Smart Room AI online.
+Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk memberi perintah.</div>
               </div>
               <div class="composer">
                 <input id="cmd" placeholder="Ask anything or command your room">
-                <button class="icon-btn blue" onclick="voiceAi()" title="Voice AI">🎙</button>
-                <button class="icon-btn primary" onclick="askAi()" title="Send">➜</button>
+                <button class="icon-btn blue" onclick="voiceAi()" title="Voice AI">MIC</button>
+                <button class="icon-btn primary" onclick="askAi()" title="Send">GO</button>
               </div>
               <div id="reply" style="display:none">Gateway ready</div>
             </section>
             <section class="page" id="toolsPage">
-              <div class="tools-page-head"><div><h2>Device Tools</h2><div class="sub">Realtime controls for every smart room device</div></div><button class="dark" onclick="checkEspStatus()" style="max-width:112px;margin:0">REFRESH</button></div>
+              <div class="tools-page-head"><div><h2>Environment Control</h2><div class="sub">4 active nodes in primary room zone.</div></div><button class="dark mono" onclick="checkEspStatus()" style="max-width:140px;margin:0">REFRESH</button></div>
               <div class="tools-grid">
                 <article class="tool-card device-card">
-                  <div><div class="tool-top"><div class="tool-identity"><div class="device-icon">DL</div><div class="tool-copy"><b>Desk Lamp</b><div class="tool-desc">Main desk light control</div></div></div><span class="state-chip" id="lampState">OFF</span></div></div>
+                  <div><div class="tool-top"><div class="tool-identity"><div class="device-icon">LOCK</div><div class="tool-copy"><b>Desk Lamp</b><div class="tool-desc">Main desk light control</div></div></div><span class="state-chip" id="lampState">OFF</span></div></div>
                   <div class="control-row"><button class="primary" onclick="queue({device:'lamp',state:'on'})">ON</button><button class="dark" onclick="queue({device:'lamp',state:'off'})">OFF</button></div>
                 </article>
                 <article class="tool-card device-card">
@@ -182,7 +190,7 @@ app.get('/', (req, res) => {
                   <div class="control-row"><button class="primary" onclick="queue({device:'rgb',state:'on'})">ON</button><button class="dark" onclick="queue({device:'rgb',state:'off'})">OFF</button></div>
                 </article>
                 <article class="tool-card device-card">
-                  <div><div class="tool-top"><div class="tool-identity"><div class="device-icon green-icon">DR</div><div class="tool-copy"><b>Smart Door</b><div class="tool-desc">Servo door with auto close</div></div></div><span class="state-chip" id="doorState">CLOSED</span></div></div>
+                  <div><div class="tool-top"><div class="tool-identity"><div class="device-icon green-icon">DR</div><div class="tool-copy"><b>Main Entrance</b><div class="tool-desc">Smart lock servo with auto close</div></div></div><span class="state-chip" id="doorState">CLOSED</span></div></div>
                   <div class="control-row"><button class="primary" onclick="queue({device:'door',state:'open'})">OPEN</button><button class="dark" onclick="queue({device:'door',state:'close'})">CLOSE</button></div>
                 </article>
                 <article class="tool-card device-card">
@@ -197,7 +205,7 @@ app.get('/', (req, res) => {
             </section>
             <section class="page alarm-page" id="alarmPage">
               <div class="alarm-hero">
-                <div class="tool-title">Alarm <span class="state-chip" id="alarmState">OFF</span></div>
+                <div class="tool-title">Scheduler <span class="state-chip" id="alarmState">OFF</span></div>
                 <input class="alarm-hidden" id="alarmHour" type="number" min="0" max="23" value="06">
                 <input class="alarm-hidden" id="alarmMinute" type="number" min="0" max="59" value="00">
                 <div class="alarm-picker">
@@ -206,17 +214,17 @@ app.get('/', (req, res) => {
                 </div>
                 <div class="alarm-settings">
                   <div class="days"><span class="active">M</span><span class="active">T</span><span class="active">W</span><span class="active">T</span><span class="active">F</span><span>S</span><span>S</span></div>
-                  <label class="field">Alarm name <input id="alarmName" value="Smart Room Alarm"></label>
+                  <label class="field mono">Routine Designation <input id="alarmName" value="Smart Room Alarm"></label>
                   <div class="alarm-actions"><button class="primary" onclick="saveAlarm()">SAVE</button><button class="primary" onclick="enableAlarm()">ON</button><button class="dark" onclick="disableAlarm()">OFF</button><button class="dark" onclick="queue({device:'buzzer',state:'off'})">STOP</button></div>
                 </div>
               </div>
             </section>
             <section class="page" id="settingsPage">
               <div class="settings-list">
-                <div class="settings-row"><div><b>Cloud Remote Dashboard</b><div class="sub">Vercel remote control from inside or outside network</div></div><span class="state-chip on">ACTIVE</span></div>
-                <div class="settings-row"><div><b>Realtime Polling</b><div class="sub">ESP checks cloud about every 2 seconds</div></div><span class="state-chip on">2 SEC</span></div>
-                <div class="settings-row"><div><b>Local ESP Dashboard</b><div class="sub">IP address shows firmware dashboard, so upload sketch after local UI changes</div></div><span class="state-chip">LOCAL</span></div>
-                <button class="dark" onclick="clearPending()">CLEAR PENDING COMMANDS</button>
+                <div class="settings-row"><div><b>Remote Dashboard</b><div class="sub">Vercel remote control from inside or outside network</div></div><span class="state-chip on">SYNC ACTIVE</span></div>
+                <div class="settings-row"><div><b>Telemetry Polling</b><div class="sub">ESP checks cloud about every 2 seconds</div></div><span class="state-chip on">2 SEC</span></div>
+                <div class="settings-row"><div><b>Local Edge Dashboard</b><div class="sub">IP address shows firmware dashboard, so upload sketch after local UI changes</div></div><span class="state-chip">LOCAL</span></div>
+                <button class="dark mono" onclick="clearPending()">CLEAR PENDING COMMANDS</button>
               </div>
             </section>
           </section>
@@ -269,10 +277,10 @@ app.get('/', (req, res) => {
           pin.addEventListener('input', () => { pin.value = pin.value.replace(/\\D/g, '').slice(0, 4); redraw(); });
           pin.addEventListener('keydown', (event) => { if (event.key === 'Enter') unlock(); });
           const pageMeta = {
-            chat: ['Smart Room AI', 'Ask, command, or use voice'],
-            tools: ['Tools', 'Control each device and see realtime status'],
-            alarm: ['Alarm', 'Set schedule and stop buzzer'],
-            settings: ['Settings', 'Cloud, realtime, and local dashboard info']
+            chat: ['AI Assistant', 'Command terminal and voice control'],
+            tools: ['Environment Control', 'Realtime device nodes and room status'],
+            alarm: ['Scheduler', 'Set routine, alarm, and stop buzzer'],
+            settings: ['System Configurations', 'Cloud, realtime, and local dashboard info']
           };
           function showPage(name) {
             const meta = pageMeta[name] || pageMeta.chat;
