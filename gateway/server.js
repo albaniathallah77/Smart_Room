@@ -132,8 +132,8 @@ app.get('/', (req, res) => {
           .days span.active { color:#001015; background:#10ddea; border-color:#10ddea; font-weight:900; box-shadow:0 0 22px rgba(16,216,255,.25); }
           .field { display:grid; gap:8px; margin:12px 0; color:#b9c1cc; }
           .field input { width:100%; }
-          @media (max-width:980px) { body { overflow:auto; padding-bottom:0; } .app-shell { height:auto; min-height:100vh; grid-template-columns:1fr; } .sidebar { display:none; } .chat-pane { min-height:100vh; grid-template-rows:72px 1fr; background:#080b11; } .page { padding:24px 18px; } .topbar { position:sticky; top:0; z-index:6; height:72px; padding:0 16px; justify-content:flex-start; background:#0b0f14f2; backdrop-filter:blur(16px); } .topbar b { font-family:Inter, system-ui, sans-serif; font-size:20px; letter-spacing:0; color:#f4f7fb; } .topbar > div { min-width:0; flex:1; } .mobile-top-logo { display:block; width:34px; height:34px; border-radius:9px; object-fit:cover; border:1px solid #2b3b4c; box-shadow:0 0 18px rgba(16,216,255,.24); } #clearButton { display:none !important; } .mobile-menu-toggle { display:grid; place-items:center; flex:0 0 auto; width:48px; min-width:48px; height:48px; min-height:48px; margin:0; padding:0; border-radius:12px; font-size:28px; line-height:1; background:#101823; border-color:#2c4358; color:#c9eeff; box-shadow:0 10px 24px #0008; } .chat-page.active { min-height:calc(100vh - 72px); grid-template-rows:1fr auto; } .chat-log { padding:22px 16px 18px; gap:18px; } .bubble { max-width:88%; box-shadow:none; font-size:15px; line-height:1.55; } .bubble.assistant { position:relative; align-self:flex-start; background:transparent; border:0; padding:8px 6px 8px 48px; color:#eef4ff; } .bubble.assistant::before { content:""; position:absolute; left:0; top:8px; width:34px; height:34px; border-radius:9px; background:url('/assets/logo.png') center/cover no-repeat, #111a23; border:1px solid #2b3b4c; box-shadow:0 0 16px rgba(16,216,255,.2); } .bubble.assistant::first-line { color:#eef4ff; } .bubble.user { align-self:flex-end; background:#2b2f36; border:1px solid #3a404a; border-radius:18px; padding:12px 14px; } .composer { position:sticky; bottom:0; margin:0; padding:12px 14px; border-radius:0; border-width:1px 0 0; background:#0b0f14f2; backdrop-filter:blur(16px); grid-template-columns:1fr auto auto; box-shadow:0 -18px 40px #0008; } .composer input { min-height:48px; padding:0 2px; font-size:15px; } .icon-btn { width:46px; min-width:46px; height:46px; min-height:46px; border-radius:999px; font-size:12px; } .tools-grid { grid-template-columns:1fr; } .tool-card.device-card:first-child { grid-column:auto; } .settings-list { grid-template-columns:1fr; } .alarm-page { padding-top:20px; } .mobile-nav { position:fixed; top:82px; left:12px; right:auto; bottom:auto; z-index:7; display:grid; grid-template-columns:1fr; gap:8px; width:min(250px,calc(100vw - 24px)); padding:10px; border:1px solid #26465a; border-radius:14px; background:#0a0f15f2; backdrop-filter:blur(14px); box-shadow:0 18px 46px #000d, 0 0 24px rgba(16,216,255,.12); opacity:0; transform:translateY(-8px) scale(.98); pointer-events:none; transition:opacity .16s ease, transform .16s ease; } .mobile-nav.open { opacity:1; transform:translateY(0) scale(1); pointer-events:auto; } .mobile-nav button { min-height:50px; margin:0; padding:10px 14px; font-size:14px; border-radius:10px; text-align:left; } .mobile-nav button.active { background:#10ddea; color:#001015; border-color:#10ddea; } .locked .mobile-nav, .locked .mobile-menu-toggle, .locked .mobile-top-logo { display:none; } }
-          @media (max-width:560px) { h1 { font-size:38px; } .pad { grid-template-columns:repeat(3,92px); gap:12px; } .pad button { min-height:92px; font-size:34px; } .pill { width:100%; text-align:center; } .tools-page-head { align-items:stretch; flex-direction:column; margin-bottom:20px; } .tools-page-head h2 { font-size:38px; } .tools-page-head button { max-width:none !important; } .tools-grid { grid-template-columns:1fr; gap:14px; } .tool-card.device-card { min-height:210px; padding:18px; } .tool-copy b { font-size:22px; } .control-row { gap:8px; } .color-control { grid-template-columns:76px 1fr; } .time-row { font-size:42px; } .time-row input { width:72px; font-size:36px; } .alarm-hero { padding:22px; border-radius:14px; } .alarm-actions { grid-template-columns:1fr; } .alarm-picker { gap:12px; } .picker-list { height:168px; } .picker-option { font-size:24px; } .settings-row { min-height:unset; flex-direction:column; align-items:flex-start; } }
+          @media (max-width:980px) { body { overflow:auto; padding-bottom:0; } .app-shell { height:auto; min-height:100vh; grid-template-columns:1fr; } .sidebar { display:none; } .chat-pane { min-height:100vh; grid-template-rows:72px 1fr; background:#080b11; } .page { padding:24px 18px; } .topbar { position:sticky; top:0; z-index:6; height:72px; padding:0 16px; justify-content:flex-start; background:#0b0f14f2; backdrop-filter:blur(16px); } .topbar b { font-family:Inter, system-ui, sans-serif; font-size:20px; letter-spacing:0; color:#f4f7fb; } .topbar > div { min-width:0; flex:1; } .mobile-top-logo { display:block; width:34px; height:34px; border-radius:9px; object-fit:cover; border:1px solid #2b3b4c; box-shadow:0 0 18px rgba(16,216,255,.24); } #clearButton { display:none !important; } .mobile-menu-toggle { display:grid; place-items:center; flex:0 0 auto; width:48px; min-width:48px; height:48px; min-height:48px; margin:0; padding:0; border-radius:12px; font-size:28px; line-height:1; background:#101823; border-color:#2c4358; color:#c9eeff; box-shadow:0 10px 24px #0008; } .chat-page.active { min-height:calc(100vh - 72px); grid-template-rows:1fr auto; } .chat-log { padding:22px 16px 18px; gap:18px; } .bubble { max-width:88%; box-shadow:none; font-size:15px; line-height:1.55; } .bubble.assistant { position:relative; align-self:flex-start; background:transparent; border:0; padding:8px 6px 8px 48px; color:#eef4ff; } .bubble.assistant::before { content:""; position:absolute; left:0; top:8px; width:34px; height:34px; border-radius:9px; background:url('/assets/logo.png') center/cover no-repeat, #111a23; border:1px solid #2b3b4c; box-shadow:0 0 16px rgba(16,216,255,.2); } .bubble.assistant::first-line { color:#eef4ff; } .bubble.user { align-self:flex-end; background:#2b2f36; border:1px solid #3a404a; border-radius:18px; padding:12px 14px; } .composer { position:sticky; bottom:0; margin:0; padding:12px 14px; border-radius:0; border-width:1px 0 0; background:#0b0f14f2; backdrop-filter:blur(16px); grid-template-columns:1fr auto auto; box-shadow:0 -18px 40px #0008; } .composer input { min-height:48px; padding:0 2px; font-size:15px; } .icon-btn { width:46px; min-width:46px; height:46px; min-height:46px; border-radius:999px; font-size:12px; } .tools-grid { grid-template-columns:1fr; } .tool-card.device-card:first-child { grid-column:auto; } .settings-list { grid-template-columns:1fr; } .alarm-page { width:min(100%,420px); padding:18px 12px 40px; } .alarm-hero { padding:22px 20px; border-radius:16px; } .alarm-picker { gap:14px; margin:28px 0 22px; } .picker-column { padding:14px 10px; } .picker-list { height:188px; scroll-behavior:smooth; } .picker-option { min-height:48px; font-size:24px; } .alarm-settings { gap:16px; } .mobile-nav { position:fixed; top:82px; left:12px; right:auto; bottom:auto; z-index:7; display:grid; grid-template-columns:1fr; gap:8px; width:min(250px,calc(100vw - 24px)); padding:10px; border:1px solid #26465a; border-radius:14px; background:#0a0f15f2; backdrop-filter:blur(14px); box-shadow:0 18px 46px #000d, 0 0 24px rgba(16,216,255,.12); opacity:0; transform:translateY(-8px) scale(.98); pointer-events:none; transition:opacity .16s ease, transform .16s ease; } .mobile-nav.open { opacity:1; transform:translateY(0) scale(1); pointer-events:auto; } .mobile-nav button { min-height:50px; margin:0; padding:10px 14px; font-size:14px; border-radius:10px; text-align:left; } .mobile-nav button.active { background:#10ddea; color:#001015; border-color:#10ddea; } .locked .mobile-nav, .locked .mobile-menu-toggle, .locked .mobile-top-logo { display:none; } }
+          @media (max-width:560px) { h1 { font-size:38px; } .pad { grid-template-columns:repeat(3,92px); gap:12px; } .pad button { min-height:92px; font-size:34px; } .pill { width:100%; text-align:center; } .tools-page-head { align-items:stretch; flex-direction:column; margin-bottom:20px; } .tools-page-head h2 { font-size:38px; } .tools-page-head button { max-width:none !important; } .tools-grid { grid-template-columns:1fr; gap:14px; } .tool-card.device-card { min-height:210px; padding:18px; } .tool-copy b { font-size:22px; } .control-row { gap:8px; } .color-control { grid-template-columns:76px 1fr; } .time-row { font-size:42px; } .time-row input { width:72px; font-size:36px; } .alarm-actions { grid-template-columns:1fr; } .settings-row { min-height:unset; flex-direction:column; align-items:flex-start; } }
         </style>
       </head>
       <body class="locked">
@@ -252,6 +252,8 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
           const pinValue = () => sessionStorage.getItem('smart_room_pin') || '';
           let alarmEditing = false;
           let pickerScrollTimer = 0;
+          let pickerRendering = false;
+          let pickerWarping = false;
           function redraw() {
             const isOpen = unlocked();
             document.body.classList.toggle('locked', !isOpen);
@@ -317,6 +319,8 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
           }
           function setAlarmPicker(part, value) {
             alarmEditing = true;
+            const limit = part === 'hour' ? 24 : 60;
+            value = ((Number(value) % limit) + limit) % limit;
             if (part === 'hour') {
               alarmHour.value = two(value);
             } else {
@@ -326,6 +330,7 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
           }
           function syncPickerFromScroll(part) {
             const list = part === 'hour' ? hourPicker : minutePicker;
+            if (pickerRendering || pickerWarping) return;
             const buttons = [...list.querySelectorAll('.picker-option')];
             const listCenter = list.getBoundingClientRect().top + list.clientHeight / 2;
             let closest = buttons[0];
@@ -341,34 +346,55 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
             if (closest) setAlarmPicker(part, Number(closest.dataset.value));
           }
           function onPickerScroll(part) {
+            if (pickerRendering || pickerWarping) return;
             alarmEditing = true;
+            normalizePickerLoop(part);
             clearTimeout(pickerScrollTimer);
-            pickerScrollTimer = setTimeout(() => syncPickerFromScroll(part), 180);
+            pickerScrollTimer = setTimeout(() => syncPickerFromScroll(part), 120);
+          }
+          function normalizePickerLoop(part) {
+            const list = part === 'hour' ? hourPicker : minutePicker;
+            const count = part === 'hour' ? 24 : 60;
+            const option = list.querySelector('.picker-option');
+            if (!option) return;
+            const row = option.offsetHeight + 10;
+            const span = row * count;
+            if (list.scrollTop < span * 0.55 || list.scrollTop > span * 1.45) {
+              pickerWarping = true;
+              list.scrollTop = list.scrollTop < span ? list.scrollTop + span : list.scrollTop - span;
+              requestAnimationFrame(() => { pickerWarping = false; });
+            }
           }
           function renderAlarmPicker() {
             const selectedHour = Number(alarmHour.value) || 0;
             const selectedMinute = Number(alarmMinute.value) || 0;
+            pickerRendering = true;
             hourPicker.innerHTML = '';
             minutePicker.innerHTML = '';
-            for (let hour = 0; hour < 24; hour++) {
+            for (let index = 0; index < 72; index++) {
+              const hour = index % 24;
               const button = document.createElement('button');
               button.className = 'picker-option' + (hour === selectedHour ? ' active' : '');
               button.dataset.value = String(hour);
+              button.dataset.loop = String(index);
               button.textContent = two(hour);
               button.onclick = () => setAlarmPicker('hour', hour);
               hourPicker.appendChild(button);
             }
-            for (let minute = 0; minute < 60; minute++) {
+            for (let index = 0; index < 180; index++) {
+              const minute = index % 60;
               const button = document.createElement('button');
               button.className = 'picker-option' + (minute === selectedMinute ? ' active' : '');
               button.dataset.value = String(minute);
+              button.dataset.loop = String(index);
               button.textContent = two(minute);
               button.onclick = () => setAlarmPicker('minute', minute);
               minutePicker.appendChild(button);
             }
             requestAnimationFrame(() => {
-              hourPicker.querySelector('.active')?.scrollIntoView({ block:'center' });
-              minutePicker.querySelector('.active')?.scrollIntoView({ block:'center' });
+              hourPicker.querySelector('.picker-option[data-loop="' + (selectedHour + 24) + '"]')?.scrollIntoView({ block:'center', behavior:'auto' });
+              minutePicker.querySelector('.picker-option[data-loop="' + (selectedMinute + 60) + '"]')?.scrollIntoView({ block:'center', behavior:'auto' });
+              requestAnimationFrame(() => { pickerRendering = false; });
             });
           }
           function clampAlarmInputs(source = 'page') {
