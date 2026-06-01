@@ -69,21 +69,21 @@ app.get('/', (req, res) => {
           .nav-item { padding:16px 18px; border-radius:7px; color:#858b97; background:transparent; border:0; text-align:left; margin:0; min-height:0; font-weight:800; font-size:17px; letter-spacing:.2px; }
           .nav-item.active, .nav-item:hover { background:linear-gradient(90deg,#1d222a,#15191f); color:#a8d6ff; box-shadow:inset 3px 0 #90cfff; }
           .side-bottom { margin-top:auto; display:grid; gap:10px; border-top:1px solid #202833; padding-top:18px; }
-          .chat-pane { display:grid; grid-template-rows:72px 1fr; min-width:0; background:#111318; }
-          .topbar { height:72px; display:flex; align-items:center; justify-content:space-between; gap:14px; padding:0 34px; border-bottom:1px solid #252a31; background:#111318; }
+          .chat-pane { display:grid; grid-template-rows:72px 1fr; min-width:0; background:#111318; height: 100vh; }
+          .topbar { height:72px; display:flex; align-items:center; justify-content:space-between; gap:14px; padding:0 34px; border-bottom:1px solid #252a31; background:#111318; flex-shrink: 0; }
           .topbar b { font-family:Inter, system-ui, sans-serif; font-size:20px; color:#f4f7fb; letter-spacing:0; }
           .mobile-menu-toggle { display:none; }
           .mobile-top-logo { display:none; }
-          .page { display:none; min-height:0; overflow:auto; padding:42px 48px; }
+          .page { display:none; min-height:0; overflow:auto; padding:42px 48px; height: 100%; }
           .page.active { display:block; }
-          .chat-page.active { display:grid; grid-template-rows:1fr auto; padding:0; overflow:hidden; height:100%; }
-          .chat-log { overflow-y:auto; width:min(900px,100%); margin:0 auto; padding:48px 24px 24px; display:flex; flex-direction:column; gap:24px; min-height:0; scroll-behavior:smooth; }
+          .chat-page.active { display:flex; flex-direction:column; padding:0; overflow:hidden; height:100%; }
+          .chat-log { flex: 1; overflow-y:auto; width:min(900px,100%); margin:0 auto; padding:48px 24px 24px; display:flex; flex-direction:column; gap:24px; min-height:0; scroll-behavior:smooth; }
           .bubble { max-width:100%; line-height:1.65; padding:12px 14px; border-radius:18px; white-space:pre-wrap; box-shadow:none; font-size:16px; }
           .bubble.assistant { position:relative; align-self:stretch; background:transparent; border:0; color:#eef4ff; padding-left:54px; }
           .bubble.assistant::before { content:""; position:absolute; left:4px; top:12px; width:34px; height:34px; border-radius:9px; background:url('/assets/logo.png') center/cover no-repeat, #111a23; border:1px solid #2b3b4c; box-shadow:0 0 16px rgba(16,216,255,.2); }
           .bubble.assistant::first-line { color:#eef4ff; }
           .bubble.user { align-self:flex-end; max-width:72%; background:#2c3037; border:1px solid #3a404a; }
-          .composer { position:relative; width:min(900px,calc(100% - 48px)); margin:0 auto 28px; background:#24272d; border:1px solid #3a404a; border-radius:28px; padding:10px 12px; display:grid; grid-template-columns:1fr auto auto; gap:8px; align-items:center; box-shadow:0 18px 42px #0009; }
+          .composer { position:relative; width:min(900px,calc(100% - 48px)); margin:0 auto 18px; background:#24272d; border:1px solid #3a404a; border-radius:28px; padding:10px 12px; display:grid; grid-template-columns:1fr auto auto; gap:8px; align-items:center; box-shadow:0 18px 42px #0009; flex-shrink: 0; }
           .composer input { border:0; background:transparent; min-height:44px; font-size:16px; }
           .icon-btn { width:46px; min-width:46px; height:46px; min-height:46px; border-radius:999px; margin:0; padding:0; }
           .voice-status { position:absolute; left:18px; right:18px; bottom:calc(100% + 10px); display:none; align-items:center; gap:10px; color:#dceaff; background:#20242b; border:1px solid #3a4452; border-radius:999px; padding:10px 14px; width:max-content; max-width:calc(100% - 36px); box-shadow:0 18px 36px #0009; }
@@ -335,7 +335,9 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
             bubble.className = 'bubble ' + role;
             bubble.textContent = text;
             chatLog.appendChild(bubble);
-            chatLog.scrollTop = chatLog.scrollHeight;
+            requestAnimationFrame(() => {
+              chatLog.scrollTo({ top: chatLog.scrollHeight, behavior: 'smooth' });
+            });
           }
           function setChip(element, isOn, onText, offText) {
             element.textContent = isOn ? onText : offText;
