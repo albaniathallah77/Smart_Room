@@ -194,6 +194,42 @@ app.get('/', (req, res) => {
           }
           .settings-list { display:grid; grid-template-columns:1fr 1fr; gap:24px; max-width:1120px; }
           .settings-row { border:1px solid #293846; background:linear-gradient(120deg,#11161d,#0a0f15); border-radius:12px; padding:26px; display:flex; align-items:center; justify-content:space-between; gap:16px; min-height:150px; box-shadow:0 18px 44px #0008; }
+          .settings-shell { display:grid; grid-template-columns:220px minmax(0,1fr); gap:24px; max-width:1180px; min-height:620px; }
+          .settings-menu { border:1px solid #242d38; border-radius:18px; background:linear-gradient(180deg,rgba(25,29,36,.92),rgba(12,16,22,.92)); padding:14px; box-shadow:0 26px 60px #0008; align-self:start; position:sticky; top:20px; }
+          .settings-tab { width:100%; margin:0 0 8px; min-height:46px; display:flex; align-items:center; gap:12px; padding:0 14px; border:0; border-radius:11px; background:transparent; color:#a6adbb; font-weight:850; letter-spacing:0; text-align:left; }
+          .settings-tab.active, .settings-tab:hover { background:#2a2d33; color:#fff; transform:none; }
+          .settings-tab span:first-child { width:24px; text-align:center; color:#c8f4ff; }
+          .settings-content { border:1px solid #242d38; border-radius:18px; background:linear-gradient(145deg,rgba(25,29,36,.75),rgba(9,12,17,.86)); box-shadow:0 28px 70px #0009; overflow:hidden; }
+          .settings-titlebar { padding:22px 28px; border-bottom:1px solid #2a3038; display:flex; align-items:center; justify-content:space-between; gap:14px; }
+          .settings-titlebar h2 { font-size:22px; letter-spacing:0; }
+          .settings-group { padding:10px 28px 28px; }
+          .settings-alert { margin:12px 0 10px; border:1px solid #26313c; border-radius:16px; padding:20px; background:#020304; display:flex; justify-content:space-between; gap:18px; align-items:flex-start; }
+          .settings-alert b { display:block; margin-bottom:8px; }
+          .settings-alert .sub { color:#e8eef8; max-width:620px; font-size:15px; }
+          .settings-list { display:block; max-width:none; }
+          .settings-row { min-height:0; border:0; border-radius:0; background:transparent; box-shadow:none; padding:20px 0; border-bottom:1px solid #262c34; display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:24px; }
+          .settings-row:last-child { border-bottom:0; }
+          .settings-row b { font-size:16px; }
+          .settings-row input { width:100%; margin-top:10px; background:#111821; border-color:#303b49; }
+          .settings-actions { min-width:190px; display:grid; gap:8px; }
+          .settings-actions button { margin:0; }
+          .settings-chips { display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; }
+          .settings-danger { margin-top:18px; border:1px solid rgba(255,77,117,.42); border-radius:15px; padding:18px; background:linear-gradient(120deg,rgba(70,12,26,.24),rgba(8,10,15,.78)); display:grid; grid-template-columns:1fr 220px; align-items:center; gap:18px; }
+          .settings-danger button { margin:0; border-color:#ff4d75; color:#ffd4de; }
+          .wifi-network-list { display:grid; gap:8px; margin-top:12px; }
+          @media (max-width:980px) {
+            .settings-shell { grid-template-columns:1fr; gap:14px; min-height:0; }
+            .settings-menu { position:static; display:grid; grid-template-columns:repeat(2,1fr); gap:8px; padding:10px; }
+            .settings-tab { margin:0; min-height:42px; padding:0 12px; font-size:14px; }
+            .settings-content { border-radius:16px; }
+            .settings-titlebar { padding:18px 20px; }
+            .settings-group { padding:8px 20px 22px; }
+            .settings-alert { flex-direction:column; padding:18px; }
+            .settings-row { grid-template-columns:1fr; gap:12px; padding:18px 0; }
+            .settings-actions { width:100%; min-width:0; }
+            .settings-chips { justify-content:flex-start; }
+            .settings-danger { grid-template-columns:1fr; padding:18px; }
+          }
           .tools-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; }
           .tool-card { border:1px solid #273647; background:linear-gradient(110deg,#171b22,#0f141b); border-radius:8px; padding:24px; margin-bottom:10px; transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
           .tool-card:hover { transform:translateY(-2px); border-color:#49718e; box-shadow:0 18px 46px #0008; }
@@ -345,13 +381,40 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
               </div>
             </section>
             <section class="page" id="settingsPage">
-              <div class="settings-list">
-                <div class="settings-row"><div><b>Remote Dashboard</b><div class="sub">Vercel remote control from inside or outside network</div></div><span class="state-chip on">SYNC ACTIVE</span></div>
-                <div class="settings-row"><div><b>Telemetry Polling</b><div class="sub">ESP checks cloud about every 500ms</div></div><span class="state-chip on">0.5 SEC</span></div>
-                <div class="settings-row"><div><b>WiFi Station</b><div class="sub" id="wifiCloudInfo">Waiting ESP telemetry</div><div class="sub" id="wifiStrongestInfo">Strongest network: -</div><div class="sub" id="wifiApInfo">Hotspot: off</div></div><div><span class="state-chip" id="wifiCloudState">OFFLINE</span><span class="state-chip" id="wifiModeState">WIFI</span></div></div>
-                <div class="settings-row"><div><b>Change WiFi</b><div class="sub">Pick a scanned network from ESP, or type SSID manually.</div><input id="cloudWifiSsid" placeholder="SSID"><input id="cloudWifiPass" type="password" placeholder="Password"><div id="cloudWifiList" class="sub" style="display:grid;gap:8px;margin-top:12px"></div></div><div style="min-width:180px"><button class="primary" id="scanWifiButton" onclick="scanWifiCloud()">SCAN</button><button class="blue" id="connectWifiButton" onclick="connectWifiCloud()">CONNECT</button><button class="dark" onclick="setWifiModeCloud('wifi')">WIFI MODE</button><button class="dark" onclick="setWifiModeCloud('hotspot')">HOTSPOT MODE</button></div></div>
-                <div class="settings-row"><div><b>Local Edge Dashboard</b><div class="sub">IP address shows firmware dashboard, so upload sketch after local UI changes</div></div><span class="state-chip">LOCAL</span></div>
-                <button class="dark mono" onclick="clearPending()">CLEAR PENDING COMMANDS</button>
+              <div class="settings-shell">
+                <aside class="settings-menu">
+                  <button class="settings-tab active"><span>⚙</span> General</button>
+                  <button class="settings-tab"><span>☁</span> Cloud</button>
+                  <button class="settings-tab"><span>⌁</span> Network</button>
+                  <button class="settings-tab"><span>▣</span> Local Edge</button>
+                  <button class="settings-tab"><span>!</span> Maintenance</button>
+                </aside>
+                <div class="settings-content">
+                  <div class="settings-titlebar">
+                    <h2>General</h2>
+                    <span class="state-chip on">SYSTEM READY</span>
+                  </div>
+                  <div class="settings-group">
+                    <div class="settings-alert">
+                      <div>
+                        <b>Secure your Smart Room</b>
+                        <div class="sub">PIN protects the cloud dashboard. Device token and private API keys stay hidden on the server.</div>
+                      </div>
+                      <span class="state-chip on">PIN ACTIVE</span>
+                    </div>
+                    <div class="settings-list">
+                      <div class="settings-row"><div><b>Remote Dashboard</b><div class="sub">Vercel remote control from inside or outside network</div></div><span class="state-chip on">SYNC ACTIVE</span></div>
+                      <div class="settings-row"><div><b>Telemetry Polling</b><div class="sub">ESP checks cloud about every 500ms</div></div><span class="state-chip on">0.5 SEC</span></div>
+                      <div class="settings-row"><div><b>WiFi Station</b><div class="sub" id="wifiCloudInfo">Waiting ESP telemetry</div><div class="sub" id="wifiStrongestInfo">Strongest network: -</div><div class="sub" id="wifiApInfo">Hotspot: off</div></div><div class="settings-chips"><span class="state-chip" id="wifiCloudState">OFFLINE</span><span class="state-chip" id="wifiModeState">WIFI</span></div></div>
+                      <div class="settings-row"><div><b>Change WiFi</b><div class="sub">Pick a scanned network from ESP, or type SSID manually.</div><input id="cloudWifiSsid" placeholder="SSID"><input id="cloudWifiPass" type="password" placeholder="Password"><div id="cloudWifiList" class="wifi-network-list"></div></div><div class="settings-actions"><button class="primary" id="scanWifiButton" onclick="scanWifiCloud()">SCAN</button><button class="blue" id="connectWifiButton" onclick="connectWifiCloud()">CONNECT</button><button class="dark" onclick="setWifiModeCloud('wifi')">WIFI MODE</button><button class="dark" onclick="setWifiModeCloud('hotspot')">HOTSPOT MODE</button></div></div>
+                      <div class="settings-row"><div><b>Local Edge Dashboard</b><div class="sub">IP address shows firmware dashboard, so upload sketch after local UI changes</div></div><span class="state-chip">LOCAL</span></div>
+                    </div>
+                    <div class="settings-danger">
+                      <div><b>Clear Pending Commands</b><div class="sub">Use this if a command queue gets stuck or an old command keeps repeating.</div></div>
+                      <button class="dark mono" onclick="clearPending()">CLEAR PENDING</button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </section>
           </section>
