@@ -304,7 +304,11 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
                 </article>
                 <article class="tool-card device-card" id="card-tv">
                   <div><div class="tool-top"><div class="tool-identity"><div class="device-icon blue-icon" id="icon-tv">TV</div><div class="tool-copy"><b>Smart TV</b><div class="tool-desc">OLED screen and animation</div></div></div><span class="state-chip" id="tvState">OFF</span></div></div>
-                  <div class="control-row"><button class="primary" onclick="queue({device:'tv',state:'on'})">ON</button><button class="dark" onclick="queue({device:'tv',state:'off'})">OFF</button></div>
+                  <div class="control-row" style="grid-template-columns: 1fr 1fr 1fr;">
+                    <button class="primary" onclick="queue({device:'tv',state:'on'})">ON</button>
+                    <button class="blue" onclick="queue({device:'tv',state:'fight'})">FIGHT</button>
+                    <button class="dark" onclick="queue({device:'tv',state:'off'})">OFF</button>
+                  </div>
                 </article>
                 <article class="tool-card device-card">
                   <div><div class="tool-top"><div class="tool-identity"><div class="device-icon gold-icon">DM</div><div class="tool-copy"><b>Demo Mode</b><div class="tool-desc">RGB, Smart TV, then door sequence</div></div></div><span class="state-chip on">EXPO</span></div></div>
@@ -826,7 +830,7 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
             try {
               const res = await fetch('/device/status');
               const data = await res.json();
-              const setPill = (id, online) => {
+              const setPill = (id, online, error) => {
                 const el = document.getElementById(id);
                 if (!el) return;
                 if (online) {
@@ -834,15 +838,29 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
                   el.style.background = '#021a0f';
                   el.style.color = '#10ea7a';
                   el.style.borderColor = '#0a522b';
+                  el.title = 'Connected via Supabase';
                 } else {
                   el.textContent = 'ESP Offline';
                   el.style.background = '#1a0505';
                   el.style.color = '#ff5555';
                   el.style.borderColor = '#551111';
+                  el.title = error || 'Device not seen in the last 60 seconds';
                 }
               };
-              setPill('espStatus', data.online);
-              setPill('espStatusMob', data.online);
+              setPill('espStatus', data.online, data.error);
+              setPill('espStatusMob', data.online, data.error);
+              
+              const statusLog = document.getElementById('log-status');
+              if (statusLog) {
+                if (data.online) {
+                  statusLog.textContent = 'Live Sync';
+                  statusLog.style.color = '#35e886';
+                } else {
+                  statusLog.textContent = data.error ? 'Error: ' + data.error : 'Offline';
+                  statusLog.style.color = '#ff4d75';
+                }
+              }
+
               updateToolStatus(data.state || {});
             } catch (e) {}
           }
@@ -1399,21 +1417,45 @@ app.post('/device/poll', async (req, res) => {
 });
 
 app.get('/device/status', async (req, res) => {
+  const status = {
+    online: false,
+    supabase: Boolean(supabase),
+    lastSeen: null,
+    error: null,
+    state: {}
+  };
+
   if (!supabase) {
-    res.json({ online: false, error: 'no supabase' });
+    status.error = 'Supabase client not initialized. Check Vercel Env Variables.';
+    res.json(status);
     return;
   }
+
   try {
-    const { data } = await supabase.from('device_status').select('last_seen,state').eq('id', 'esp32').single();
-    if (!data) {
-      res.json({ online: false });
-      return;
+    const { data, error } = await supabase
+      .from('device_status')
+      .select('last_seen,state')
+      .eq('id', 'esp32')
+      .maybeSingle();
+
+    if (error) {
+      status.error = 'Database error: ' + error.message;
+    } else if (!data) {
+      status.error = 'No device data found in database. ESP32 has never polled.';
+    } else {
+      const lastSeen = new Date(data.last_seen).getTime();
+      const now = Date.now();
+      status.lastSeen = data.last_seen;
+      status.online = (now - lastSeen) < 60000; // Online if seen in last 60s
+      status.state = data.state || {};
+      if (!status.online) {
+        status.error = 'ESP32 was last seen ' + Math.round((now - lastSeen) / 1000) + 's ago.';
+      }
     }
-    const lastSeen = new Date(data.last_seen).getTime();
-    const now = Date.now();
-    res.json({ online: (now - lastSeen) < 60000, lastSeen: data.last_seen, state: data.state || {} });
+    res.json(status);
   } catch (err) {
-    res.json({ online: false, error: err.message });
+    status.error = err.message;
+    res.json(status);
   }
 });
 
@@ -1475,10 +1517,12 @@ app.post('/chat', async (req, res) => {
             '{"device":"rgb","state":"on|off"}',
             '{"device":"rgb","r":0-255,"g":0-255,"b":0-255}',
             '{"device":"door","state":"open|close"}',
-            '{"device":"tv","state":"on|off"}',
+            '{"device":"tv","state":"on|off|fight"}',
             '{"device":"alarm","enabled":true,"hour":0-23,"minute":0-59}',
             '{"device":"alarm","enabled":false}',
             '{"device":"buzzer","state":"off"}',
+            'IMPORTANT: For RGB colors, do NOT use "state":"blue", use R,G,B values instead. Default blue is {"r":90,"g":160,"b":255}.',
+            'For stickman animation or fight, use {"device":"tv","state":"fight"}.',
             'Do not use fan or relay commands.',
             'If user gives a name, preference, or rule to remember, include "memory":"short memory text" in the JSON.',
             'For "mode tidur", turn lamp/rgb/tv off and optionally set alarm if user asks.',
@@ -1513,12 +1557,6 @@ app.post('/chat', async (req, res) => {
         return;
       }
       queued = await queueCommands(commands, 'ai', userMessage);
-    }
-
-    if (commands.length && process.env.ESP32_BASE_URL) {
-      for (const command of commands) {
-        await sendCommandToEsp32(command);
-      }
     }
 
     await Promise.all([
@@ -1579,35 +1617,40 @@ function normalizeCommand(command) {
   const device = String(command.device || '').toLowerCase();
   const state = command.state === undefined ? undefined : String(command.state).toLowerCase();
 
-  if (device === 'lamp') {
-    return state === 'on' || state === 'off' ? { device, state } : null;
+  if (device === 'lamp' || device === 'lampu' || device === 'desk_lamp') {
+    if (state === 'on' || state === 'nyala' || state === 'hidup' || state === 'on') return { device: 'lamp', state: 'on' };
+    if (state === 'off' || state === 'mati' || state === 'off') return { device: 'lamp', state: 'off' };
+    return null;
   }
 
   if (device === 'door' || device === 'smart_door' || device === 'pintu') {
-    if (state === 'open' || state === 'unlock' || command.open === true) return { device: 'door', state: 'open' };
-    if (state === 'close' || state === 'closed' || state === 'lock' || command.open === false) return { device: 'door', state: 'close' };
+    if (state === 'open' || state === 'unlock' || state === 'buka' || state === 'nyala' || state === 'on' || command.open === true) return { device: 'door', state: 'open' };
+    if (state === 'close' || state === 'closed' || state === 'lock' || state === 'tutup' || state === 'mati' || state === 'off' || command.open === false) return { device: 'door', state: 'close' };
     return null;
   }
 
   if (device === 'tv' || device === 'oled' || device === 'smart_tv') {
-    return state === 'on' || state === 'off' ? { device: 'tv', state } : null;
+    if (state === 'fight' || state === 'animation') return { device: 'tv', state: 'fight' };
+    if (state === 'on' || state === 'nyala' || state === 'hidup') return { device: 'tv', state: 'on' };
+    if (state === 'off' || state === 'mati') return { device: 'tv', state: 'off' };
+    return null;
   }
 
   if (device === 'buzzer') {
-    return state === 'off' ? { device, state: 'off' } : null;
+    return state === 'off' || state === 'mati' || state === 'stop' ? { device: 'buzzer', state: 'off' } : null;
   }
 
-  if (device === 'rgb') {
-    if (state === 'on' || state === 'off') {
-      return { device, state };
-    }
-
+  if (device === 'rgb' || device === 'lampu_kamar') {
     const r = clampColor(command.r);
     const g = clampColor(command.g);
     const b = clampColor(command.b);
+
     if (r !== null && g !== null && b !== null) {
-      return { device, r, g, b };
+      return { device: 'rgb', r, g, b };
     }
+
+    if (state === 'on' || state === 'nyala' || state === 'hidup') return { device: 'rgb', state: 'on' };
+    if (state === 'off' || state === 'mati') return { device: 'rgb', state: 'off' };
   }
 
   if (device === 'alarm') {
@@ -1630,18 +1673,6 @@ function clampColor(value) {
     return null;
   }
   return Math.max(0, Math.min(255, Math.round(number)));
-}
-
-async function sendCommandToEsp32(command) {
-  const response = await fetch(`${process.env.ESP32_BASE_URL}/api/command`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(command)
-  });
-
-  if (!response.ok) {
-    throw new Error(`ESP32 command failed: ${response.status}`);
-  }
 }
 
 const port = Number(process.env.PORT || 8787);

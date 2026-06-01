@@ -91,7 +91,7 @@ private:
       if (WiFi.status() == WL_CONNECTED) {
         client->pollCommands();
       }
-      vTaskDelay(500 / portTICK_PERIOD_MS);
+      vTaskDelay(800 / portTICK_PERIOD_MS); // Dipercepat kembali ke 800ms untuk respon lebih cepat
     }
   }
 

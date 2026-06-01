@@ -12,7 +12,8 @@ enum class RoomActionType {
   SetDoor,
   SetTvPower,
   SetAlarm,
-  StopAlarm
+  StopAlarm,
+  SetFightMode
 };
 
 struct RoomAction {
@@ -51,6 +52,11 @@ public:
     }
 
     if (device == "tv" || device == "oled" || device == "smart_tv") {
+      if (state == "fight" || state == "animation") {
+        action.type = RoomActionType::SetFightMode;
+        action.enabled = true;
+        return true;
+      }
       action.type = RoomActionType::SetTvPower;
       action.enabled = state == "on" || doc["enabled"] == true;
       return true;

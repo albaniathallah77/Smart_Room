@@ -32,6 +32,15 @@ public:
       return;
     }
 
+    // PRIORITAS 1: FIGHT MODE (Harus di paling atas)
+    if (state.fightMode) {
+      if (millis() - _lastRenderAt < 50) return; // Animasi sangat cepat
+      renderFightScene(_animationFrame++);
+      _lastRenderAt = millis();
+      _lastTvOn = true; // Paksa status TV on agar tidak tertutup logika lain
+      return;
+    }
+
     if (state.tvOn != _lastTvOn) {
       _lastTvOn = state.tvOn;
       if (state.tvOn) {
@@ -50,14 +59,6 @@ public:
     if (state.tvOn && !state.alarm.ringing && state.doorOpen != _lastDoorOpen) {
       _lastDoorOpen = state.doorOpen;
       renderDoorStill(state.doorOpen);
-      _lastRenderAt = millis();
-      return;
-    }
-
-    if (state.tvOn && !state.alarm.ringing && millis() - _lastMochiAt > 9000) {
-      renderMochiStill(mochiLabel(_mochiScene), _mochiScene);
-      _mochiScene = (_mochiScene + 1) % 4;
-      _lastMochiAt = millis();
       _lastRenderAt = millis();
       return;
     }
@@ -104,6 +105,7 @@ private:
   bool _lastTvOn = false;
   bool _lastDoorOpen = false;
   uint8_t _mochiScene = 0;
+  uint8_t _animationFrame = 0;
   unsigned long _lastRenderAt = 0;
   unsigned long _lastMochiAt = 0;
 
@@ -177,6 +179,62 @@ private:
     _display.drawLine(doorRight, 20, doorRight, 52, SSD1306_WHITE);
     _display.fillCircle(doorRight - 4, 38, 1, SSD1306_WHITE);
     drawStickman(35, 39, frame);
+  }
+
+  void renderFightScene(uint8_t frame) {
+    _display.clearDisplay();
+    _display.drawLine(0, 52, 128, 52, SSD1306_WHITE); // Tanah
+
+    // 1. SI BIRU (Tengah - Duduk Santai di Kursi)
+    // Pose duduk: kepala (64,26), tangan bersandar, kaki selonjor
+    drawStickmanPose(64, 38, 0, -12, -8, -2, 8, -2, -6, 12, 10, 10); 
+    _display.drawRect(58, 48, 12, 4, SSD1306_WHITE); // Kursi
+    _display.drawLine(58, 40, 58, 48, SSD1306_WHITE); // Sandaran kursi
+
+    // 2. KELOMPOK KIRI (Menyerang)
+    uint8_t cycle = frame % 20;
+    
+    // Penyerang 1 (Paling depan - Tendangan Putar)
+    int8_t x1 = 20 + (cycle < 10 ? cycle * 2 : 20 - (cycle-10)*2);
+    if (cycle < 10) {
+      // Pose Menendang
+      drawStickmanPose(x1, 38, 2, -12, -4, -6, -2, -8, -2, 12, 12, -4);
+    } else {
+      // Pose Siap
+      drawStickmanPose(x1, 38, 0, -12, -4, 2, 4, 2, -4, 12, 4, 12);
+    }
+
+    // Penyerang 2 (Di belakang - Berlari)
+    int8_t x2 = x1 - 15;
+    drawStickmanPose(x2, 38, 2, -12, -6, 2, 6, -2, cycle%2?2:8, 12, cycle%2?8:2, 12);
+
+    // 3. KELOMPOK KANAN (Menyerang)
+    // Penyerang 3 (Paling depan - Pukulan Bertubi-tubi)
+    int8_t x3 = 108 - (cycle < 10 ? cycle * 2 : 20 - (cycle-10)*2);
+    if (cycle % 4 < 2) {
+      // Pose Memukul
+      drawStickmanPose(x3, 38, -2, -12, -12, -4, 4, 2, -4, 12, 4, 12);
+    } else {
+      // Pose Siap
+      drawStickmanPose(x3, 38, 0, -12, -4, 2, 4, 2, -4, 12, 4, 12);
+    }
+
+    // Penyerang 4 (Di belakang - Melompat)
+    int8_t x4 = x3 + 15;
+    int8_t y4 = 38 - (cycle < 10 ? cycle : 20 - cycle);
+    drawStickmanPose(x4, y4, 0, -12, -6, 6, 6, 6, -4, 10, 4, 10);
+
+    _display.display();
+  }
+
+  void drawStickmanPose(int16_t x, int16_t y, int8_t hX, int8_t hY, int8_t aLX, int8_t aLY, int8_t aRX, int8_t aRY, int8_t lLX, int8_t lLY, int8_t lRX, int8_t lRY) {
+    _display.drawCircle(x + hX, y + hY, 3, SSD1306_WHITE); // Head
+    _display.drawLine(x + hX, y + hY + 3, x, y + 4, SSD1306_WHITE); // Neck
+    _display.drawLine(x, y + 4, x, y + 12, SSD1306_WHITE); // Torso
+    _display.drawLine(x, y + 5, x + aLX, y + 5 + aLY, SSD1306_WHITE); // Arm L
+    _display.drawLine(x, y + 5, x + aRX, y + 5 + aRY, SSD1306_WHITE); // Arm R
+    _display.drawLine(x, y + 12, x + lLX, y + 12 + lLY, SSD1306_WHITE); // Leg L
+    _display.drawLine(x, y + 12, x + lRX, y + 12 + lRY, SSD1306_WHITE); // Leg R
   }
 
   void drawStickman(uint8_t x, uint8_t y, uint8_t frame) {

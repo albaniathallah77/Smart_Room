@@ -25,6 +25,7 @@ struct SmartRoomState {
   bool doorOpen = false;
   bool tvOn = false;
   bool aiOnline = false;
+  bool fightMode = false;
   String lastAiStatus = "idle";
   AlarmState alarm;
   unsigned long lastCommandAt = 0;
