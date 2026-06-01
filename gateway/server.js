@@ -349,7 +349,7 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
                 <div class="settings-row"><div><b>Remote Dashboard</b><div class="sub">Vercel remote control from inside or outside network</div></div><span class="state-chip on">SYNC ACTIVE</span></div>
                 <div class="settings-row"><div><b>Telemetry Polling</b><div class="sub">ESP checks cloud about every 500ms</div></div><span class="state-chip on">0.5 SEC</span></div>
                 <div class="settings-row"><div><b>WiFi Station</b><div class="sub" id="wifiCloudInfo">Waiting ESP telemetry</div><div class="sub" id="wifiStrongestInfo">Strongest network: -</div><div class="sub" id="wifiApInfo">Hotspot: off</div></div><div><span class="state-chip" id="wifiCloudState">OFFLINE</span><span class="state-chip" id="wifiModeState">WIFI</span></div></div>
-                <div class="settings-row"><div><b>Change WiFi</b><div class="sub">Manual SSID from Vercel. Scan results come from ESP.</div><input id="cloudWifiSsid" placeholder="SSID"><input id="cloudWifiPass" type="password" placeholder="Password"></div><div style="min-width:180px"><button class="primary" onclick="scanWifiCloud()">SCAN</button><button class="blue" onclick="connectWifiCloud()">CONNECT</button></div></div>
+                <div class="settings-row"><div><b>Change WiFi</b><div class="sub">Manual SSID from Vercel. Scan results come from ESP.</div><input id="cloudWifiSsid" placeholder="SSID"><input id="cloudWifiPass" type="password" placeholder="Password"></div><div style="min-width:180px"><button class="primary" id="scanWifiButton" onclick="scanWifiCloud()">SCAN</button><button class="blue" id="connectWifiButton" onclick="connectWifiCloud()">CONNECT</button></div></div>
                 <div class="settings-row"><div><b>Local Edge Dashboard</b><div class="sub">IP address shows firmware dashboard, so upload sketch after local UI changes</div></div><span class="state-chip">LOCAL</span></div>
                 <button class="dark mono" onclick="clearPending()">CLEAR PENDING COMMANDS</button>
               </div>
@@ -692,18 +692,46 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
             }
           }
 
-          function scanWifiCloud() {
-            queue({device:'wifi', state:'scan'});
+          async function scanWifiCloud() {
+            const button = document.getElementById('scanWifiButton');
+            const strongest = document.getElementById('wifiStrongestInfo');
+            if (button) {
+              button.disabled = true;
+              button.textContent = 'SCANNING';
+            }
+            if (strongest) strongest.textContent = 'Scan requested. Waiting ESP result...';
+            setStatus('WiFi scan queued');
+            await queue({device:'wifi', state:'scan'});
+            [1500, 3500, 6000].forEach((delay) => setTimeout(checkEspStatus, delay));
+            setTimeout(() => {
+              if (button) {
+                button.disabled = false;
+                button.textContent = 'SCAN';
+              }
+            }, 6500);
           }
 
-          function connectWifiCloud() {
+          async function connectWifiCloud() {
             const ssid = document.getElementById('cloudWifiSsid')?.value.trim();
             const password = document.getElementById('cloudWifiPass')?.value || '';
+            const button = document.getElementById('connectWifiButton');
             if (!ssid) {
               addLog('ERROR: SSID is required', 'error');
               return;
             }
-            queue({device:'wifi', state:'connect', ssid, password});
+            if (button) {
+              button.disabled = true;
+              button.textContent = 'SENT';
+            }
+            setStatus('WiFi switch queued');
+            await queue({device:'wifi', state:'connect', ssid, password});
+            [2500, 6000, 10000].forEach((delay) => setTimeout(checkEspStatus, delay));
+            setTimeout(() => {
+              if (button) {
+                button.disabled = false;
+                button.textContent = 'CONNECT';
+              }
+            }, 10000);
           }
 
           function runRoutine(name) {
