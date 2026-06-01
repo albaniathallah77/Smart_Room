@@ -90,7 +90,7 @@ public:
     }
 
     _lastBroadcastAt = millis();
-    StaticJsonDocument<768> doc;
+    StaticJsonDocument<1024> doc;
     doc["lamp"] = state.deskLampOn;
     doc["rgb"] = state.rgbOn;
     doc["r"] = state.rgbColor.r;
@@ -108,8 +108,11 @@ public:
     doc["alarmHour"] = state.alarm.hour;
     doc["alarmMinute"] = state.alarm.minute;
     doc["wifiConnected"] = state.wifiConnected;
+    doc["wifiSetupApActive"] = state.wifiSetupApActive;
     doc["wifiSsid"] = state.wifiSsid;
     doc["wifiIp"] = state.wifiIp;
+    doc["wifiSetupIp"] = state.wifiSetupIp;
+    doc["wifiMode"] = state.wifiMode;
     doc["wifiRssi"] = state.wifiRssi;
     doc["strongestWifiSsid"] = state.strongestWifiSsid;
     doc["strongestWifiRssi"] = state.strongestWifiRssi;
@@ -252,7 +255,7 @@ private:
       <div class="alarm-actions"><button class="blue" onclick="setAlarm()">Pilih Waktu</button><button class="primary" onclick="enableAlarm()">ON</button><button class="dark" onclick="disableAlarm()">OFF</button><button class="dark" onclick="send({device:'buzzer',state:'off'})">STOP</button></div>
     </article>
     <article class="card"><h2>Demo Mode <span class="state">EXPO</span></h2><button class="primary" onclick="demoMode()">RUN DEMO</button><div class="ai-reply">RGB, Smart TV, and door sequence.</div></article>
-    <article class="card"><h2>WiFi <span class="state" id="wifiState">--</span></h2><div class="ai-reply" id="wifiInfo">Checking network...</div><button class="primary" onclick="scanWifi()">SCAN WIFI</button><input id="wifiSsid" placeholder="SSID"><input id="wifiPass" type="password" placeholder="Password"><button class="blue" onclick="connectWifi()">CONNECT</button><div class="wifi-list" id="wifiList"></div></article>
+    <article class="card"><h2>WiFi <span class="state" id="wifiState">--</span></h2><div class="row"><span class="state" id="wifiMode">WIFI</span><span class="state warn" id="hotspotMode">HOTSPOT OFF</span></div><div class="ai-reply" id="wifiInfo">Checking network...</div><button class="primary" onclick="scanWifi()">SCAN WIFI</button><input id="wifiSsid" placeholder="SSID"><input id="wifiPass" type="password" placeholder="Password"><button class="blue" onclick="connectWifi()">CONNECT</button><div class="wifi-list" id="wifiList"></div></article>
     <article class="card"><h2>AI Command</h2><input id="cmd" placeholder="mode tidur"><button class="primary" onclick="askAi()">ASK AI</button><button class="blue" onclick="voiceAi()">VOICE AI</button><button class="dark" onclick="sendText()">LOCAL</button><div class="ai-reply" id="aiReply">Gateway ready</div></article>
   </section>
 </main>
@@ -327,6 +330,8 @@ private:
     door.textContent = s.door ? 'OPEN' : 'CLOSED';
     tv.textContent = s.tv ? (s.stikmanMode ? 'STIKMAN' : (s.catMode ? 'CAT' : (s.fightMode ? 'FIGHT' : 'ON'))) : 'OFF';
     wifiState.textContent = s.wifiConnected ? 'ONLINE' : 'OFFLINE';
+    wifiMode.textContent = s.wifiMode === 'hotspot' ? 'HOTSPOT' : (s.wifiMode === 'offline' ? 'OFFLINE' : 'WIFI');
+    hotspotMode.textContent = s.wifiSetupApActive ? `AP ${s.wifiSetupIp || '192.168.4.1'}` : 'HOTSPOT OFF';
     wifiInfo.textContent = `${s.wifiSsid || '-'} | ${s.wifiIp || '0.0.0.0'} | ${s.wifiRssi || 0} dBm | strongest: ${s.strongestWifiSsid || '-'} ${s.strongestWifiRssi || ''}`;
     alarm.textContent = s.alarmRinging ? 'RINGING' : `${String(s.alarmHour).padStart(2,'0')}:${String(s.alarmMinute).padStart(2,'0')}`;
     if (!alarmEditing && Number.isFinite(Number(s.alarmHour)) && Number.isFinite(Number(s.alarmMinute))) {

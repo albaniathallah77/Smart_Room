@@ -348,7 +348,7 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
               <div class="settings-list">
                 <div class="settings-row"><div><b>Remote Dashboard</b><div class="sub">Vercel remote control from inside or outside network</div></div><span class="state-chip on">SYNC ACTIVE</span></div>
                 <div class="settings-row"><div><b>Telemetry Polling</b><div class="sub">ESP checks cloud about every 500ms</div></div><span class="state-chip on">0.5 SEC</span></div>
-                <div class="settings-row"><div><b>WiFi Station</b><div class="sub" id="wifiCloudInfo">Waiting ESP telemetry</div><div class="sub" id="wifiStrongestInfo">Strongest network: -</div></div><span class="state-chip" id="wifiCloudState">OFFLINE</span></div>
+                <div class="settings-row"><div><b>WiFi Station</b><div class="sub" id="wifiCloudInfo">Waiting ESP telemetry</div><div class="sub" id="wifiStrongestInfo">Strongest network: -</div><div class="sub" id="wifiApInfo">Hotspot: off</div></div><div><span class="state-chip" id="wifiCloudState">OFFLINE</span><span class="state-chip" id="wifiModeState">WIFI</span></div></div>
                 <div class="settings-row"><div><b>Change WiFi</b><div class="sub">Manual SSID from Vercel. Scan results come from ESP.</div><input id="cloudWifiSsid" placeholder="SSID"><input id="cloudWifiPass" type="password" placeholder="Password"></div><div style="min-width:180px"><button class="primary" onclick="scanWifiCloud()">SCAN</button><button class="blue" onclick="connectWifiCloud()">CONNECT</button></div></div>
                 <div class="settings-row"><div><b>Local Edge Dashboard</b><div class="sub">IP address shows firmware dashboard, so upload sketch after local UI changes</div></div><span class="state-chip">LOCAL</span></div>
                 <button class="dark mono" onclick="clearPending()">CLEAR PENDING COMMANDS</button>
@@ -632,11 +632,15 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
             }
 
             const wifiCloudState = get('wifiCloudState');
+            const wifiModeState = get('wifiModeState');
             const wifiCloudInfo = get('wifiCloudInfo');
             const wifiStrongestInfo = get('wifiStrongestInfo');
+            const wifiApInfo = get('wifiApInfo');
             if (wifiCloudState) setChip(wifiCloudState, state.wifiConnected === true, 'ONLINE', 'OFFLINE');
+            if (wifiModeState) setChip(wifiModeState, state.wifiMode !== 'hotspot', state.wifiMode === 'offline' ? 'OFFLINE' : 'WIFI', 'HOTSPOT');
             if (wifiCloudInfo) wifiCloudInfo.textContent = (state.wifiSsid || '-') + ' | ' + (state.wifiIp || '0.0.0.0') + ' | ' + (state.wifiRssi || 0) + ' dBm';
             if (wifiStrongestInfo) wifiStrongestInfo.textContent = 'Strongest network: ' + (state.strongestWifiSsid || '-') + ' ' + (state.strongestWifiRssi || '') + ' (' + (state.wifiScanCount || 0) + ' found)';
+            if (wifiApInfo) wifiApInfo.textContent = state.wifiSetupApActive ? ('Hotspot: SmartRoom-Setup at ' + (state.wifiSetupIp || '192.168.4.1')) : 'Hotspot: off in normal WiFi mode';
 
             if (!alarmEditing && Number.isFinite(Number(state.alarmHour)) && Number.isFinite(Number(state.alarmMinute))) {
               const ah = get('alarmHour');

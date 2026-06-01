@@ -78,13 +78,13 @@ private:
   unsigned long _lastWifiReconnectAt = 0;
   unsigned long _lastWifiStateAt = 0;
   bool _wifiWasConnected = false;
+  bool _setupApActive = false;
 
   void connectWifi() {
     loadWifiCredentials();
-    WiFi.mode(WIFI_AP_STA);
+    WiFi.mode(WIFI_STA);
     WiFi.persistent(false);
     WiFi.setAutoReconnect(true);
-    startSetupAccessPoint();
     WiFi.begin(_wifiSsid.c_str(), _wifiPassword.c_str());
     Serial.print("Connecting WiFi");
 
@@ -98,32 +98,46 @@ private:
     Serial.println();
     if (WiFi.status() == WL_CONNECTED) {
       _wifiWasConnected = true;
+      stopSetupAccessPoint();
       updateWifiState();
       Serial.print("WiFi connected: ");
       Serial.println(WiFi.localIP());
     } else {
       _wifiWasConnected = false;
+      startSetupAccessPoint();
       updateWifiState();
       Serial.println("WiFi failed, dashboard will start after reconnect");
     }
   }
 
   void startSetupAccessPoint() {
-    static bool started = false;
-    if (started) {
+    if (_setupApActive) {
       return;
     }
 
+    WiFi.mode(WIFI_AP_STA);
     WiFi.softAP(WIFI_SETUP_AP_SSID, WIFI_SETUP_AP_PASSWORD);
-    started = true;
+    _setupApActive = true;
     Serial.print("WiFi setup AP: ");
     Serial.print(WIFI_SETUP_AP_SSID);
     Serial.print(" at http://");
     Serial.println(WiFi.softAPIP());
   }
 
+  void stopSetupAccessPoint() {
+    if (!_setupApActive) {
+      return;
+    }
+
+    WiFi.softAPdisconnect(true);
+    WiFi.mode(WIFI_STA);
+    _setupApActive = false;
+    Serial.println("WiFi setup AP stopped; using STA WiFi only");
+  }
+
   void maintainWifi() {
     if (WiFi.status() == WL_CONNECTED) {
+      stopSetupAccessPoint();
       if (!_wifiWasConnected) {
         _wifiWasConnected = true;
         updateWifiState();
@@ -138,6 +152,7 @@ private:
 
     if (_wifiWasConnected) {
       _wifiWasConnected = false;
+      startSetupAccessPoint();
       updateWifiState();
       Serial.println("WiFi lost, reconnecting in background");
     }
@@ -148,6 +163,9 @@ private:
     }
 
     _lastWifiReconnectAt = now;
+    if (!_setupApActive) {
+      startSetupAccessPoint();
+    }
     WiFi.disconnect(false);
     WiFi.begin(_wifiSsid.c_str(), _wifiPassword.c_str());
   }
@@ -208,6 +226,7 @@ private:
     if (WiFi.status() == WL_CONNECTED) {
       saveWifiCredentials(_wifiSsid, _wifiPassword);
       _wifiWasConnected = true;
+      stopSetupAccessPoint();
       updateWifiState();
       Serial.print("WiFi switched: ");
       Serial.println(WiFi.localIP());
@@ -219,14 +238,18 @@ private:
     _wifiPassword = previousPassword;
     WiFi.disconnect(false);
     WiFi.begin(_wifiSsid.c_str(), _wifiPassword.c_str());
+    startSetupAccessPoint();
     updateWifiState();
     return false;
   }
 
   void updateWifiState() {
     _state.wifiConnected = WiFi.status() == WL_CONNECTED;
+    _state.wifiSetupApActive = _setupApActive;
     _state.wifiSsid = _state.wifiConnected ? WiFi.SSID() : _wifiSsid;
     _state.wifiIp = _state.wifiConnected ? WiFi.localIP().toString() : "0.0.0.0";
+    _state.wifiSetupIp = _setupApActive ? WiFi.softAPIP().toString() : "";
+    _state.wifiMode = _state.wifiConnected ? "wifi" : (_setupApActive ? "hotspot" : "offline");
     _state.wifiRssi = _state.wifiConnected ? WiFi.RSSI() : 0;
   }
 

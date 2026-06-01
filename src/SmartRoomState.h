@@ -29,8 +29,11 @@ struct SmartRoomState {
   bool catMode = false;
   bool stikmanMode = false;
   bool wifiConnected = false;
+  bool wifiSetupApActive = false;
   String wifiSsid = "";
   String wifiIp = "";
+  String wifiSetupIp = "";
+  String wifiMode = "wifi";
   int wifiRssi = 0;
   String strongestWifiSsid = "";
   int strongestWifiRssi = 0;
