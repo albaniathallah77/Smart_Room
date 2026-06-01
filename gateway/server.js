@@ -76,8 +76,8 @@ app.get('/', (req, res) => {
           .mobile-top-logo { display:none; }
           .page { display:none; min-height:0; overflow:auto; padding:42px 48px; }
           .page.active { display:block; }
-          .chat-page.active { display:grid; grid-template-rows:1fr auto; padding:0; overflow:hidden; }
-          .chat-log { overflow:auto; width:min(900px,100%); margin:0 auto; padding:48px 24px 24px; display:flex; flex-direction:column; gap:24px; }
+          .chat-page.active { display:grid; grid-template-rows:1fr auto; padding:0; overflow:hidden; height:100%; }
+          .chat-log { overflow-y:auto; width:min(900px,100%); margin:0 auto; padding:48px 24px 24px; display:flex; flex-direction:column; gap:24px; min-height:0; scroll-behavior:smooth; }
           .bubble { max-width:100%; line-height:1.65; padding:12px 14px; border-radius:18px; white-space:pre-wrap; box-shadow:none; font-size:16px; }
           .bubble.assistant { position:relative; align-self:stretch; background:transparent; border:0; color:#eef4ff; padding-left:54px; }
           .bubble.assistant::before { content:""; position:absolute; left:4px; top:12px; width:34px; height:34px; border-radius:9px; background:url('/assets/logo.png') center/cover no-repeat, #111a23; border:1px solid #2b3b4c; box-shadow:0 0 16px rgba(16,216,255,.2); }
@@ -106,17 +106,19 @@ app.get('/', (req, res) => {
           .color-control input[type=color] { width:100%; }
           .mobile-nav { display:none; }
           .mobile-drawer-brand, .mobile-drawer-bottom { display:none; }
-          .alarm-page { max-width:960px; margin:0 auto; padding-top:80px; }
-          .alarm-hero { border:1px solid #0a5974; background:radial-gradient(circle at 76% 0,rgba(16,216,255,.14),transparent 26%), linear-gradient(120deg,#0b1119,#061018); border-radius:18px; padding:40px; box-shadow:0 28px 80px #000b, 0 0 40px rgba(16,216,255,.11), inset 0 1px rgba(255,255,255,.06); }
-          .alarm-picker { display:grid; grid-template-columns:1fr 1fr; gap:22px; margin:34px 0 28px; }
+          .alarm-page { max-width:1120px; margin:0 auto; padding-top:40px; }
+          .alarm-hero { border:1px solid #0a5974; background:radial-gradient(circle at 76% 0,rgba(16,216,255,.14),transparent 26%), linear-gradient(120deg,#0b1119,#061018); border-radius:18px; padding:40px; box-shadow:0 28px 80px #000b, 0 0 40px rgba(16,216,255,.11), inset 0 1px rgba(255,255,255,.06); display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:start; }
+          .alarm-hero > .tool-title { grid-column: 1 / -1; margin-bottom: -20px; }
+          .alarm-picker { display:grid; grid-template-columns:1fr 1fr; gap:22px; margin:24px 0; }
           .picker-column { background:#05080d; color:#e9fbff; border:1px solid #0b88ad; border-radius:12px; padding:16px 14px; min-width:0; box-shadow:inset 0 1px #52eaff18, 0 18px 46px #0009; }
           .picker-label { text-align:center; color:#00e3ff; font-family:Orbitron, Inter, sans-serif; font-size:14px; font-weight:800; margin-bottom:14px; }
-          .picker-list { height:210px; overflow:auto; scroll-snap-type:y mandatory; display:grid; gap:10px; padding:0 4px; scrollbar-width:none; }
+          .picker-list { height:260px; overflow-y:auto; scroll-snap-type:y mandatory; display:grid; gap:10px; padding:60px 4px; scrollbar-width:none; scroll-behavior:smooth; -webkit-overflow-scrolling: touch; }
           .picker-list::-webkit-scrollbar { display:none; }
-          .picker-option { min-height:52px; margin:0; border:0; background:transparent; color:#5d6672; border-radius:8px; font-family:Orbitron, Inter, sans-serif; font-size:28px; font-weight:800; scroll-snap-align:center; transition:background .16s ease, color .16s ease, transform .16s ease, box-shadow .16s ease; }
-          .picker-option.active { color:#00080d; background:#18d9f4; transform:scale(1.02); box-shadow:0 0 26px rgba(16,216,255,.42); }
+          .picker-option { min-height:64px; margin:0; border:0; background:transparent; color:#3d4652; border-radius:12px; font-family:Orbitron, Inter, sans-serif; font-size:32px; font-weight:800; scroll-snap-align:center; transition:all .25s cubic-bezier(0.4, 0, 0.2, 1); cursor:pointer; user-select:none; }
+          .picker-option:hover { color:#7fefff; background:rgba(16,216,255,.05); }
+          .picker-option.active { color:#00080d; background:linear-gradient(135deg,#12e6ff,#168bff); transform:scale(1.15); box-shadow:0 0 40px rgba(16,216,255,.5), inset 0 1px rgba(255,255,255,.4); }
           .alarm-hidden { display:none; }
-          .alarm-settings { border-top:1px solid #26343b; padding-top:24px; display:grid; gap:18px; }
+          .alarm-settings { border:0; padding-top:0; display:grid; gap:18px; align-self: center; }
           .alarm-actions { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
           .settings-list { display:grid; grid-template-columns:1fr 1fr; gap:24px; max-width:1120px; }
           .settings-row { border:1px solid #293846; background:linear-gradient(120deg,#11161d,#0a0f15); border-radius:12px; padding:26px; display:flex; align-items:center; justify-content:space-between; gap:16px; min-height:150px; box-shadow:0 18px 44px #0008; }
@@ -138,7 +140,17 @@ app.get('/', (req, res) => {
           .days span.active { color:#001015; background:#10ddea; border-color:#10ddea; font-weight:900; box-shadow:0 0 22px rgba(16,216,255,.25); }
           .field { display:grid; gap:8px; margin:12px 0; color:#b9c1cc; }
           .field input { width:100%; }
-          @media (max-width:980px) { body { overflow:auto; padding-bottom:0; } .app-shell { height:auto; min-height:100vh; grid-template-columns:1fr; } .sidebar { display:none; } .chat-pane { min-height:100vh; grid-template-rows:72px 1fr; background:#111318; } .page { padding:24px 18px; } .topbar { position:sticky; top:0; z-index:6; height:72px; padding:0 16px; justify-content:flex-start; background:#111318f2; backdrop-filter:blur(16px); } .topbar b { font-family:Inter, system-ui, sans-serif; font-size:20px; letter-spacing:0; color:#f4f7fb; } .topbar > div { min-width:0; flex:1; } .mobile-top-logo { display:block; width:34px; height:34px; border-radius:9px; object-fit:cover; border:1px solid #2b3b4c; box-shadow:0 0 18px rgba(16,216,255,.24); } #clearButton { display:none !important; } .mobile-menu-toggle { display:grid; place-items:center; flex:0 0 auto; width:48px; min-width:48px; height:48px; min-height:48px; margin:0; padding:0; border-radius:12px; font-size:28px; line-height:1; background:#101823; border-color:#2c4358; color:#c9eeff; box-shadow:0 10px 24px #0008; } .chat-page.active { min-height:calc(100vh - 72px); grid-template-rows:1fr auto; } .chat-log { width:100%; padding:22px 16px 18px; gap:18px; } .bubble { max-width:88%; box-shadow:none; font-size:15px; line-height:1.55; } .bubble.assistant { align-self:flex-start; padding:8px 6px 8px 48px; } .bubble.assistant::before { left:0; top:8px; } .bubble.user { align-self:flex-end; background:#2b2f36; border:1px solid #3a404a; border-radius:18px; padding:12px 14px; } .composer { position:sticky; bottom:0; width:100%; margin:0; padding:12px 14px; border-radius:0; border-width:1px 0 0; background:#111318f2; backdrop-filter:blur(16px); grid-template-columns:1fr auto auto; box-shadow:0 -18px 40px #0008; } .composer input { min-height:48px; padding:0 2px; font-size:15px; } .icon-btn { width:46px; min-width:46px; height:46px; min-height:46px; border-radius:999px; font-size:12px; } .tools-grid { grid-template-columns:1fr; } .tool-card.device-card:first-child { grid-column:auto; } .settings-list { grid-template-columns:1fr; } .alarm-page { width:min(100%,420px); padding:18px 12px 40px; } .alarm-hero { padding:22px 20px; border-radius:16px; } .alarm-picker { gap:14px; margin:28px 0 22px; } .picker-column { padding:14px 10px; } .picker-list { height:188px; scroll-behavior:smooth; } .picker-option { min-height:48px; font-size:24px; } .alarm-settings { gap:16px; } .mobile-nav { position:fixed; inset:0 auto 0 0; z-index:7; display:flex; flex-direction:column; gap:14px; width:min(320px,84vw); padding:28px 18px; border-right:1px solid #202833; border-radius:0; background:linear-gradient(90deg,#11151b 0,#0d1117 72%,#070a0f 100%); box-shadow:18px 0 60px #000c; opacity:1; transform:translateX(-104%); pointer-events:none; transition:transform .24s ease; } .mobile-nav.open { transform:translateX(0); pointer-events:auto; } .mobile-drawer-brand { display:flex; align-items:center; gap:14px; padding:0 10px 24px; } .mobile-drawer-brand b { display:block; font-size:29px; line-height:.95; color:#b4dbff; text-shadow:0 0 18px rgba(68,175,255,.22); } .mobile-drawer-bottom { display:grid; gap:10px; margin-top:auto; border-top:1px solid #202833; padding-top:18px; } .mobile-nav button { min-height:0; margin:0; padding:16px 18px; font-size:17px; border-radius:7px; text-align:left; color:#858b97; background:transparent; border:0; } .mobile-nav button.active { background:linear-gradient(90deg,#1d222a,#15191f); color:#a8d6ff; box-shadow:inset 3px 0 #90cfff; } .mobile-drawer-bottom button { text-align:center; color:#edf6ff; border:1px solid #334457; background:#090d12; } .locked .mobile-nav, .locked .mobile-menu-toggle, .locked .mobile-top-logo { display:none; } }
+          @media (max-width:980px) { 
+            body { overflow:auto; padding-bottom:0; } 
+            .app-shell { height:auto; min-height:100vh; grid-template-columns:1fr; } 
+            .sidebar { display:none; } 
+            .chat-pane { min-height:100vh; grid-template-rows:72px 1fr; background:#111318; } 
+            .page { padding:24px 18px; } 
+            .alarm-page { padding-top:20px; }
+            .alarm-hero { grid-template-columns: 1fr; gap: 24px; padding: 24px; }
+            .alarm-hero > .tool-title { margin-bottom: 0; }
+            .alarm-settings { border-top: 1px solid #26343b; padding-top: 20px; }
+            .topbar { position:sticky; top:0; z-index:6; height:72px; padding:0 16px; justify-content:flex-start; background:#111318f2; backdrop-filter:blur(16px); } .topbar b { font-family:Inter, system-ui, sans-serif; font-size:20px; letter-spacing:0; color:#f4f7fb; } .topbar > div { min-width:0; flex:1; } .mobile-top-logo { display:block; width:34px; height:34px; border-radius:9px; object-fit:cover; border:1px solid #2b3b4c; box-shadow:0 0 18px rgba(16,216,255,.24); } #clearButton { display:none !important; } .mobile-menu-toggle { display:grid; place-items:center; flex:0 0 auto; width:48px; min-width:48px; height:48px; min-height:48px; margin:0; padding:0; border-radius:12px; font-size:28px; line-height:1; background:#101823; border-color:#2c4358; color:#c9eeff; box-shadow:0 10px 24px #0008; } .chat-page.active { min-height:calc(100vh - 72px); grid-template-rows:1fr auto; } .chat-log { width:100%; padding:22px 16px 18px; gap:18px; } .bubble { max-width:88%; box-shadow:none; font-size:15px; line-height:1.55; } .bubble.assistant { align-self:flex-start; padding:8px 6px 8px 48px; } .bubble.assistant::before { left:0; top:8px; } .bubble.user { align-self:flex-end; background:#2b2f36; border:1px solid #3a404a; border-radius:18px; padding:12px 14px; } .composer { position:sticky; bottom:0; width:100%; margin:0; padding:12px 14px; border-radius:0; border-width:1px 0 0; background:#111318f2; backdrop-filter:blur(16px); grid-template-columns:1fr auto auto; box-shadow:0 -18px 40px #0008; } .composer input { min-height:48px; padding:0 2px; font-size:15px; } .icon-btn { width:46px; min-width:46px; height:46px; min-height:46px; border-radius:999px; font-size:12px; } .tools-grid { grid-template-columns:1fr; } .tool-card.device-card:first-child { grid-column:auto; } .settings-list { grid-template-columns:1fr; } .alarm-page { width:min(100%,420px); padding:18px 12px 40px; } .alarm-hero { padding:22px 20px; border-radius:16px; } .alarm-picker { gap:14px; margin:28px 0 22px; } .picker-column { padding:14px 10px; } .picker-list { height:188px; scroll-behavior:smooth; } .picker-option { min-height:48px; font-size:24px; } .alarm-settings { gap:16px; } .mobile-nav { position:fixed; inset:0 auto 0 0; z-index:7; display:flex; flex-direction:column; gap:14px; width:min(320px,84vw); padding:28px 18px; border-right:1px solid #202833; border-radius:0; background:linear-gradient(90deg,#11151b 0,#0d1117 72%,#070a0f 100%); box-shadow:18px 0 60px #000c; opacity:1; transform:translateX(-104%); pointer-events:none; transition:transform .24s ease; } .mobile-nav.open { transform:translateX(0); pointer-events:auto; } .mobile-drawer-brand { display:flex; align-items:center; gap:14px; padding:0 10px 24px; } .mobile-drawer-brand b { display:block; font-size:29px; line-height:.95; color:#b4dbff; text-shadow:0 0 18px rgba(68,175,255,.22); } .mobile-drawer-bottom { display:grid; gap:10px; margin-top:auto; border-top:1px solid #202833; padding-top:18px; } .mobile-nav button { min-height:0; margin:0; padding:16px 18px; font-size:17px; border-radius:7px; text-align:left; color:#858b97; background:transparent; border:0; } .mobile-nav button.active { background:linear-gradient(90deg,#1d222a,#15191f); color:#a8d6ff; box-shadow:inset 3px 0 #90cfff; } .mobile-drawer-bottom button { text-align:center; color:#edf6ff; border:1px solid #334457; background:#090d12; } .locked .mobile-nav, .locked .mobile-menu-toggle, .locked .mobile-top-logo { display:none; } }
           @media (max-width:560px) { h1 { font-size:38px; } .pad { grid-template-columns:repeat(3,92px); gap:12px; } .pad button { min-height:92px; font-size:34px; } .pill { width:100%; text-align:center; } .tools-page-head { align-items:stretch; flex-direction:column; margin-bottom:20px; } .tools-page-head h2 { font-size:38px; } .tools-page-head button { max-width:none !important; } .tools-grid { grid-template-columns:1fr; gap:14px; } .tool-card.device-card { min-height:210px; padding:18px; } .tool-copy b { font-size:22px; } .control-row { gap:8px; } .color-control { grid-template-columns:76px 1fr; } .time-row { font-size:42px; } .time-row input { width:72px; font-size:36px; } .alarm-actions { grid-template-columns:1fr; } .settings-row { min-height:unset; flex-direction:column; align-items:flex-start; } }
         </style>
       </head>
@@ -332,7 +344,7 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
           function two(number) {
             return String(Math.max(0, Math.min(99, Number(number) || 0))).padStart(2, '0');
           }
-          function setAlarmPicker(part, value) {
+          function setAlarmPicker(part, value, fromScroll = false) {
             alarmEditing = true;
             const limit = part === 'hour' ? 24 : 60;
             value = ((Number(value) % limit) + limit) % limit;
@@ -341,14 +353,21 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
             } else {
               alarmMinute.value = two(value);
             }
-            renderAlarmPicker();
+            if (!fromScroll) renderAlarmPicker('force_scroll');
+            else updatePickerActiveOnly(part, value);
+          }
+          function updatePickerActiveOnly(part, value) {
+            const list = part === 'hour' ? hourPicker : minutePicker;
+            list.querySelectorAll('.picker-option').forEach(opt => {
+              opt.classList.toggle('active', Number(opt.dataset.value) === value);
+            });
           }
           function syncPickerFromScroll(part) {
             const list = part === 'hour' ? hourPicker : minutePicker;
             if (pickerRendering || pickerWarping) return;
             const buttons = [...list.querySelectorAll('.picker-option')];
             const listCenter = list.getBoundingClientRect().top + list.clientHeight / 2;
-            let closest = buttons[0];
+            let closest = null;
             let closestDistance = Infinity;
             buttons.forEach((button) => {
               const rect = button.getBoundingClientRect();
@@ -358,14 +377,13 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
                 closest = button;
               }
             });
-            if (closest) setAlarmPicker(part, Number(closest.dataset.value));
+            if (closest) setAlarmPicker(part, Number(closest.dataset.value), true);
           }
           function onPickerScroll(part) {
             if (pickerRendering || pickerWarping) return;
             alarmEditing = true;
             normalizePickerLoop(part);
-            clearTimeout(pickerScrollTimer);
-            pickerScrollTimer = setTimeout(() => syncPickerFromScroll(part), 120);
+            syncPickerFromScroll(part);
           }
           function normalizePickerLoop(part) {
             const list = part === 'hour' ? hourPicker : minutePicker;
@@ -374,7 +392,7 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
             if (!option) return;
             const row = option.offsetHeight + 10;
             const span = row * count;
-            if (list.scrollTop < span * 0.55 || list.scrollTop > span * 1.45) {
+            if (list.scrollTop < span * 0.4 || list.scrollTop > span * 1.6) {
               pickerWarping = true;
               list.scrollTop = list.scrollTop < span ? list.scrollTop + span : list.scrollTop - span;
               requestAnimationFrame(() => { pickerWarping = false; });
@@ -383,6 +401,25 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
           function renderAlarmPicker() {
             const selectedHour = Number(alarmHour.value) || 0;
             const selectedMinute = Number(alarmMinute.value) || 0;
+            const isInitial = hourPicker.children.length === 0;
+            
+            if (!isInitial && !alarmEditing) {
+              updatePickerActiveOnly('hour', selectedHour);
+              updatePickerActiveOnly('minute', selectedMinute);
+              hourPicker.querySelector('.picker-option[data-loop="' + (selectedHour + 24) + '"]')?.scrollIntoView({ block:'center', behavior:'smooth' });
+              minutePicker.querySelector('.picker-option[data-loop="' + (selectedMinute + 60) + '"]')?.scrollIntoView({ block:'center', behavior:'smooth' });
+              return;
+            }
+            if (!isInitial && alarmEditing) {
+              updatePickerActiveOnly('hour', selectedHour);
+              updatePickerActiveOnly('minute', selectedMinute);
+              if (arguments[0] === 'force_scroll') {
+                hourPicker.querySelector('.picker-option[data-loop="' + (selectedHour + 24) + '"]')?.scrollIntoView({ block:'center', behavior:'smooth' });
+                minutePicker.querySelector('.picker-option[data-loop="' + (selectedMinute + 60) + '"]')?.scrollIntoView({ block:'center', behavior:'smooth' });
+              }
+              return;
+            }
+
             pickerRendering = true;
             hourPicker.innerHTML = '';
             minutePicker.innerHTML = '';
@@ -393,7 +430,7 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
               button.dataset.value = String(hour);
               button.dataset.loop = String(index);
               button.textContent = two(hour);
-              button.onclick = () => setAlarmPicker('hour', hour);
+              button.onclick = () => { setAlarmPicker('hour', hour); };
               hourPicker.appendChild(button);
             }
             for (let index = 0; index < 180; index++) {
@@ -403,12 +440,14 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
               button.dataset.value = String(minute);
               button.dataset.loop = String(index);
               button.textContent = two(minute);
-              button.onclick = () => setAlarmPicker('minute', minute);
+              button.onclick = () => { setAlarmPicker('minute', minute); };
               minutePicker.appendChild(button);
             }
             requestAnimationFrame(() => {
-              hourPicker.querySelector('.picker-option[data-loop="' + (selectedHour + 24) + '"]')?.scrollIntoView({ block:'center', behavior:'auto' });
-              minutePicker.querySelector('.picker-option[data-loop="' + (selectedMinute + 60) + '"]')?.scrollIntoView({ block:'center', behavior:'auto' });
+              const hOpt = hourPicker.querySelector('.picker-option[data-loop="' + (selectedHour + 24) + '"]');
+              const mOpt = minutePicker.querySelector('.picker-option[data-loop="' + (selectedMinute + 60) + '"]');
+              if (hOpt) hOpt.scrollIntoView({ block:'center', behavior:'auto' });
+              if (mOpt) mOpt.scrollIntoView({ block:'center', behavior:'auto' });
               requestAnimationFrame(() => { pickerRendering = false; });
             });
           }
