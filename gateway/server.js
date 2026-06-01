@@ -564,41 +564,53 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
             }).join('');
           }
           function updateToolStatus(state = {}) {
-            setChip(lampState, state.lamp === true, 'ON', 'OFF');
-            setChip(rgbState, state.rgb === true, 'ON', 'OFF');
-            setChip(doorState, state.door === true, 'OPEN', 'CLOSED');
-            setChip(tvState, state.tv === true, 'ON', 'OFF');
-            setChip(alarmState, state.alarmEnabled === true, 'ACTIVE', 'OFF');
+            const get = (id) => document.getElementById(id);
+            const lampState = get('lampState');
+            const rgbState = get('rgbState');
+            const doorState = get('doorState');
+            const tvState = get('tvState');
+            const alarmState = get('alarmState');
+
+            if (lampState) setChip(lampState, state.lamp === true, 'ON', 'OFF');
+            if (rgbState) setChip(rgbState, state.rgb === true, 'ON', 'OFF');
+            if (doorState) setChip(doorState, state.door === true, 'OPEN', 'CLOSED');
+            if (tvState) setChip(tvState, state.tv === true, 'ON', 'OFF');
+            if (alarmState) setChip(alarmState, state.alarmEnabled === true, 'ACTIVE', 'OFF');
 
             // Visual enhancements for device cards
-            document.getElementById('card-lamp')?.classList.toggle('active-glow', state.lamp === true);
-            document.getElementById('icon-lamp')?.classList.toggle('active-anim', state.lamp === true);
-            
-            document.getElementById('card-rgb')?.classList.toggle('active-glow', state.rgb === true);
-            document.getElementById('icon-rgb')?.classList.toggle('active-anim', state.rgb === true);
-            
-            document.getElementById('card-door')?.classList.toggle('active-glow', state.door === true);
-            document.getElementById('icon-door')?.classList.toggle('active-anim', state.door === true);
-            
-            document.getElementById('card-tv')?.classList.toggle('active-glow', state.tv === true);
-            document.getElementById('icon-tv')?.classList.toggle('active-anim', state.tv === true);
+            get('card-lamp')?.classList.toggle('active-glow', state.lamp === true);
+            get('icon-lamp')?.classList.toggle('active-anim', state.lamp === true);
+            get('card-rgb')?.classList.toggle('active-glow', state.rgb === true);
+            get('icon-rgb')?.classList.toggle('active-anim', state.rgb === true);
+            get('card-door')?.classList.toggle('active-glow', state.door === true);
+            get('icon-door')?.classList.toggle('active-anim', state.door === true);
+            get('card-tv')?.classList.toggle('active-glow', state.tv === true);
+            get('icon-tv')?.classList.toggle('active-anim', state.tv === true);
 
             if (state.freeHeap && state.maxHeap) {
               const free = Math.round(state.freeHeap / 1024);
               const total = Math.round(state.maxHeap / 1024);
               const text = free + ' / ' + total + ' KB';
-              if (window.ramValSidebar) ramValSidebar.textContent = text;
-              if (window.ramValMobile) ramValMobile.textContent = text;
+              const rvSidebar = get('ramValSidebar');
+              const rvMobile = get('ramValMobile');
+              if (rvSidebar) rvSidebar.textContent = text;
+              if (rvMobile) rvMobile.textContent = text;
             }
 
             if (!alarmEditing && Number.isFinite(Number(state.alarmHour)) && Number.isFinite(Number(state.alarmMinute))) {
-              alarmHour.value = two(state.alarmHour);
-              alarmMinute.value = two(state.alarmMinute);
-              alarmHourSheet.value = two(state.alarmHour);
-              alarmMinuteSheet.value = two(state.alarmMinute);
+              const ah = get('alarmHour');
+              const am = get('alarmMinute');
+              const ahs = get('alarmHourSheet');
+              const ams = get('alarmMinuteSheet');
+              if (ah) ah.value = two(state.alarmHour);
+              if (am) am.value = two(state.alarmMinute);
+              if (ahs) ahs.value = two(state.alarmHour);
+              if (ams) ams.value = two(state.alarmMinute);
             }
             if (Number.isFinite(Number(state.r)) && Number.isFinite(Number(state.g)) && Number.isFinite(Number(state.b))) {
-              color.value = rgbToHex(state.r, state.g, state.b);
+              const hex = rgbToHex(state.r, state.g, state.b);
+              const colorEl = get('color');
+              if (colorEl) colorEl.value = hex;
             }
           }
           function addLog(text, type = '') {
@@ -684,7 +696,9 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
             setTimeout(() => queue({device:'door', state:'open'}), 1400);
           }
           function rgbColor() {
-            const hex = color.value.slice(1);
+            const colorEl = document.getElementById('color');
+            if (!colorEl) return;
+            const hex = colorEl.value.slice(1);
             queue({device:'rgb', r:parseInt(hex.slice(0,2),16), g:parseInt(hex.slice(2,4),16), b:parseInt(hex.slice(4,6),16)});
           }
           function openAlarmSheet() {
@@ -713,27 +727,33 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
           }
           function saveAlarmSheet() {
             const { hour, minute } = clampAlarmInputs('sheet');
-            alarmHour.value = two(hour);
-            alarmMinute.value = two(minute);
-            alarmName.value = alarmNameSheet.value;
+            const ah = document.getElementById('alarmHour');
+            const am = document.getElementById('alarmMinute');
+            const an = document.getElementById('alarmName');
+            const ans = document.getElementById('alarmNameSheet');
+            if (ah) ah.value = two(hour);
+            if (am) am.value = two(minute);
+            if (an && ans) an.value = ans.value;
             renderAlarmPicker();
             queue({device:'alarm', enabled:true, hour, minute});
             closeAlarmSheet();
           }
           async function askAi() {
-            if (!unlocked() || !cmd.value.trim()) return;
-            const message = cmd.value.trim();
-            cmd.value = '';
+            const cmdEl = document.getElementById('cmd');
+            if (!unlocked() || !cmdEl || !cmdEl.value.trim()) return;
+            const message = cmdEl.value.trim();
+            cmdEl.value = '';
             addBubble('user', message);
             addBubble('assistant', 'AI thinking...');
-            const loadingBubble = chatLog.lastElementChild;
+            const chatLogEl = document.getElementById('chatLog');
+            const loadingBubble = chatLogEl ? chatLogEl.lastElementChild : null;
             const response = await fetch('/chat', {
               method:'POST',
               headers:{'Content-Type':'application/json'},
               body:JSON.stringify({pin:pinValue(), message, queue:true})
             });
             const result = await response.json().catch(() => ({}));
-            loadingBubble.textContent = result.reply || result.error || 'AI failed';
+            if (loadingBubble) loadingBubble.textContent = result.reply || result.error || 'AI failed';
             scrollToBottom(true);
             if (result.reply) speak(result.reply);
             setStatus(response.ok && result.ok ? 'AI command queued' : 'AI failed');
