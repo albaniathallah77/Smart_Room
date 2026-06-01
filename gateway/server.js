@@ -123,7 +123,7 @@ app.get('/', (req, res) => {
           .mobile-drawer-brand, .mobile-drawer-bottom { display:none; }
           .alarm-page { display:none; padding:0; }
           .alarm-page.active { display:flex; flex-direction:column; min-height:100%; width:100%; }
-          .alarm-hero { width:100%; max-width:1400px; margin:0 auto; background:transparent; border:0; border-radius:0; padding:48px; box-shadow:none; display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:start; flex:1; }
+          .alarm-hero { width:100%; max-width:1400px; margin:0 auto; background:transparent; border:0; border-radius:0; padding:20px 48px 48px; display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:start; flex:1; }
           .alarm-hero > .tool-title { grid-column: 1 / -1; font-size:48px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; font-family:Orbitron, sans-serif; letter-spacing:1px; color:#10d8ff; }
           .alarm-picker { display:grid; grid-template-columns:1fr 1fr; gap:32px; margin:0; }
           .picker-column { background:rgba(5, 8, 12, 0.6); border:1px solid rgba(26, 38, 50, 0.5); border-radius:24px; padding:32px; position:relative; overflow:hidden; backdrop-filter:blur(10px); }
@@ -325,7 +325,7 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
             if (isOpen) {
               const activePage = document.querySelector('.page.active');
               if (activePage && activePage.id === 'alarmPage') {
-                renderAlarmPicker('force_scroll');
+                renderAlarmPicker();
               }
             }
           }
@@ -370,7 +370,7 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
             document.querySelectorAll('[data-page]').forEach((item) => item.classList.toggle('active', item.dataset.page === name));
             mobileNav.classList.remove('open');
             if (name === 'alarm') {
-              renderAlarmPicker('force_scroll');
+              renderAlarmPicker();
             }
             if (name !== 'chat') checkEspStatus();
           }
