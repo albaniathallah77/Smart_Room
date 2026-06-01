@@ -63,6 +63,8 @@ public:
     doc["alarmRinging"] = state.alarm.ringing;
     doc["alarmHour"] = state.alarm.hour;
     doc["alarmMinute"] = state.alarm.minute;
+    doc["freeHeap"] = ESP.getFreeHeap();
+    doc["maxHeap"] = ESP.getHeapSize();
 
     String stateText;
     serializeJson(doc, stateText);

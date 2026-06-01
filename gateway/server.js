@@ -260,6 +260,7 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
                 </article>
                 <div class="system-log-container">
                   <div class="log-title"><span>System Activity Log</span><span id="log-status" style="font-size:10px;opacity:0.6">Streaming...</span></div>
+                  <div id="heapIndicator" style="font-size:10px;color:var(--muted);margin-bottom:8px;font-family:Share Tech Mono, monospace;">RAM: -- / -- KB</div>
                   <div class="log-content" id="systemLog">
                     <div class="log-line">System initialized and ready for simulation.</div>
                   </div>
@@ -543,6 +544,13 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
             
             document.getElementById('card-tv')?.classList.toggle('active-glow', state.tv === true);
             document.getElementById('icon-tv')?.classList.toggle('active-anim', state.tv === true);
+
+            if (state.freeHeap && state.maxHeap) {
+              const free = Math.round(state.freeHeap / 1024);
+              const total = Math.round(state.maxHeap / 1024);
+              const heapEl = document.getElementById('heapIndicator');
+              if (heapEl) heapEl.textContent = 'RAM: ' + free + ' KB / ' + total + ' KB FREE';
+            }
 
             if (!alarmEditing && Number.isFinite(Number(state.alarmHour)) && Number.isFinite(Number(state.alarmMinute))) {
               alarmHour.value = two(state.alarmHour);
