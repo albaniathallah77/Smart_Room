@@ -122,8 +122,8 @@ app.get('/', (req, res) => {
           .mobile-nav { display:none; }
           .mobile-drawer-brand, .mobile-drawer-bottom { display:none; }
           .alarm-page { display:none; padding:0; }
-          .alarm-page.active { display:flex; flex-direction:column; min-height:100%; width:100%; }
-          .alarm-hero { width:100%; max-width:1400px; margin:0 auto; background:transparent; border:0; border-radius:0; padding:20px 48px 48px; display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:start; flex:1; }
+          .alarm-page.active { display:grid; place-items:center; min-height:100%; width:100%; padding:20px; }
+          .alarm-hero { width:100%; max-width:1120px; margin:0 auto; background:transparent; border:0; border-radius:0; padding:0; display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:center; }
           .alarm-hero > .tool-title { grid-column: 1 / -1; font-size:48px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; font-family:Orbitron, sans-serif; letter-spacing:1px; color:#10d8ff; }
           .alarm-picker { display:grid; grid-template-columns:1fr 1fr; gap:32px; margin:0; }
           .picker-column { background:rgba(5, 8, 12, 0.6); border:1px solid rgba(26, 38, 50, 0.5); border-radius:24px; padding:32px; position:relative; overflow:hidden; backdrop-filter:blur(10px); }
@@ -545,7 +545,6 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
               alarmMinute.value = two(state.alarmMinute);
               alarmHourSheet.value = two(state.alarmHour);
               alarmMinuteSheet.value = two(state.alarmMinute);
-              renderAlarmPicker();
             }
             if (Number.isFinite(Number(state.r)) && Number.isFinite(Number(state.g)) && Number.isFinite(Number(state.b))) {
               color.value = rgbToHex(state.r, state.g, state.b);
