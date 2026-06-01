@@ -5,6 +5,7 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <time.h>
+#include "WalkAnimationFrames.h"
 #include "../SmartRoomState.h"
 
 class OledManager {
@@ -34,7 +35,7 @@ public:
 
     // PRIORITAS 1: FIGHT MODE (Harus di paling atas)
     if (state.fightMode) {
-      if (millis() - _lastRenderAt < 50) return; // Animasi sangat cepat
+      if (millis() - _lastRenderAt < OledWalkAnimation::FRAME_DELAY_MS) return;
       renderFightScene(_animationFrame++);
       _lastRenderAt = millis();
       _lastTvOn = true; // Paksa status TV on agar tidak tertutup logika lain
@@ -182,48 +183,12 @@ private:
   }
 
   void renderFightScene(uint8_t frame) {
+    const uint8_t frameIndex = frame % OledWalkAnimation::FRAME_COUNT;
     _display.clearDisplay();
-    _display.drawLine(0, 52, 128, 52, SSD1306_WHITE); // Tanah
-
-    // 1. SI BIRU (Tengah - Duduk Santai di Kursi)
-    // Pose duduk: kepala (64,26), tangan bersandar, kaki selonjor
-    drawStickmanPose(64, 38, 0, -12, -8, -2, 8, -2, -6, 12, 10, 10); 
-    _display.drawRect(58, 48, 12, 4, SSD1306_WHITE); // Kursi
-    _display.drawLine(58, 40, 58, 48, SSD1306_WHITE); // Sandaran kursi
-
-    // 2. KELOMPOK KIRI (Menyerang)
-    uint8_t cycle = frame % 20;
-    
-    // Penyerang 1 (Paling depan - Tendangan Putar)
-    int8_t x1 = 20 + (cycle < 10 ? cycle * 2 : 20 - (cycle-10)*2);
-    if (cycle < 10) {
-      // Pose Menendang
-      drawStickmanPose(x1, 38, 2, -12, -4, -6, -2, -8, -2, 12, 12, -4);
-    } else {
-      // Pose Siap
-      drawStickmanPose(x1, 38, 0, -12, -4, 2, 4, 2, -4, 12, 4, 12);
-    }
-
-    // Penyerang 2 (Di belakang - Berlari)
-    int8_t x2 = x1 - 15;
-    drawStickmanPose(x2, 38, 2, -12, -6, 2, 6, -2, cycle%2?2:8, 12, cycle%2?8:2, 12);
-
-    // 3. KELOMPOK KANAN (Menyerang)
-    // Penyerang 3 (Paling depan - Pukulan Bertubi-tubi)
-    int8_t x3 = 108 - (cycle < 10 ? cycle * 2 : 20 - (cycle-10)*2);
-    if (cycle % 4 < 2) {
-      // Pose Memukul
-      drawStickmanPose(x3, 38, -2, -12, -12, -4, 4, 2, -4, 12, 4, 12);
-    } else {
-      // Pose Siap
-      drawStickmanPose(x3, 38, 0, -12, -4, 2, 4, 2, -4, 12, 4, 12);
-    }
-
-    // Penyerang 4 (Di belakang - Melompat)
-    int8_t x4 = x3 + 15;
-    int8_t y4 = 38 - (cycle < 10 ? cycle : 20 - cycle);
-    drawStickmanPose(x4, y4, 0, -12, -6, 6, 6, 6, -4, 10, 4, 10);
-
+    _display.drawBitmap(32, 0, OledWalkAnimation::WALK_FRAMES[frameIndex],
+                        OledWalkAnimation::FRAME_WIDTH,
+                        OledWalkAnimation::FRAME_HEIGHT,
+                        SSD1306_WHITE);
     _display.display();
   }
 
