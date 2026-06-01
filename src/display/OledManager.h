@@ -7,6 +7,7 @@
 #include <time.h>
 #include "CatAnimationFrames.h"
 #include "StikmanAnimationFrames.h"
+#include "KacauAnimationFrames.h"
 #include "WalkAnimationFrames.h"
 #include "../SmartRoomState.h"
 
@@ -47,6 +48,14 @@ public:
     if (state.stikmanMode) {
       if (millis() - _lastRenderAt < OledStikmanAnimation::FRAME_DELAY_MS) return;
       renderStikmanScene(_animationFrame++);
+      _lastRenderAt = millis();
+      _lastTvOn = true;
+      return;
+    }
+
+    if (state.kacauMode) {
+      if (millis() - _lastRenderAt < OledKacauAnimation::FRAME_DELAY_MS) return;
+      renderKacauScene(_animationFrame++);
       _lastRenderAt = millis();
       _lastTvOn = true;
       return;
@@ -226,6 +235,16 @@ private:
     _display.drawBitmap(0, 0, OledStikmanAnimation::STIKMAN_FRAMES[frameIndex],
                         OledStikmanAnimation::FRAME_WIDTH,
                         OledStikmanAnimation::FRAME_HEIGHT,
+                        SSD1306_WHITE);
+    _display.display();
+  }
+
+  void renderKacauScene(uint8_t frame) {
+    const uint8_t frameIndex = frame % OledKacauAnimation::FRAME_COUNT;
+    _display.clearDisplay();
+    _display.drawBitmap(0, 0, OledKacauAnimation::KACAU_FRAMES[frameIndex],
+                        OledKacauAnimation::FRAME_WIDTH,
+                        OledKacauAnimation::FRAME_HEIGHT,
                         SSD1306_WHITE);
     _display.display();
   }

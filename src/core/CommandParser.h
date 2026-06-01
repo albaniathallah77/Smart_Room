@@ -16,6 +16,7 @@ enum class RoomActionType {
   SetFightMode,
   SetCatMode,
   SetStikmanMode,
+  SetKacauMode,
   ScanWifi,
   SetWifiCredentials,
   SetWifiMode
@@ -71,6 +72,11 @@ public:
       }
       if (state == "stikman" || state == "stickman") {
         action.type = RoomActionType::SetStikmanMode;
+        action.enabled = true;
+        return true;
+      }
+      if (state == "kacau" || state == "chaos") {
+        action.type = RoomActionType::SetKacauMode;
         action.enabled = true;
         return true;
       }
@@ -145,6 +151,12 @@ public:
 
     if (text == "stikman" || hasAny(text, "animasi stikman", "animasi stickman", "mode stikman", "mode stickman")) {
       action.type = RoomActionType::SetStikmanMode;
+      action.enabled = true;
+      return true;
+    }
+
+    if (text == "kacau" || hasAny(text, "animasi kacau", "mode kacau", "chaos animation", "mode chaos")) {
+      action.type = RoomActionType::SetKacauMode;
       action.enabled = true;
       return true;
     }

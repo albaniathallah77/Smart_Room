@@ -383,6 +383,7 @@ private:
         _state.fightMode = false;
         _state.catMode = false;
         _state.stikmanMode = false;
+        _state.kacauMode = false;
         Serial.print("Smart TV/OLED ");
         Serial.println(action.enabled ? "ON" : "OFF");
         break;
@@ -391,6 +392,7 @@ private:
         _state.fightMode = action.enabled;
         _state.catMode = false;
         _state.stikmanMode = false;
+        _state.kacauMode = false;
         Serial.println("Stickman Fight Animation ACTIVE");
         break;
       case RoomActionType::SetCatMode:
@@ -398,6 +400,7 @@ private:
         _state.fightMode = false;
         _state.catMode = action.enabled;
         _state.stikmanMode = false;
+        _state.kacauMode = false;
         Serial.println("Cat Animation ACTIVE");
         break;
       case RoomActionType::SetStikmanMode:
@@ -405,7 +408,16 @@ private:
         _state.fightMode = false;
         _state.catMode = false;
         _state.stikmanMode = action.enabled;
+        _state.kacauMode = false;
         Serial.println("Stikman Animation ACTIVE");
+        break;
+      case RoomActionType::SetKacauMode:
+        _state.tvOn = true;
+        _state.fightMode = false;
+        _state.catMode = false;
+        _state.stikmanMode = false;
+        _state.kacauMode = action.enabled;
+        Serial.println("Kacau Animation ACTIVE");
         break;
       case RoomActionType::SetAlarm:
         _state.alarm.enabled = action.enabled;
