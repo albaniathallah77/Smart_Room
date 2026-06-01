@@ -353,6 +353,7 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
             <button data-page="settings" onclick="showPage('settings')">Settings</button>
             <div class="mobile-drawer-bottom">
               <div class="ram-stat"><span>ESP HEAP</span><b id="ramValMobile">-- KB</b></div>
+              <div class="pill" id="espStatusMob" style="border-color:#551111;color:#ff5555;background:#1a0505;">ESP Offline</div>
               <div class="pill" id="statusMob">Cloud ready</div>
               <button class="dark" onclick="lockAgain()">LOCK</button>
             </div>
@@ -825,17 +826,23 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
             try {
               const res = await fetch('/device/status');
               const data = await res.json();
-              if (data.online) {
-                espStatus.textContent = 'ESP Online';
-                espStatus.style.background = '#021a0f';
-                espStatus.style.color = '#10ea7a';
-                espStatus.style.borderColor = '#0a522b';
-              } else {
-                espStatus.textContent = 'ESP Offline';
-                espStatus.style.background = '#1a0505';
-                espStatus.style.color = '#ff5555';
-                espStatus.style.borderColor = '#551111';
-              }
+              const setPill = (id, online) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                if (online) {
+                  el.textContent = 'ESP Online';
+                  el.style.background = '#021a0f';
+                  el.style.color = '#10ea7a';
+                  el.style.borderColor = '#0a522b';
+                } else {
+                  el.textContent = 'ESP Offline';
+                  el.style.background = '#1a0505';
+                  el.style.color = '#ff5555';
+                  el.style.borderColor = '#551111';
+                }
+              };
+              setPill('espStatus', data.online);
+              setPill('espStatusMob', data.online);
               updateToolStatus(data.state || {});
             } catch (e) {}
           }
