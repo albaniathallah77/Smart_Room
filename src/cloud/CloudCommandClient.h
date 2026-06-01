@@ -59,6 +59,8 @@ public:
     doc["b"] = state.rgbColor.b;
     doc["door"] = state.doorOpen;
     doc["tv"] = state.tvOn;
+    doc["fightMode"] = state.fightMode;
+    doc["catMode"] = state.catMode;
     doc["alarmEnabled"] = state.alarm.enabled;
     doc["alarmRinging"] = state.alarm.ringing;
     doc["alarmHour"] = state.alarm.hour;

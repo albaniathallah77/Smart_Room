@@ -161,13 +161,21 @@ private:
       case RoomActionType::SetTvPower:
         _state.tvOn = action.enabled;
         _state.fightMode = false;
+        _state.catMode = false;
         Serial.print("Smart TV/OLED ");
         Serial.println(action.enabled ? "ON" : "OFF");
         break;
       case RoomActionType::SetFightMode:
         _state.tvOn = true;
         _state.fightMode = action.enabled;
+        _state.catMode = false;
         Serial.println("Stickman Fight Animation ACTIVE");
+        break;
+      case RoomActionType::SetCatMode:
+        _state.tvOn = true;
+        _state.fightMode = false;
+        _state.catMode = action.enabled;
+        Serial.println("Cat Animation ACTIVE");
         break;
       case RoomActionType::SetAlarm:
         _state.alarm.enabled = action.enabled;

@@ -13,7 +13,8 @@ enum class RoomActionType {
   SetTvPower,
   SetAlarm,
   StopAlarm,
-  SetFightMode
+  SetFightMode,
+  SetCatMode
 };
 
 struct RoomAction {
@@ -57,6 +58,11 @@ public:
         action.enabled = true;
         return true;
       }
+      if (state == "cat" || state == "kucing") {
+        action.type = RoomActionType::SetCatMode;
+        action.enabled = true;
+        return true;
+      }
       action.type = RoomActionType::SetTvPower;
       action.enabled = state == "on" || doc["enabled"] == true;
       return true;
@@ -96,6 +102,12 @@ public:
 
   bool parseNaturalLanguage(String text, RoomAction& action) {
     text.toLowerCase();
+
+    if (text == "cat" || hasAny(text, "animasi cat", "cat animation", "kucing", "mode cat")) {
+      action.type = RoomActionType::SetCatMode;
+      action.enabled = true;
+      return true;
+    }
 
     if (hasAny(text, "lampu meja", "desk lamp", "lamp")) {
       action.type = RoomActionType::SetDeskLamp;

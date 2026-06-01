@@ -5,6 +5,7 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <time.h>
+#include "CatAnimationFrames.h"
 #include "WalkAnimationFrames.h"
 #include "../SmartRoomState.h"
 
@@ -33,7 +34,15 @@ public:
       return;
     }
 
-    // PRIORITAS 1: FIGHT MODE (Harus di paling atas)
+    // PRIORITAS 1: mode animasi khusus (harus di paling atas)
+    if (state.catMode) {
+      if (millis() - _lastRenderAt < OledCatAnimation::FRAME_DELAY_MS) return;
+      renderCatScene(_animationFrame++);
+      _lastRenderAt = millis();
+      _lastTvOn = true;
+      return;
+    }
+
     if (state.fightMode) {
       if (millis() - _lastRenderAt < OledWalkAnimation::FRAME_DELAY_MS) return;
       renderFightScene(_animationFrame++);
@@ -188,6 +197,16 @@ private:
     _display.drawBitmap(32, 0, OledWalkAnimation::WALK_FRAMES[frameIndex],
                         OledWalkAnimation::FRAME_WIDTH,
                         OledWalkAnimation::FRAME_HEIGHT,
+                        SSD1306_WHITE);
+    _display.display();
+  }
+
+  void renderCatScene(uint8_t frame) {
+    const uint8_t frameIndex = frame % OledCatAnimation::FRAME_COUNT;
+    _display.clearDisplay();
+    _display.drawBitmap(0, 0, OledCatAnimation::CAT_FRAMES[frameIndex],
+                        OledCatAnimation::FRAME_WIDTH,
+                        OledCatAnimation::FRAME_HEIGHT,
                         SSD1306_WHITE);
     _display.display();
   }

@@ -307,6 +307,9 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
                   <div class="control-row" style="grid-template-columns: 1fr 1fr 1fr;">
                     <button class="primary" onclick="queue({device:'tv',state:'on'})">ON</button>
                     <button class="blue" onclick="queue({device:'tv',state:'fight'})">FIGHT</button>
+                  </div>
+                  <div class="control-row" style="grid-template-columns: 1fr 1fr;">
+                    <button class="blue" onclick="queue({device:'tv',state:'cat'})">CAT</button>
                     <button class="dark" onclick="queue({device:'tv',state:'off'})">OFF</button>
                   </div>
                 </article>
@@ -597,7 +600,10 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
             if (lampState) setChip(lampState, state.lamp === true, 'ON', 'OFF');
             if (rgbState) setChip(rgbState, state.rgb === true, 'ON', 'OFF');
             if (doorState) setChip(doorState, state.door === true, 'OPEN', 'CLOSED');
-            if (tvState) setChip(tvState, state.tv === true, 'ON', 'OFF');
+            if (tvState) {
+              const tvLabel = state.catMode === true ? 'CAT' : (state.fightMode === true ? 'FIGHT' : 'ON');
+              setChip(tvState, state.tv === true, tvLabel, 'OFF');
+            }
             if (alarmState) setChip(alarmState, state.alarmEnabled === true, 'ACTIVE', 'OFF');
 
             // Visual enhancements for device cards
@@ -1517,12 +1523,12 @@ app.post('/chat', async (req, res) => {
             '{"device":"rgb","state":"on|off"}',
             '{"device":"rgb","r":0-255,"g":0-255,"b":0-255}',
             '{"device":"door","state":"open|close"}',
-            '{"device":"tv","state":"on|off|fight"}',
+            '{"device":"tv","state":"on|off|fight|cat"}',
             '{"device":"alarm","enabled":true,"hour":0-23,"minute":0-59}',
             '{"device":"alarm","enabled":false}',
             '{"device":"buzzer","state":"off"}',
             'IMPORTANT: For RGB colors, do NOT use "state":"blue", use R,G,B values instead. Default blue is {"r":90,"g":160,"b":255}.',
-            'For stickman animation or fight, use {"device":"tv","state":"fight"}.',
+            'For stickman animation or fight, use {"device":"tv","state":"fight"}. For cat animation, use {"device":"tv","state":"cat"}.',
             'Do not use fan or relay commands.',
             'If user gives a name, preference, or rule to remember, include "memory":"short memory text" in the JSON.',
             'For "mode tidur", turn lamp/rgb/tv off and optionally set alarm if user asks.',
@@ -1631,6 +1637,7 @@ function normalizeCommand(command) {
 
   if (device === 'tv' || device === 'oled' || device === 'smart_tv') {
     if (state === 'fight' || state === 'animation') return { device: 'tv', state: 'fight' };
+    if (state === 'cat' || state === 'kucing') return { device: 'tv', state: 'cat' };
     if (state === 'on' || state === 'nyala' || state === 'hidup') return { device: 'tv', state: 'on' };
     if (state === 'off' || state === 'mati') return { device: 'tv', state: 'off' };
     return null;
