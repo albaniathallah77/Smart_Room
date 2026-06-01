@@ -519,14 +519,15 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
                 if (result.status === 'done') {
                   setStatus('Sent to ESP / Done');
                   clearInterval(timer);
-                } else if (checks > 12) {
+                  checkEspStatus();
+                } else if (checks > 20) {
                   setStatus('Queued, waiting ESP');
                   clearInterval(timer);
                 }
               } catch (error) {
-                if (checks > 12) clearInterval(timer);
+                if (checks > 20) clearInterval(timer);
               }
-            }, 1500);
+            }, 800);
           }
           function demoMode() {
             queue({device:'rgb', r:0, g:220, b:255});
@@ -667,7 +668,7 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
           minutePicker.addEventListener('scroll', () => onPickerScroll('minute'));
           alarmModal.addEventListener('click', (event) => { if (event.target === alarmModal) closeAlarmSheet(); });
           renderAlarmPicker();
-          setInterval(checkEspStatus, 2000);
+          setInterval(checkEspStatus, 1200);
           checkEspStatus();
           
           redraw();
