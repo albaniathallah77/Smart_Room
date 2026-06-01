@@ -413,7 +413,7 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
                       <div class="settings-row"><div><b>Remote Dashboard</b><div class="sub">Vercel remote control from inside or outside network</div></div><span class="state-chip on">SYNC ACTIVE</span></div>
                       <div class="settings-row"><div><b>Telemetry Polling</b><div class="sub">ESP checks cloud about every 500ms</div></div><span class="state-chip on">0.5 SEC</span></div>
                       <div class="settings-row"><div><b>WiFi Station</b><div class="sub" id="wifiCloudInfo">Waiting ESP telemetry</div><div class="sub" id="wifiStrongestInfo">Strongest network: -</div><div class="sub" id="wifiApInfo">Hotspot: off</div></div><div class="settings-chips"><span class="state-chip" id="wifiCloudState">OFFLINE</span><span class="state-chip" id="wifiModeState">WIFI</span></div></div>
-                      <div class="settings-row"><div><b>Change WiFi</b><div class="sub">Pick a scanned network from ESP, or type SSID manually.</div><input id="cloudWifiSsid" placeholder="SSID"><input id="cloudWifiPass" type="password" placeholder="Password"><div id="cloudWifiList" class="wifi-network-list"></div></div><div class="settings-actions"><button class="primary" id="scanWifiButton" onclick="scanWifiCloud()">SCAN</button><button class="blue" id="connectWifiButton" onclick="connectWifiCloud()">CONNECT</button><button class="dark" onclick="setWifiModeCloud('wifi')">WIFI MODE</button><button class="dark" onclick="setWifiModeCloud('hotspot')">HOTSPOT MODE</button></div></div>
+                      <div class="settings-row"><div><b>Change WiFi</b><div class="sub">Pick a scanned network from ESP, or type SSID manually.</div><input id="cloudWifiSsid" placeholder="SSID"><input id="cloudWifiPass" type="password" placeholder="Password"><div id="cloudWifiList" class="wifi-network-list"></div></div><div class="settings-actions"><button class="primary" id="scanWifiButton" onclick="scanWifiCloud()">SCAN</button><button class="dark" id="stopWifiScanButton" onclick="stopWifiScanCloud()">STOP SCAN</button><button class="blue" id="connectWifiButton" onclick="connectWifiCloud()">CONNECT</button><button class="dark" onclick="setWifiModeCloud('wifi')">WIFI MODE</button><button class="dark" onclick="setWifiModeCloud('hotspot')">HOTSPOT MODE</button></div></div>
                       <div class="settings-row"><div><b>Local Edge Dashboard</b><div class="sub">IP address shows firmware dashboard, so upload sketch after local UI changes</div></div><span class="state-chip">LOCAL</span></div>
                     </div>
                     <div class="settings-danger">
@@ -825,6 +825,36 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
             setTimeout(() => {
               setButtonLoading(button, false);
             }, 6500);
+          }
+
+          async function stopWifiScanCloud() {
+            const button = document.getElementById('stopWifiScanButton') || activeButtonFallback();
+            const strongest = document.getElementById('wifiStrongestInfo');
+            setButtonLoading(button, true, 'STOPPING');
+            setStatus('Stopping scan...');
+            addLog('STOP REQUESTED: clearing pending WiFi scan commands', 'cmd');
+            try {
+              const response = await fetch('/remote/clear', {
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body:JSON.stringify({pin:pinValue()})
+              });
+              const result = await response.json().catch(() => ({}));
+              if (response.ok && result.ok) {
+                setStatus('Scan stopped');
+                addLog('PENDING COMMANDS CLEARED: ' + (result.deleted || 0), 'success');
+                if (strongest) strongest.textContent = 'Scan stopped. Press SCAN once to refresh.';
+              } else {
+                setStatus(result.error || 'Stop failed');
+                addLog('ERROR: ' + (result.error || 'Stop failed'), 'error');
+              }
+            } catch (error) {
+              setStatus('Stop failed');
+              addLog('ERROR: Stop scan network failed', 'error');
+            } finally {
+              setButtonLoading(button, false);
+              checkEspStatus();
+            }
           }
 
           async function connectWifiCloud() {
