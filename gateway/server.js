@@ -330,14 +330,24 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
           function setStatus(text) {
             document.getElementById('status').textContent = text;
           }
+          function scrollToBottom(force = false) {
+            const threshold = 150;
+            const isNearBottom = chatLog.scrollHeight - chatLog.scrollTop - chatLog.clientHeight < threshold;
+            if (force || isNearBottom) {
+              requestAnimationFrame(() => {
+                chatLog.scrollTo({ top: chatLog.scrollHeight, behavior: 'smooth' });
+              });
+            }
+          }
           function addBubble(role, text) {
+            while (chatLog.children.length > 30) {
+              chatLog.removeChild(chatLog.firstChild);
+            }
             const bubble = document.createElement('div');
             bubble.className = 'bubble ' + role;
             bubble.textContent = text;
             chatLog.appendChild(bubble);
-            requestAnimationFrame(() => {
-              chatLog.scrollTo({ top: chatLog.scrollHeight, behavior: 'smooth' });
-            });
+            scrollToBottom(true);
           }
           function setChip(element, isOn, onText, offText) {
             element.textContent = isOn ? onText : offText;
@@ -582,6 +592,7 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
             });
             const result = await response.json().catch(() => ({}));
             loadingBubble.textContent = result.reply || result.error || 'AI failed';
+            scrollToBottom(true);
             if (result.reply) speak(result.reply);
             setStatus(response.ok && result.ok ? 'AI command queued' : 'AI failed');
             const id = result.queued?.[0]?.id;
