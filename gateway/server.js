@@ -141,11 +141,15 @@ app.get('/', (req, res) => {
           .alarm-actions button { min-height:64px; font-size:16px; font-weight:900; letter-spacing:1px; text-transform:uppercase; border-radius:12px; transition:all 0.2s; }
           
           @media (max-width:980px) {
-            .alarm-hero { grid-template-columns:1fr; gap:32px; padding:24px; }
-            .alarm-hero > .tool-title { font-size:32px; }
-            .alarm-settings { align-self: stretch; padding:24px; }
-            .picker-list { height:260px; padding:100px 4px; }
-            .picker-option { min-height:60px; font-size:32px; }
+            .alarm-hero { grid-template-columns:1fr; gap:12px; padding:12px; }
+            .alarm-hero > .tool-title { font-size:24px; margin-bottom:4px; }
+            .alarm-settings { align-self: stretch; padding:12px; gap:12px; }
+            .picker-list { height:180px; padding:60px 4px; }
+            .picker-option { min-height:50px; font-size:24px; }
+            .days span { padding:10px 0; font-size:12px; }
+            .field { gap:6px; font-size:12px; }
+            .field input { padding:10px; font-size:14px; }
+            .alarm-actions button { min-height:44px; font-size:13px; }
           }
           .settings-list { display:grid; grid-template-columns:1fr 1fr; gap:24px; max-width:1120px; }
           .settings-row { border:1px solid #293846; background:linear-gradient(120deg,#11161d,#0a0f15); border-radius:12px; padding:26px; display:flex; align-items:center; justify-content:space-between; gap:16px; min-height:150px; box-shadow:0 18px 44px #0008; }
