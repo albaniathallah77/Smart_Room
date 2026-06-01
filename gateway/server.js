@@ -349,7 +349,7 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
                 <div class="settings-row"><div><b>Remote Dashboard</b><div class="sub">Vercel remote control from inside or outside network</div></div><span class="state-chip on">SYNC ACTIVE</span></div>
                 <div class="settings-row"><div><b>Telemetry Polling</b><div class="sub">ESP checks cloud about every 500ms</div></div><span class="state-chip on">0.5 SEC</span></div>
                 <div class="settings-row"><div><b>WiFi Station</b><div class="sub" id="wifiCloudInfo">Waiting ESP telemetry</div><div class="sub" id="wifiStrongestInfo">Strongest network: -</div><div class="sub" id="wifiApInfo">Hotspot: off</div></div><div><span class="state-chip" id="wifiCloudState">OFFLINE</span><span class="state-chip" id="wifiModeState">WIFI</span></div></div>
-                <div class="settings-row"><div><b>Change WiFi</b><div class="sub">Manual SSID from Vercel. Scan results come from ESP.</div><input id="cloudWifiSsid" placeholder="SSID"><input id="cloudWifiPass" type="password" placeholder="Password"></div><div style="min-width:180px"><button class="primary" id="scanWifiButton" onclick="scanWifiCloud()">SCAN</button><button class="blue" id="connectWifiButton" onclick="connectWifiCloud()">CONNECT</button></div></div>
+                <div class="settings-row"><div><b>Change WiFi</b><div class="sub">Pick a scanned network from ESP, or type SSID manually.</div><input id="cloudWifiSsid" placeholder="SSID"><input id="cloudWifiPass" type="password" placeholder="Password"><div id="cloudWifiList" class="sub" style="display:grid;gap:8px;margin-top:12px"></div></div><div style="min-width:180px"><button class="primary" id="scanWifiButton" onclick="scanWifiCloud()">SCAN</button><button class="blue" id="connectWifiButton" onclick="connectWifiCloud()">CONNECT</button><button class="dark" onclick="setWifiModeCloud('wifi')">WIFI MODE</button><button class="dark" onclick="setWifiModeCloud('hotspot')">HOTSPOT MODE</button></div></div>
                 <div class="settings-row"><div><b>Local Edge Dashboard</b><div class="sub">IP address shows firmware dashboard, so upload sketch after local UI changes</div></div><span class="state-chip">LOCAL</span></div>
                 <button class="dark mono" onclick="clearPending()">CLEAR PENDING COMMANDS</button>
               </div>
@@ -636,11 +636,27 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
             const wifiCloudInfo = get('wifiCloudInfo');
             const wifiStrongestInfo = get('wifiStrongestInfo');
             const wifiApInfo = get('wifiApInfo');
+            const wifiList = get('cloudWifiList');
             if (wifiCloudState) setChip(wifiCloudState, state.wifiConnected === true, 'ONLINE', 'OFFLINE');
             if (wifiModeState) setChip(wifiModeState, state.wifiMode !== 'hotspot', state.wifiMode === 'offline' ? 'OFFLINE' : 'WIFI', 'HOTSPOT');
             if (wifiCloudInfo) wifiCloudInfo.textContent = (state.wifiSsid || '-') + ' | ' + (state.wifiIp || '0.0.0.0') + ' | ' + (state.wifiRssi || 0) + ' dBm';
             if (wifiStrongestInfo) wifiStrongestInfo.textContent = 'Strongest network: ' + (state.strongestWifiSsid || '-') + ' ' + (state.strongestWifiRssi || '') + ' (' + (state.wifiScanCount || 0) + ' found)';
             if (wifiApInfo) wifiApInfo.textContent = state.wifiSetupApActive ? ('Hotspot: SmartRoom-Setup at ' + (state.wifiSetupIp || '192.168.4.1')) : 'Hotspot: off in normal WiFi mode';
+            if (wifiList && Array.isArray(state.wifiNetworks)) {
+              wifiList.innerHTML = '';
+              state.wifiNetworks.forEach((network) => {
+                if (!network?.ssid) return;
+                const button = document.createElement('button');
+                button.className = 'dark';
+                button.style.margin = '0';
+                button.textContent = network.ssid + '  ' + network.rssi + ' dBm' + (network.secure ? '  LOCK' : '  OPEN');
+                button.onclick = () => {
+                  const ssidInput = document.getElementById('cloudWifiSsid');
+                  if (ssidInput) ssidInput.value = network.ssid;
+                };
+                wifiList.appendChild(button);
+              });
+            }
 
             if (!alarmEditing && Number.isFinite(Number(state.alarmHour)) && Number.isFinite(Number(state.alarmMinute))) {
               const ah = get('alarmHour');
@@ -732,6 +748,13 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
                 button.textContent = 'CONNECT';
               }
             }, 10000);
+          }
+
+          async function setWifiModeCloud(mode) {
+            const state = mode === 'hotspot' ? 'hotspot' : 'wifi';
+            setStatus(state === 'hotspot' ? 'Switching to hotspot' : 'Switching to WiFi');
+            await queue({device:'wifi', state});
+            [1500, 3500, 6000].forEach((delay) => setTimeout(checkEspStatus, delay));
           }
 
           function runRoutine(name) {
@@ -1706,6 +1729,8 @@ function normalizeCommand(command) {
 
   if (device === 'wifi' || device === 'network') {
     if (state === 'scan' || state === 'check' || state === 'cek') return { device: 'wifi', state: 'scan' };
+    if (state === 'hotspot' || state === 'ap' || state === 'setup') return { device: 'wifi', state: 'hotspot' };
+    if (state === 'wifi' || state === 'sta' || state === 'station') return { device: 'wifi', state: 'wifi' };
     if (state === 'connect' || state === 'set' || command.ssid) {
       const ssid = String(command.ssid || '').trim();
       if (!ssid) return null;

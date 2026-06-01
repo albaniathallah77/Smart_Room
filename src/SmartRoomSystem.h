@@ -79,6 +79,7 @@ private:
   unsigned long _lastWifiStateAt = 0;
   bool _wifiWasConnected = false;
   bool _setupApActive = false;
+  bool _manualHotspotMode = false;
 
   void connectWifi() {
     loadWifiCredentials();
@@ -136,6 +137,14 @@ private:
   }
 
   void maintainWifi() {
+    if (_manualHotspotMode) {
+      if (!_setupApActive) {
+        startSetupAccessPoint();
+      }
+      updateWifiState();
+      return;
+    }
+
     if (WiFi.status() == WL_CONNECTED) {
       stopSetupAccessPoint();
       if (!_wifiWasConnected) {
@@ -211,7 +220,9 @@ private:
     String previousPassword = _wifiPassword;
     _wifiSsid = ssid;
     _wifiPassword = password;
+    _manualHotspotMode = false;
 
+    WiFi.mode(WIFI_STA);
     WiFi.disconnect(false);
     WiFi.begin(_wifiSsid.c_str(), _wifiPassword.c_str());
     Serial.print("Switching WiFi to ");
@@ -249,15 +260,41 @@ private:
     _state.wifiSsid = _state.wifiConnected ? WiFi.SSID() : _wifiSsid;
     _state.wifiIp = _state.wifiConnected ? WiFi.localIP().toString() : "0.0.0.0";
     _state.wifiSetupIp = _setupApActive ? WiFi.softAPIP().toString() : "";
-    _state.wifiMode = _state.wifiConnected ? "wifi" : (_setupApActive ? "hotspot" : "offline");
+    _state.wifiMode = _manualHotspotMode ? "hotspot" : (_state.wifiConnected ? "wifi" : (_setupApActive ? "hotspot" : "offline"));
     _state.wifiRssi = _state.wifiConnected ? WiFi.RSSI() : 0;
   }
 
+  void setWifiMode(bool hotspotMode) {
+    _manualHotspotMode = hotspotMode;
+    if (hotspotMode) {
+      WiFi.disconnect(false);
+      WiFi.mode(WIFI_AP);
+      WiFi.softAP(WIFI_SETUP_AP_SSID, WIFI_SETUP_AP_PASSWORD);
+      _setupApActive = true;
+      Serial.println("WiFi mode switched to hotspot setup");
+    } else {
+      WiFi.softAPdisconnect(true);
+      _setupApActive = false;
+      WiFi.mode(WIFI_STA);
+      WiFi.begin(_wifiSsid.c_str(), _wifiPassword.c_str());
+      Serial.println("WiFi mode switched to station");
+    }
+    updateWifiState();
+  }
+
   void scanWifiStrength() {
+    bool restoreHotspotOnly = _manualHotspotMode;
+    if (restoreHotspotOnly) {
+      WiFi.mode(WIFI_AP_STA);
+    }
+
     int count = WiFi.scanNetworks(false, true);
     _state.wifiScanCount = count > 0 ? static_cast<uint8_t>(min(count, 255)) : 0;
     _state.strongestWifiSsid = "";
     _state.strongestWifiRssi = -127;
+    for (uint8_t i = 0; i < MAX_WIFI_SCAN_RESULTS; i++) {
+      _state.wifiNetworks[i] = WifiScanNetwork();
+    }
 
     for (int i = 0; i < count; i++) {
       int rssi = WiFi.RSSI(i);
@@ -265,9 +302,17 @@ private:
         _state.strongestWifiSsid = WiFi.SSID(i);
         _state.strongestWifiRssi = rssi;
       }
+      if (i < MAX_WIFI_SCAN_RESULTS) {
+        _state.wifiNetworks[i].ssid = WiFi.SSID(i);
+        _state.wifiNetworks[i].rssi = rssi;
+        _state.wifiNetworks[i].secure = WiFi.encryptionType(i) != WIFI_AUTH_OPEN;
+      }
     }
 
     WiFi.scanDelete();
+    if (restoreHotspotOnly) {
+      WiFi.mode(WIFI_AP);
+    }
     updateWifiState();
     Serial.print("WiFi scan done. Strongest: ");
     Serial.print(_state.strongestWifiSsid);
@@ -362,6 +407,9 @@ private:
         break;
       case RoomActionType::SetWifiCredentials:
         tryWifiCredentials(action.ssid, action.password);
+        break;
+      case RoomActionType::SetWifiMode:
+        setWifiMode(action.enabled);
         break;
       case RoomActionType::None:
         break;

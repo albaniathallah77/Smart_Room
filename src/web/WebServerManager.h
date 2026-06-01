@@ -90,7 +90,7 @@ public:
     }
 
     _lastBroadcastAt = millis();
-    StaticJsonDocument<1024> doc;
+    StaticJsonDocument<2048> doc;
     doc["lamp"] = state.deskLampOn;
     doc["rgb"] = state.rgbOn;
     doc["r"] = state.rgbColor.r;
@@ -117,6 +117,16 @@ public:
     doc["strongestWifiSsid"] = state.strongestWifiSsid;
     doc["strongestWifiRssi"] = state.strongestWifiRssi;
     doc["wifiScanCount"] = state.wifiScanCount;
+    JsonArray networks = doc.createNestedArray("wifiNetworks");
+    for (uint8_t i = 0; i < MAX_WIFI_SCAN_RESULTS; i++) {
+      if (state.wifiNetworks[i].ssid.length() == 0) {
+        continue;
+      }
+      JsonObject network = networks.createNestedObject();
+      network["ssid"] = state.wifiNetworks[i].ssid;
+      network["rssi"] = state.wifiNetworks[i].rssi;
+      network["secure"] = state.wifiNetworks[i].secure;
+    }
 
     String payload;
     serializeJson(doc, payload);
@@ -255,7 +265,7 @@ private:
       <div class="alarm-actions"><button class="blue" onclick="setAlarm()">Pilih Waktu</button><button class="primary" onclick="enableAlarm()">ON</button><button class="dark" onclick="disableAlarm()">OFF</button><button class="dark" onclick="send({device:'buzzer',state:'off'})">STOP</button></div>
     </article>
     <article class="card"><h2>Demo Mode <span class="state">EXPO</span></h2><button class="primary" onclick="demoMode()">RUN DEMO</button><div class="ai-reply">RGB, Smart TV, and door sequence.</div></article>
-    <article class="card"><h2>WiFi <span class="state" id="wifiState">--</span></h2><div class="row"><span class="state" id="wifiMode">WIFI</span><span class="state warn" id="hotspotMode">HOTSPOT OFF</span></div><div class="ai-reply" id="wifiInfo">Checking network...</div><button class="primary" onclick="scanWifi()">SCAN WIFI</button><input id="wifiSsid" placeholder="SSID"><input id="wifiPass" type="password" placeholder="Password"><button class="blue" onclick="connectWifi()">CONNECT</button><div class="wifi-list" id="wifiList"></div></article>
+    <article class="card"><h2>WiFi <span class="state" id="wifiState">--</span></h2><div class="row"><span class="state" id="wifiMode">WIFI</span><span class="state warn" id="hotspotMode">HOTSPOT OFF</span></div><div class="ai-reply" id="wifiInfo">Checking network...</div><button class="primary" onclick="scanWifi()">SCAN WIFI</button><input id="wifiSsid" placeholder="SSID"><input id="wifiPass" type="password" placeholder="Password"><button class="blue" onclick="connectWifi()">CONNECT</button><div class="row"><button class="dark" onclick="setWifiMode('wifi')">WIFI MODE</button><button class="dark" onclick="setWifiMode('hotspot')">HOTSPOT</button></div><div class="wifi-list" id="wifiList"></div></article>
     <article class="card"><h2>AI Command</h2><input id="cmd" placeholder="mode tidur"><button class="primary" onclick="askAi()">ASK AI</button><button class="blue" onclick="voiceAi()">VOICE AI</button><button class="dark" onclick="sendText()">LOCAL</button><div class="ai-reply" id="aiReply">Gateway ready</div></article>
   </section>
 </main>
@@ -443,6 +453,10 @@ private:
       body:JSON.stringify({ssid:wifiSsid.value.trim(), password:wifiPass.value})
     });
     wifiInfo.textContent = 'WiFi command sent. Wait for reconnect.';
+  }
+  function setWifiMode(mode) {
+    send({device:'wifi', state: mode === 'hotspot' ? 'hotspot' : 'wifi'});
+    wifiInfo.textContent = mode === 'hotspot' ? 'Switching to hotspot mode...' : 'Switching to WiFi mode...';
   }
   async function askAi() {
     if (!isUnlocked()) return;

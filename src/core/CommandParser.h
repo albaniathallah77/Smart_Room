@@ -17,7 +17,8 @@ enum class RoomActionType {
   SetCatMode,
   SetStikmanMode,
   ScanWifi,
-  SetWifiCredentials
+  SetWifiCredentials,
+  SetWifiMode
 };
 
 struct RoomAction {
@@ -107,6 +108,16 @@ public:
         action.type = RoomActionType::ScanWifi;
         return true;
       }
+      if (state == "hotspot" || state == "ap" || state == "setup") {
+        action.type = RoomActionType::SetWifiMode;
+        action.enabled = true;
+        return true;
+      }
+      if (state == "wifi" || state == "sta" || state == "station") {
+        action.type = RoomActionType::SetWifiMode;
+        action.enabled = false;
+        return true;
+      }
       if (state == "connect" || state == "set" || doc.containsKey("ssid")) {
         action.type = RoomActionType::SetWifiCredentials;
         action.ssid = String(doc["ssid"] | "");
@@ -140,6 +151,18 @@ public:
 
     if (hasAny(text, "scan wifi", "cek wifi", "wifi terkuat", "jaringan terkuat")) {
       action.type = RoomActionType::ScanWifi;
+      return true;
+    }
+
+    if (hasAny(text, "mode hotspot", "hotspot mode", "nyalakan hotspot", "setup hotspot")) {
+      action.type = RoomActionType::SetWifiMode;
+      action.enabled = true;
+      return true;
+    }
+
+    if (hasAny(text, "mode wifi", "wifi mode", "pakai wifi", "matikan hotspot")) {
+      action.type = RoomActionType::SetWifiMode;
+      action.enabled = false;
       return true;
     }
 

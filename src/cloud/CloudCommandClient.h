@@ -51,7 +51,7 @@ public:
   }
 
   void updateState(const SmartRoomState& state) {
-    StaticJsonDocument<1024> doc;
+    StaticJsonDocument<2048> doc;
     doc["lamp"] = state.deskLampOn;
     doc["rgb"] = state.rgbOn;
     doc["r"] = state.rgbColor.r;
@@ -78,6 +78,16 @@ public:
     doc["strongestWifiSsid"] = state.strongestWifiSsid;
     doc["strongestWifiRssi"] = state.strongestWifiRssi;
     doc["wifiScanCount"] = state.wifiScanCount;
+    JsonArray networks = doc.createNestedArray("wifiNetworks");
+    for (uint8_t i = 0; i < MAX_WIFI_SCAN_RESULTS; i++) {
+      if (state.wifiNetworks[i].ssid.length() == 0) {
+        continue;
+      }
+      JsonObject network = networks.createNestedObject();
+      network["ssid"] = state.wifiNetworks[i].ssid;
+      network["rssi"] = state.wifiNetworks[i].rssi;
+      network["secure"] = state.wifiNetworks[i].secure;
+    }
 
     String stateText;
     serializeJson(doc, stateText);

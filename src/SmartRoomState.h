@@ -18,6 +18,14 @@ struct AlarmState {
   bool ringing = false;
 };
 
+constexpr uint8_t MAX_WIFI_SCAN_RESULTS = 8;
+
+struct WifiScanNetwork {
+  String ssid = "";
+  int rssi = 0;
+  bool secure = false;
+};
+
 struct SmartRoomState {
   bool deskLampOn = false;
   bool rgbOn = false;
@@ -38,6 +46,7 @@ struct SmartRoomState {
   String strongestWifiSsid = "";
   int strongestWifiRssi = 0;
   uint8_t wifiScanCount = 0;
+  WifiScanNetwork wifiNetworks[MAX_WIFI_SCAN_RESULTS];
   String lastAiStatus = "idle";
   AlarmState alarm;
   unsigned long lastCommandAt = 0;
