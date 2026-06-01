@@ -13,6 +13,10 @@
 // Local dashboard PIN. Change this in Config.h.
 #define WEB_DASHBOARD_PIN "2008"
 
+// ESP32 setup hotspot for changing WiFi when the main router is offline.
+#define WIFI_SETUP_AP_SSID "SmartRoom-Setup"
+#define WIFI_SETUP_AP_PASSWORD "smartroom2008"
+
 // Token for ESP32 cloud command polling. Set the same value in Vercel as DEVICE_TOKEN.
 #define CLOUD_DEVICE_TOKEN "change-this-device-token"
 

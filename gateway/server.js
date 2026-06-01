@@ -345,6 +345,8 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
               <div class="settings-list">
                 <div class="settings-row"><div><b>Remote Dashboard</b><div class="sub">Vercel remote control from inside or outside network</div></div><span class="state-chip on">SYNC ACTIVE</span></div>
                 <div class="settings-row"><div><b>Telemetry Polling</b><div class="sub">ESP checks cloud about every 500ms</div></div><span class="state-chip on">0.5 SEC</span></div>
+                <div class="settings-row"><div><b>WiFi Station</b><div class="sub" id="wifiCloudInfo">Waiting ESP telemetry</div><div class="sub" id="wifiStrongestInfo">Strongest network: -</div></div><span class="state-chip" id="wifiCloudState">OFFLINE</span></div>
+                <div class="settings-row"><div><b>Change WiFi</b><div class="sub">Manual SSID from Vercel. Scan results come from ESP.</div><input id="cloudWifiSsid" placeholder="SSID"><input id="cloudWifiPass" type="password" placeholder="Password"></div><div style="min-width:180px"><button class="primary" onclick="scanWifiCloud()">SCAN</button><button class="blue" onclick="connectWifiCloud()">CONNECT</button></div></div>
                 <div class="settings-row"><div><b>Local Edge Dashboard</b><div class="sub">IP address shows firmware dashboard, so upload sketch after local UI changes</div></div><span class="state-chip">LOCAL</span></div>
                 <button class="dark mono" onclick="clearPending()">CLEAR PENDING COMMANDS</button>
               </div>
@@ -626,6 +628,13 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
               if (rvMobile) rvMobile.textContent = text;
             }
 
+            const wifiCloudState = get('wifiCloudState');
+            const wifiCloudInfo = get('wifiCloudInfo');
+            const wifiStrongestInfo = get('wifiStrongestInfo');
+            if (wifiCloudState) setChip(wifiCloudState, state.wifiConnected === true, 'ONLINE', 'OFFLINE');
+            if (wifiCloudInfo) wifiCloudInfo.textContent = (state.wifiSsid || '-') + ' | ' + (state.wifiIp || '0.0.0.0') + ' | ' + (state.wifiRssi || 0) + ' dBm';
+            if (wifiStrongestInfo) wifiStrongestInfo.textContent = 'Strongest network: ' + (state.strongestWifiSsid || '-') + ' ' + (state.strongestWifiRssi || '') + ' (' + (state.wifiScanCount || 0) + ' found)';
+
             if (!alarmEditing && Number.isFinite(Number(state.alarmHour)) && Number.isFinite(Number(state.alarmMinute))) {
               const ah = get('alarmHour');
               const am = get('alarmMinute');
@@ -674,6 +683,20 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
               addLog('ERROR: ' + (result.error || 'Failed'), 'error');
               setStatus(result.error || 'Failed');
             }
+          }
+
+          function scanWifiCloud() {
+            queue({device:'wifi', state:'scan'});
+          }
+
+          function connectWifiCloud() {
+            const ssid = document.getElementById('cloudWifiSsid')?.value.trim();
+            const password = document.getElementById('cloudWifiPass')?.value || '';
+            if (!ssid) {
+              addLog('ERROR: SSID is required', 'error');
+              return;
+            }
+            queue({device:'wifi', state:'connect', ssid, password});
           }
 
           function runRoutine(name) {
@@ -1524,6 +1547,8 @@ app.post('/chat', async (req, res) => {
             '{"device":"rgb","r":0-255,"g":0-255,"b":0-255}',
             '{"device":"door","state":"open|close"}',
             '{"device":"tv","state":"on|off|fight|cat"}',
+            '{"device":"wifi","state":"scan"}',
+            '{"device":"wifi","state":"connect","ssid":"network name","password":"network password"}',
             '{"device":"alarm","enabled":true,"hour":0-23,"minute":0-59}',
             '{"device":"alarm","enabled":false}',
             '{"device":"buzzer","state":"off"}',
@@ -1640,6 +1665,16 @@ function normalizeCommand(command) {
     if (state === 'cat' || state === 'kucing') return { device: 'tv', state: 'cat' };
     if (state === 'on' || state === 'nyala' || state === 'hidup') return { device: 'tv', state: 'on' };
     if (state === 'off' || state === 'mati') return { device: 'tv', state: 'off' };
+    return null;
+  }
+
+  if (device === 'wifi' || device === 'network') {
+    if (state === 'scan' || state === 'check' || state === 'cek') return { device: 'wifi', state: 'scan' };
+    if (state === 'connect' || state === 'set' || command.ssid) {
+      const ssid = String(command.ssid || '').trim();
+      if (!ssid) return null;
+      return { device: 'wifi', state: 'connect', ssid, password: String(command.password || '') };
+    }
     return null;
   }
 

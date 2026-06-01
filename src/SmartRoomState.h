@@ -27,6 +27,13 @@ struct SmartRoomState {
   bool aiOnline = false;
   bool fightMode = false;
   bool catMode = false;
+  bool wifiConnected = false;
+  String wifiSsid = "";
+  String wifiIp = "";
+  int wifiRssi = 0;
+  String strongestWifiSsid = "";
+  int strongestWifiRssi = 0;
+  uint8_t wifiScanCount = 0;
   String lastAiStatus = "idle";
   AlarmState alarm;
   unsigned long lastCommandAt = 0;

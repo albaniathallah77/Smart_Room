@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include <WiFi.h>
+#include <Preferences.h>
 #include <time.h>
 #include "PinMap.h"
 #include "SmartRoomState.h"
@@ -14,6 +15,14 @@
 #include "core/Scheduler.h"
 #include "web/WebServerManager.h"
 #include "cloud/CloudCommandClient.h"
+
+#ifndef WIFI_SETUP_AP_SSID
+#define WIFI_SETUP_AP_SSID "SmartRoom-Setup"
+#endif
+
+#ifndef WIFI_SETUP_AP_PASSWORD
+#define WIFI_SETUP_AP_PASSWORD "smartroom2008"
+#endif
 
 class SmartRoomSystem {
 public:
@@ -42,6 +51,7 @@ public:
     _web.loop(_state);
     _cloud.updateState(_state);
     _cloud.loop();
+    refreshWifiTelemetry();
     _door.loop();
     updateDoorAutoClose();
     updateAlarm();
@@ -61,15 +71,21 @@ private:
   Scheduler _scheduler;
   WebServerManager _web;
   CloudCommandClient _cloud;
+  Preferences _prefs;
+  String _wifiSsid = WIFI_SSID;
+  String _wifiPassword = WIFI_PASSWORD;
   unsigned long _doorOpenedAt = 0;
   unsigned long _lastWifiReconnectAt = 0;
+  unsigned long _lastWifiStateAt = 0;
   bool _wifiWasConnected = false;
 
   void connectWifi() {
-    WiFi.mode(WIFI_STA);
+    loadWifiCredentials();
+    WiFi.mode(WIFI_AP_STA);
     WiFi.persistent(false);
     WiFi.setAutoReconnect(true);
-    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+    startSetupAccessPoint();
+    WiFi.begin(_wifiSsid.c_str(), _wifiPassword.c_str());
     Serial.print("Connecting WiFi");
 
     uint8_t attempts = 0;
@@ -82,18 +98,35 @@ private:
     Serial.println();
     if (WiFi.status() == WL_CONNECTED) {
       _wifiWasConnected = true;
+      updateWifiState();
       Serial.print("WiFi connected: ");
       Serial.println(WiFi.localIP());
     } else {
       _wifiWasConnected = false;
+      updateWifiState();
       Serial.println("WiFi failed, dashboard will start after reconnect");
     }
+  }
+
+  void startSetupAccessPoint() {
+    static bool started = false;
+    if (started) {
+      return;
+    }
+
+    WiFi.softAP(WIFI_SETUP_AP_SSID, WIFI_SETUP_AP_PASSWORD);
+    started = true;
+    Serial.print("WiFi setup AP: ");
+    Serial.print(WIFI_SETUP_AP_SSID);
+    Serial.print(" at http://");
+    Serial.println(WiFi.softAPIP());
   }
 
   void maintainWifi() {
     if (WiFi.status() == WL_CONNECTED) {
       if (!_wifiWasConnected) {
         _wifiWasConnected = true;
+        updateWifiState();
         configTime(TIMEZONE_OFFSET_SECONDS, 0, NTP_SERVER_1, NTP_SERVER_2);
         Serial.print("WiFi reconnected: ");
         Serial.println(WiFi.localIP());
@@ -105,6 +138,7 @@ private:
 
     if (_wifiWasConnected) {
       _wifiWasConnected = false;
+      updateWifiState();
       Serial.println("WiFi lost, reconnecting in background");
     }
 
@@ -115,7 +149,107 @@ private:
 
     _lastWifiReconnectAt = now;
     WiFi.disconnect(false);
-    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+    WiFi.begin(_wifiSsid.c_str(), _wifiPassword.c_str());
+  }
+
+  void refreshWifiTelemetry() {
+    unsigned long now = millis();
+    if (now - _lastWifiStateAt < 2000) {
+      return;
+    }
+    _lastWifiStateAt = now;
+    updateWifiState();
+  }
+
+  void loadWifiCredentials() {
+    _prefs.begin("smart-room", true);
+    String savedSsid = _prefs.getString("wifi_ssid", "");
+    String savedPassword = _prefs.getString("wifi_pass", "");
+    _prefs.end();
+
+    if (savedSsid.length() > 0) {
+      _wifiSsid = savedSsid;
+      _wifiPassword = savedPassword;
+      return;
+    }
+
+    _wifiSsid = WIFI_SSID;
+    _wifiPassword = WIFI_PASSWORD;
+  }
+
+  void saveWifiCredentials(const String& ssid, const String& password) {
+    _prefs.begin("smart-room", false);
+    _prefs.putString("wifi_ssid", ssid);
+    _prefs.putString("wifi_pass", password);
+    _prefs.end();
+  }
+
+  bool tryWifiCredentials(const String& ssid, const String& password) {
+    if (ssid.length() == 0) {
+      return false;
+    }
+
+    String previousSsid = _wifiSsid;
+    String previousPassword = _wifiPassword;
+    _wifiSsid = ssid;
+    _wifiPassword = password;
+
+    WiFi.disconnect(false);
+    WiFi.begin(_wifiSsid.c_str(), _wifiPassword.c_str());
+    Serial.print("Switching WiFi to ");
+    Serial.println(_wifiSsid);
+
+    uint8_t attempts = 0;
+    while (WiFi.status() != WL_CONNECTED && attempts < 30) {
+      delay(250);
+      attempts++;
+    }
+
+    if (WiFi.status() == WL_CONNECTED) {
+      saveWifiCredentials(_wifiSsid, _wifiPassword);
+      _wifiWasConnected = true;
+      updateWifiState();
+      Serial.print("WiFi switched: ");
+      Serial.println(WiFi.localIP());
+      return true;
+    }
+
+    Serial.println("WiFi switch failed, restoring previous network");
+    _wifiSsid = previousSsid;
+    _wifiPassword = previousPassword;
+    WiFi.disconnect(false);
+    WiFi.begin(_wifiSsid.c_str(), _wifiPassword.c_str());
+    updateWifiState();
+    return false;
+  }
+
+  void updateWifiState() {
+    _state.wifiConnected = WiFi.status() == WL_CONNECTED;
+    _state.wifiSsid = _state.wifiConnected ? WiFi.SSID() : _wifiSsid;
+    _state.wifiIp = _state.wifiConnected ? WiFi.localIP().toString() : "0.0.0.0";
+    _state.wifiRssi = _state.wifiConnected ? WiFi.RSSI() : 0;
+  }
+
+  void scanWifiStrength() {
+    int count = WiFi.scanNetworks(false, true);
+    _state.wifiScanCount = count > 0 ? static_cast<uint8_t>(min(count, 255)) : 0;
+    _state.strongestWifiSsid = "";
+    _state.strongestWifiRssi = -127;
+
+    for (int i = 0; i < count; i++) {
+      int rssi = WiFi.RSSI(i);
+      if (i == 0 || rssi > _state.strongestWifiRssi) {
+        _state.strongestWifiSsid = WiFi.SSID(i);
+        _state.strongestWifiRssi = rssi;
+      }
+    }
+
+    WiFi.scanDelete();
+    updateWifiState();
+    Serial.print("WiFi scan done. Strongest: ");
+    Serial.print(_state.strongestWifiSsid);
+    Serial.print(" ");
+    Serial.println(_state.strongestWifiRssi);
   }
 
   void addDefaultSchedules() {
@@ -189,6 +323,12 @@ private:
       case RoomActionType::StopAlarm:
         _state.alarm.ringing = false;
         _buzzer.stop();
+        break;
+      case RoomActionType::ScanWifi:
+        scanWifiStrength();
+        break;
+      case RoomActionType::SetWifiCredentials:
+        tryWifiCredentials(action.ssid, action.password);
         break;
       case RoomActionType::None:
         break;

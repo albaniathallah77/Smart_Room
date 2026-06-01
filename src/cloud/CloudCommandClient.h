@@ -51,7 +51,7 @@ public:
   }
 
   void updateState(const SmartRoomState& state) {
-    StaticJsonDocument<512> doc;
+    StaticJsonDocument<768> doc;
     doc["lamp"] = state.deskLampOn;
     doc["rgb"] = state.rgbOn;
     doc["r"] = state.rgbColor.r;
@@ -67,6 +67,13 @@ public:
     doc["alarmMinute"] = state.alarm.minute;
     doc["freeHeap"] = ESP.getFreeHeap();
     doc["maxHeap"] = ESP.getHeapSize();
+    doc["wifiConnected"] = state.wifiConnected;
+    doc["wifiSsid"] = state.wifiSsid;
+    doc["wifiIp"] = state.wifiIp;
+    doc["wifiRssi"] = state.wifiRssi;
+    doc["strongestWifiSsid"] = state.strongestWifiSsid;
+    doc["strongestWifiRssi"] = state.strongestWifiRssi;
+    doc["wifiScanCount"] = state.wifiScanCount;
 
     String stateText;
     serializeJson(doc, stateText);

@@ -14,7 +14,9 @@ enum class RoomActionType {
   SetAlarm,
   StopAlarm,
   SetFightMode,
-  SetCatMode
+  SetCatMode,
+  ScanWifi,
+  SetWifiCredentials
 };
 
 struct RoomAction {
@@ -24,6 +26,8 @@ struct RoomAction {
   RgbColor color;
   uint8_t hour = 0;
   uint8_t minute = 0;
+  String ssid;
+  String password;
 };
 
 class CommandParser {
@@ -92,6 +96,19 @@ public:
       return true;
     }
 
+    if (device == "wifi" || device == "network") {
+      if (state == "scan" || state == "check" || state == "cek") {
+        action.type = RoomActionType::ScanWifi;
+        return true;
+      }
+      if (state == "connect" || state == "set" || doc.containsKey("ssid")) {
+        action.type = RoomActionType::SetWifiCredentials;
+        action.ssid = String(doc["ssid"] | "");
+        action.password = String(doc["password"] | "");
+        return action.ssid.length() > 0;
+      }
+    }
+
     if (device == "buzzer" && state == "off") {
       action.type = RoomActionType::StopAlarm;
       return true;
@@ -106,6 +123,11 @@ public:
     if (text == "cat" || hasAny(text, "animasi cat", "cat animation", "kucing", "mode cat")) {
       action.type = RoomActionType::SetCatMode;
       action.enabled = true;
+      return true;
+    }
+
+    if (hasAny(text, "scan wifi", "cek wifi", "wifi terkuat", "jaringan terkuat")) {
+      action.type = RoomActionType::ScanWifi;
       return true;
     }
 

@@ -48,6 +48,38 @@ public:
       }
     );
 
+    _server.on("/api/wifi/scan", HTTP_GET, [](AsyncWebServerRequest* request) {
+      request->send(200, "application/json", wifiScanJson());
+    });
+
+    _server.on("/api/wifi/connect", HTTP_POST, [this](AsyncWebServerRequest* request) {}, nullptr,
+      [this](AsyncWebServerRequest* request, uint8_t* data, size_t len, size_t index, size_t total) {
+        String body;
+        for (size_t i = 0; i < len; i++) {
+          body += static_cast<char>(data[i]);
+        }
+
+        StaticJsonDocument<384> input;
+        if (deserializeJson(input, body)) {
+          request->send(400, "application/json", "{\"ok\":false,\"error\":\"invalid json\"}");
+          return;
+        }
+
+        StaticJsonDocument<384> command;
+        command["device"] = "wifi";
+        command["state"] = "connect";
+        command["ssid"] = input["ssid"] | "";
+        command["password"] = input["password"] | "";
+
+        String payload;
+        serializeJson(command, payload);
+        if (_callback) {
+          _callback(payload, _context);
+        }
+        request->send(200, "application/json", "{\"ok\":true}");
+      }
+    );
+
     _server.begin();
   }
 
@@ -58,7 +90,7 @@ public:
     }
 
     _lastBroadcastAt = millis();
-    StaticJsonDocument<512> doc;
+    StaticJsonDocument<768> doc;
     doc["lamp"] = state.deskLampOn;
     doc["rgb"] = state.rgbOn;
     doc["r"] = state.rgbColor.r;
@@ -74,6 +106,13 @@ public:
     doc["alarmRinging"] = state.alarm.ringing;
     doc["alarmHour"] = state.alarm.hour;
     doc["alarmMinute"] = state.alarm.minute;
+    doc["wifiConnected"] = state.wifiConnected;
+    doc["wifiSsid"] = state.wifiSsid;
+    doc["wifiIp"] = state.wifiIp;
+    doc["wifiRssi"] = state.wifiRssi;
+    doc["strongestWifiSsid"] = state.strongestWifiSsid;
+    doc["strongestWifiRssi"] = state.strongestWifiRssi;
+    doc["wifiScanCount"] = state.wifiScanCount;
 
     String payload;
     serializeJson(doc, payload);
@@ -133,6 +172,8 @@ private:
     input[type=color] { height:42px; padding:2px; }
     #cmd { width:100%; }
     .ai-reply { min-height:18px; margin-top:10px; color:#7fefff; font-size:13px; line-height:1.35; }
+    .wifi-list { display:grid; gap:6px; max-height:144px; overflow:auto; margin-top:10px; }
+    .wifi-option { margin:0; text-align:left; background:#031016; border-color:#16495a; font-size:12px; min-height:36px; }
     .alarm-card { grid-column:span 2; }
     .alarm-picker { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:10px 0 12px; }
     .picker-column { background:#061821; color:#e9fbff; border:1px solid #174a5a; border-radius:8px; padding:10px 8px; min-width:0; }
@@ -210,6 +251,7 @@ private:
       <div class="alarm-actions"><button class="blue" onclick="setAlarm()">Pilih Waktu</button><button class="primary" onclick="enableAlarm()">ON</button><button class="dark" onclick="disableAlarm()">OFF</button><button class="dark" onclick="send({device:'buzzer',state:'off'})">STOP</button></div>
     </article>
     <article class="card"><h2>Demo Mode <span class="state">EXPO</span></h2><button class="primary" onclick="demoMode()">RUN DEMO</button><div class="ai-reply">RGB, Smart TV, and door sequence.</div></article>
+    <article class="card"><h2>WiFi <span class="state" id="wifiState">--</span></h2><div class="ai-reply" id="wifiInfo">Checking network...</div><button class="primary" onclick="scanWifi()">SCAN WIFI</button><input id="wifiSsid" placeholder="SSID"><input id="wifiPass" type="password" placeholder="Password"><button class="blue" onclick="connectWifi()">CONNECT</button><div class="wifi-list" id="wifiList"></div></article>
     <article class="card"><h2>AI Command</h2><input id="cmd" placeholder="mode tidur"><button class="primary" onclick="askAi()">ASK AI</button><button class="blue" onclick="voiceAi()">VOICE AI</button><button class="dark" onclick="sendText()">LOCAL</button><div class="ai-reply" id="aiReply">Gateway ready</div></article>
   </section>
 </main>
@@ -283,6 +325,8 @@ private:
     rgb.textContent = s.rgb ? 'ON' : 'OFF';
     door.textContent = s.door ? 'OPEN' : 'CLOSED';
     tv.textContent = s.tv ? (s.catMode ? 'CAT' : (s.fightMode ? 'FIGHT' : 'ON')) : 'OFF';
+    wifiState.textContent = s.wifiConnected ? 'ONLINE' : 'OFFLINE';
+    wifiInfo.textContent = `${s.wifiSsid || '-'} | ${s.wifiIp || '0.0.0.0'} | ${s.wifiRssi || 0} dBm | strongest: ${s.strongestWifiSsid || '-'} ${s.strongestWifiRssi || ''}`;
     alarm.textContent = s.alarmRinging ? 'RINGING' : `${String(s.alarmHour).padStart(2,'0')}:${String(s.alarmMinute).padStart(2,'0')}`;
     if (!alarmEditing && Number.isFinite(Number(s.alarmHour)) && Number.isFinite(Number(s.alarmMinute))) {
       alarmHour.value = two(s.alarmHour);
@@ -369,6 +413,30 @@ private:
       return;
     }
     fetch('/api/command', {method:'POST', headers:{'Content-Type':'text/plain'}, body:text});
+  }
+  async function scanWifi() {
+    wifiInfo.textContent = 'Scanning...';
+    const response = await fetch('/api/wifi/scan');
+    const data = await response.json();
+    wifiInfo.textContent = `Found ${data.count || 0}. Strongest: ${data.strongest?.ssid || '-'} ${data.strongest?.rssi || ''}`;
+    wifiList.innerHTML = '';
+    (data.networks || []).forEach((network) => {
+      const button = document.createElement('button');
+      button.className = 'wifi-option';
+      button.textContent = `${network.ssid || '(hidden)'}  ${network.rssi} dBm`;
+      button.onclick = () => { wifiSsid.value = network.ssid || ''; };
+      wifiList.appendChild(button);
+    });
+  }
+  async function connectWifi() {
+    if (!wifiSsid.value.trim()) return;
+    wifiInfo.textContent = 'Connecting...';
+    await fetch('/api/wifi/connect', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ssid:wifiSsid.value.trim(), password:wifiPass.value})
+    });
+    wifiInfo.textContent = 'WiFi command sent. Wait for reconnect.';
   }
   async function askAi() {
     if (!isUnlocked()) return;
@@ -462,5 +530,38 @@ private:
 </body>
 </html>
 )HTML";
+  }
+
+  static String wifiScanJson() {
+    int count = WiFi.scanNetworks(false, true);
+    DynamicJsonDocument doc(4096);
+    doc["ok"] = count >= 0;
+    doc["count"] = count > 0 ? count : 0;
+    JsonArray networks = doc.createNestedArray("networks");
+    int strongestIndex = -1;
+
+    for (int i = 0; i < count; i++) {
+      if (strongestIndex < 0 || WiFi.RSSI(i) > WiFi.RSSI(strongestIndex)) {
+        strongestIndex = i;
+      }
+      if (i >= 20) {
+        continue;
+      }
+      JsonObject network = networks.createNestedObject();
+      network["ssid"] = WiFi.SSID(i);
+      network["rssi"] = WiFi.RSSI(i);
+      network["secure"] = WiFi.encryptionType(i) != WIFI_AUTH_OPEN;
+    }
+
+    JsonObject strongest = doc.createNestedObject("strongest");
+    if (strongestIndex >= 0) {
+      strongest["ssid"] = WiFi.SSID(strongestIndex);
+      strongest["rssi"] = WiFi.RSSI(strongestIndex);
+    }
+
+    String output;
+    serializeJson(doc, output);
+    WiFi.scanDelete();
+    return output;
   }
 };
