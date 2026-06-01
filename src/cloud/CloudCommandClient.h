@@ -89,7 +89,7 @@ private:
       if (WiFi.status() == WL_CONNECTED) {
         client->pollCommands();
       }
-      vTaskDelay(800 / portTICK_PERIOD_MS);
+      vTaskDelay(300 / portTICK_PERIOD_MS);
     }
   }
 

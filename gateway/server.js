@@ -265,8 +265,8 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
             <section class="page alarm-page" id="alarmPage">
               <div class="alarm-hero">
                 <div class="tool-title">Scheduler <span class="state-chip" id="alarmState">OFF</span></div>
-                <input class="alarm-hidden" id="alarmHour" type="number" min="0" max="23" value="06">
-                <input class="alarm-hidden" id="alarmMinute" type="number" min="0" max="59" value="00">
+                <input class="alarm-hidden" id="alarmHour" type="number" min="0" max="23" value="06" style="display:none">
+                <input class="alarm-hidden" id="alarmMinute" type="number" min="0" max="59" value="00" style="display:none">
                 <div class="alarm-picker">
                   <div class="picker-column"><div class="picker-label">JAM</div><div class="picker-list" id="hourPicker"></div></div>
                   <div class="picker-column"><div class="picker-label">MENIT</div><div class="picker-list" id="minutePicker"></div></div>
@@ -626,7 +626,7 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
               } catch (error) {
                 if (checks > 20) clearInterval(timer);
               }
-            }, 800);
+            }, 400);
           }
           function demoMode() {
             queue({device:'rgb', r:0, g:220, b:255});
@@ -767,7 +767,7 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
           minutePicker.addEventListener('scroll', () => onPickerScroll('minute'));
           alarmModal.addEventListener('click', (event) => { if (event.target === alarmModal) closeAlarmSheet(); });
           renderAlarmPicker();
-          setInterval(checkEspStatus, 1200);
+          setInterval(checkEspStatus, 800);
           checkEspStatus();
           
           redraw();
