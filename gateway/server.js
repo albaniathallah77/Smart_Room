@@ -93,8 +93,23 @@ app.get('/', (req, res) => {
           .tools-page-head { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin:0 0 34px; }
           .tools-page-head h2 { margin:0 0 6px; font-size:clamp(38px,5vw,64px); }
           .tools-grid { display:grid; grid-template-columns:repeat(2,minmax(260px,1fr)); gap:24px; max-width:1180px; }
-          .tool-card.device-card { min-height:250px; display:flex; flex-direction:column; justify-content:space-between; background:linear-gradient(110deg,rgba(28,33,41,.96),rgba(16,22,30,.96)); border-color:#26384b; }
-          .tool-card.device-card:first-child { grid-column:span 2; min-height:250px; }
+          .tool-card.device-card { min-height:250px; display:flex; flex-direction:column; justify-content:space-between; background:linear-gradient(110deg,rgba(28,33,41,.96),rgba(16,22,30,.96)); border-color:#26384b; position:relative; overflow:hidden; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+          .tool-card.device-card.active-glow { border-color: #10d8ff; box-shadow: 0 0 30px rgba(16, 216, 255, 0.15), inset 0 0 20px rgba(16, 216, 255, 0.05); }
+          .tool-card.device-card.active-glow::after { content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle at center, rgba(16, 216, 255, 0.08) 0%, transparent 70%); pointer-events: none; }
+          .device-icon.active-anim { animation: icon-pulse 2s infinite; color: #10d8ff; border-color: #10d8ff; box-shadow: 0 0 15px rgba(16, 216, 255, 0.4); }
+          @keyframes icon-pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
+          
+          .system-log-container { grid-column: span 2; background: #05080c; border: 1px solid #1a2632; border-radius: 12px; padding: 16px; font-family: "Share Tech Mono", monospace; height: 180px; display: flex; flex-direction: column; gap: 8px; }
+          .log-title { color: #10d8ff; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 4px; display: flex; justify-content: space-between; }
+          .log-content { flex: 1; overflow-y: auto; font-size: 13px; color: #858b97; scrollbar-width: none; }
+          .log-line { margin-bottom: 4px; border-left: 2px solid #1a2632; padding-left: 8px; animation: log-entry 0.3s ease-out; }
+          .log-line.cmd { color: #edf2ff; border-color: #10d8ff; }
+          .log-line.success { color: #35e886; border-color: #35e886; }
+          @keyframes log-entry { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+
+          .routine-grid { grid-column: span 2; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 12px; }
+          .routine-btn { background: rgba(16, 155, 255, 0.05); border: 1px solid rgba(16, 155, 255, 0.2); color: #159bff; padding: 12px; border-radius: 10px; font-size: 13px; font-weight: 800; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+          .routine-btn:hover { background: rgba(16, 155, 255, 0.1); border-color: #159bff; transform: translateY(-2px); }
           .tool-top { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:20px; }
           .tool-identity { display:flex; gap:16px; align-items:center; min-width:0; }
           .device-icon { width:58px; height:58px; border-radius:16px; display:grid; place-items:center; flex:0 0 auto; color:#13d7ff; font-size:14px; font-weight:950; background:#102337; border:1px solid #0e5a7c; box-shadow:inset 0 1px rgba(255,255,255,.06); }
@@ -209,26 +224,37 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
             <section class="page" id="toolsPage">
               <div class="tools-page-head"><div><h2>Environment Control</h2><div class="sub">4 active nodes in primary room zone.</div></div><button class="dark mono" onclick="checkEspStatus()" style="max-width:140px;margin:0">REFRESH</button></div>
               <div class="tools-grid">
-                <article class="tool-card device-card">
-                  <div><div class="tool-top"><div class="tool-identity"><div class="device-icon">LOCK</div><div class="tool-copy"><b>Desk Lamp</b><div class="tool-desc">Main desk light control</div></div></div><span class="state-chip" id="lampState">OFF</span></div></div>
+                <div class="routine-grid">
+                  <button class="routine-btn" onclick="runRoutine('sleep')">🌙 SLEEP MODE</button>
+                  <button class="routine-btn" onclick="runRoutine('study')">📚 STUDY MODE</button>
+                  <button class="routine-btn" onclick="runRoutine('leave')">🚪 LEAVE HOME</button>
+                </div>
+                <article class="tool-card device-card" id="card-lamp">
+                  <div><div class="tool-top"><div class="tool-identity"><div class="device-icon" id="icon-lamp">LOCK</div><div class="tool-copy"><b>Desk Lamp</b><div class="tool-desc">Main desk light control</div></div></div><span class="state-chip" id="lampState">OFF</span></div></div>
                   <div class="control-row"><button class="primary" onclick="queue({device:'lamp',state:'on'})">ON</button><button class="dark" onclick="queue({device:'lamp',state:'off'})">OFF</button></div>
                 </article>
-                <article class="tool-card device-card">
-                  <div><div class="tool-top"><div class="tool-identity"><div class="device-icon blue-icon">RGB</div><div class="tool-copy"><b>RGB Room</b><div class="tool-desc">Mood light and room color</div></div></div><span class="state-chip" id="rgbState">OFF</span></div><div class="color-control"><input id="color" type="color" value="#10ddea"><button class="blue" onclick="rgbColor()">SET COLOR</button></div></div>
+                <article class="tool-card device-card" id="card-rgb">
+                  <div><div class="tool-top"><div class="tool-identity"><div class="device-icon blue-icon" id="icon-rgb">RGB</div><div class="tool-copy"><b>RGB Room</b><div class="tool-desc">Mood light and room color</div></div></div><span class="state-chip" id="rgbState">OFF</span></div><div class="color-control"><input id="color" type="color" value="#10ddea"><button class="blue" onclick="rgbColor()">SET COLOR</button></div></div>
                   <div class="control-row"><button class="primary" onclick="queue({device:'rgb',state:'on'})">ON</button><button class="dark" onclick="queue({device:'rgb',state:'off'})">OFF</button></div>
                 </article>
-                <article class="tool-card device-card">
-                  <div><div class="tool-top"><div class="tool-identity"><div class="device-icon green-icon">DR</div><div class="tool-copy"><b>Main Entrance</b><div class="tool-desc">Smart lock servo with auto close</div></div></div><span class="state-chip" id="doorState">CLOSED</span></div></div>
+                <article class="tool-card device-card" id="card-door">
+                  <div><div class="tool-top"><div class="tool-identity"><div class="device-icon green-icon" id="icon-door">DR</div><div class="tool-copy"><b>Main Entrance</b><div class="tool-desc">Smart lock servo with auto close</div></div></div><span class="state-chip" id="doorState">CLOSED</span></div></div>
                   <div class="control-row"><button class="primary" onclick="queue({device:'door',state:'open'})">OPEN</button><button class="dark" onclick="queue({device:'door',state:'close'})">CLOSE</button></div>
                 </article>
-                <article class="tool-card device-card">
-                  <div><div class="tool-top"><div class="tool-identity"><div class="device-icon blue-icon">TV</div><div class="tool-copy"><b>Smart TV</b><div class="tool-desc">OLED screen and animation</div></div></div><span class="state-chip" id="tvState">OFF</span></div></div>
+                <article class="tool-card device-card" id="card-tv">
+                  <div><div class="tool-top"><div class="tool-identity"><div class="device-icon blue-icon" id="icon-tv">TV</div><div class="tool-copy"><b>Smart TV</b><div class="tool-desc">OLED screen and animation</div></div></div><span class="state-chip" id="tvState">OFF</span></div></div>
                   <div class="control-row"><button class="primary" onclick="queue({device:'tv',state:'on'})">ON</button><button class="dark" onclick="queue({device:'tv',state:'off'})">OFF</button></div>
                 </article>
                 <article class="tool-card device-card">
                   <div><div class="tool-top"><div class="tool-identity"><div class="device-icon gold-icon">DM</div><div class="tool-copy"><b>Demo Mode</b><div class="tool-desc">RGB, Smart TV, then door sequence</div></div></div><span class="state-chip on">EXPO</span></div></div>
                   <button class="primary" onclick="demoMode()">RUN DEMO</button>
                 </article>
+                <div class="system-log-container">
+                  <div class="log-title"><span>System Activity Log</span><span id="log-status" style="font-size:10px;opacity:0.6">Streaming...</span></div>
+                  <div class="log-content" id="systemLog">
+                    <div class="log-line">System initialized and ready for simulation.</div>
+                  </div>
+                </div>
               </div>
             </section>
             <section class="page alarm-page" id="alarmPage">
@@ -495,7 +521,20 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
             setChip(rgbState, state.rgb === true, 'ON', 'OFF');
             setChip(doorState, state.door === true, 'OPEN', 'CLOSED');
             setChip(tvState, state.tv === true, 'ON', 'OFF');
-            setChip(alarmState, state.alarmRinging === true || state.alarmEnabled === true, state.alarmRinging ? 'RINGING' : 'ON', 'OFF');
+
+            // Visual enhancements for device cards
+            document.getElementById('card-lamp')?.classList.toggle('active-glow', state.lamp === true);
+            document.getElementById('icon-lamp')?.classList.toggle('active-anim', state.lamp === true);
+            
+            document.getElementById('card-rgb')?.classList.toggle('active-glow', state.rgb === true);
+            document.getElementById('icon-rgb')?.classList.toggle('active-anim', state.rgb === true);
+            
+            document.getElementById('card-door')?.classList.toggle('active-glow', state.door === true);
+            document.getElementById('icon-door')?.classList.toggle('active-anim', state.door === true);
+            
+            document.getElementById('card-tv')?.classList.toggle('active-glow', state.tv === true);
+            document.getElementById('icon-tv')?.classList.toggle('active-anim', state.tv === true);
+
             if (!alarmEditing && Number.isFinite(Number(state.alarmHour)) && Number.isFinite(Number(state.alarmMinute))) {
               alarmHour.value = two(state.alarmHour);
               alarmMinute.value = two(state.alarmMinute);
@@ -507,8 +546,20 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
               color.value = rgbToHex(state.r, state.g, state.b);
             }
           }
+          function addLog(text, type = '') {
+            const logContent = document.getElementById('systemLog');
+            if (!logContent) return;
+            const line = document.createElement('div');
+            line.className = 'log-line ' + type;
+            const time = new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            line.textContent = '[' + time + '] ' + text;
+            logContent.insertBefore(line, logContent.firstChild);
+            if (logContent.children.length > 50) logContent.removeChild(logContent.lastChild);
+          }
+
           async function queue(command) {
             if (!unlocked()) return;
+            addLog('QUEUING: ' + (command.device || 'sys') + ' -> ' + (command.state || 'action'), 'cmd');
             setStatus('Sending...');
             const response = await fetch('/remote/command', {
               method:'POST',
@@ -519,11 +570,33 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
             if (response.ok && result.ok) {
               setStatus('Queued');
               const id = result.queued?.[0]?.id;
-              if (id) trackCommand(id);
+              if (id) {
+                addLog('COMMAND ISSUED: ID ' + id.substring(0,8) + '...', 'success');
+                trackCommand(id);
+              }
             } else {
+              addLog('ERROR: ' + (result.error || 'Failed'), 'error');
               setStatus(result.error || 'Failed');
             }
           }
+
+          function runRoutine(name) {
+             addLog('ROUTINE TRIGGERED: ' + name.toUpperCase(), 'cmd');
+             if (name === 'sleep') {
+               queue({device:'lamp', state:'off'});
+               setTimeout(function() { queue({device:'rgb', state:'off'}) }, 800);
+               setTimeout(function() { queue({device:'tv', state:'off'}) }, 1600);
+               setTimeout(function() { queue({device:'door', state:'close'}) }, 2400);
+             } else if (name === 'study') {
+               queue({device:'lamp', state:'on'});
+               setTimeout(function() { queue({device:'rgb', state:'on', r:255, g:255, b:255}) }, 800);
+             } else if (name === 'leave') {
+               queue({device:'door', state:'open'});
+               setTimeout(function() { queue({device:'lamp', state:'off'}) }, 1200);
+               setTimeout(function() { queue({device:'rgb', state:'off'}) }, 1800);
+               setTimeout(function() { queue({device:'tv', state:'off'}) }, 2400);
+             }
+           }
           function trackCommand(id) {
             let checks = 0;
             const timer = setInterval(async () => {
@@ -536,10 +609,12 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
                 });
                 const result = await response.json();
                 if (result.status === 'done') {
+                  addLog('ESP32 ACKNOWLEDGED: Command executed successfully', 'success');
                   setStatus('Sent to ESP / Done');
                   clearInterval(timer);
                   checkEspStatus();
                 } else if (checks > 20) {
+                  addLog('TIMEOUT: ESP32 did not respond in time', 'error');
                   setStatus('Queued, waiting ESP');
                   clearInterval(timer);
                 }
