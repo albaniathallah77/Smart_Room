@@ -196,7 +196,7 @@ private:
     <article class="card"><h2>Desk Lamp <span class="state" id="lamp">--</span></h2><button class="primary" onclick="send({device:'lamp',state:'on'})">ON</button><button class="dark" onclick="send({device:'lamp',state:'off'})">OFF</button></article>
     <article class="card"><h2>RGB Room <span class="state" id="rgb">--</span></h2><div class="row"><input id="color" type="color" value="#10ddea"><button class="blue" onclick="rgbColor()">SET</button></div><button class="primary" onclick="send({device:'rgb',state:'on'})">ON</button><button class="dark" onclick="send({device:'rgb',state:'off'})">OFF</button></article>
     <article class="card"><h2>Smart Door <span class="state" id="door">--</span></h2><button class="primary" onclick="send({device:'door',state:'open'})">OPEN</button><button class="dark" onclick="send({device:'door',state:'close'})">CLOSE</button></article>
-    <article class="card"><h2>Smart TV <span class="state" id="tv">--</span></h2><button class="primary" onclick="send({device:'tv',state:'on'})">ON</button><button class="dark" onclick="send({device:'tv',state:'off'})">OFF</button></article>
+    <article class="card"><h2>Smart TV <span class="state" id="tv">--</span></h2><div class="row"><button class="primary" onclick="send({device:'tv',state:'on'})">ON</button><button class="blue" onclick="send({device:'tv',state:'fight'})">FIGHT</button></div><button class="dark" onclick="send({device:'tv',state:'off'})">OFF</button></article>
     <article class="card alarm-card">
       <h2>Alarm <span class="state" id="alarm">--</span></h2>
       <input class="alarm-hidden" id="alarmHour" type="number" min="0" max="23" value="06">
