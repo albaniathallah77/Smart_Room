@@ -60,15 +60,17 @@ app.get('/', (req, res) => {
           .pad button { margin:0; min-height:104px; font-size:40px; border-radius:14px; background:linear-gradient(180deg,#142231,#0d1824); border-color:#263949; box-shadow:inset 0 1px rgba(255,255,255,.05), 0 16px 34px #0008; font-weight:900; }
           .pad button.primary { font-size:18px; background:linear-gradient(135deg,#12e6ff,#168bff); border-color:#33e8ff; color:#02070b; }
           #error { min-height:18px; margin-top:12px; text-align:center; color:#ff8b8b; font-size:13px; }
-          .app-shell { width:100%; height:100vh; display:grid; grid-template-columns:288px minmax(0,1fr); gap:0; padding:0; }
-          .sidebar { border-right:1px solid #202833; background:linear-gradient(90deg,#11151b 0,#0d1117 72%,#070a0f 100%); padding:28px 18px; display:flex; flex-direction:column; gap:20px; box-shadow:18px 0 60px #0008; }
+          .app-shell { width:100%; height:100vh; display:grid; grid-template-columns:300px minmax(0,1fr); gap:0; padding:0; }
+          .sidebar { border-right:1px solid #202833; background:linear-gradient(90deg,#11151b 0,#0d1117 72%,#070a0f 100%); padding:28px 18px; display:flex; flex-direction:column; gap:16px; box-shadow:18px 0 60px #0008; }
           .brand-row { display:flex; align-items:center; gap:14px; padding:0 10px 24px; }
           .brand-row b { display:block; font-size:29px; line-height:.95; color:#b4dbff; text-shadow:0 0 18px rgba(68,175,255,.22); }
           .logo-mark { width:52px; height:52px; border-radius:11px; display:grid; place-items:center; overflow:hidden; background:#111a23; border:1px solid #2b3b4c; box-shadow:0 0 24px rgba(16,216,255,.28); }
           .logo-mark img { width:100%; height:100%; object-fit:cover; }
           .nav-item { padding:16px 18px; border-radius:7px; color:#858b97; background:transparent; border:0; text-align:left; margin:0; min-height:0; font-weight:800; font-size:17px; letter-spacing:.2px; }
           .nav-item.active, .nav-item:hover { background:linear-gradient(90deg,#1d222a,#15191f); color:#a8d6ff; box-shadow:inset 3px 0 #90cfff; }
-          .side-bottom { margin-top:auto; display:grid; gap:10px; border-top:1px solid #202833; padding-top:18px; }
+          .side-bottom { margin-top:auto; display:grid; gap:8px; border-top:1px solid #202833; padding-top:18px; }
+          .ram-stat { font-family:"Share Tech Mono", monospace; font-size:12px; color:#10d8ff; background:rgba(16,216,255,0.05); border:1px solid rgba(16,216,255,0.1); padding:10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; }
+          .ram-stat b { color: #fff; }
           .chat-pane { display:grid; grid-template-rows:72px 1fr; min-width:0; background:#111318; height: 100vh; }
           .topbar { height:72px; display:flex; align-items:center; justify-content:space-between; gap:14px; padding:0 34px; border-bottom:1px solid #252a31; background:#111318; flex-shrink: 0; }
           .topbar b { font-family:Inter, system-ui, sans-serif; font-size:20px; color:#f4f7fb; letter-spacing:0; }
@@ -121,17 +123,17 @@ app.get('/', (req, res) => {
           .color-control input[type=color] { width:100%; }
           .mobile-nav { display:none; }
           .mobile-drawer-brand, .mobile-drawer-bottom { display:none; }
-          .alarm-page { display:none; padding:0; }
-          .alarm-page.active { display:grid; place-items:center; min-height:100%; width:100%; padding:20px; }
-          .alarm-hero { width:100%; max-width:1120px; margin:0 auto; background:transparent; border:0; border-radius:0; padding:0; display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:center; }
-          .alarm-hero > .tool-title { grid-column: 1 / -1; font-size:48px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; font-family:Orbitron, sans-serif; letter-spacing:1px; color:#10d8ff; }
+          .alarm-page { display:none; padding:0; height: 100%; }
+          .alarm-page.active { display:grid; place-items:center; height:100%; width:100%; padding:48px; }
+          .alarm-hero { width:100%; max-width:1200px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:center; }
+          .alarm-hero > .tool-title { grid-column: 1 / -1; font-size:52px; margin-bottom:32px; display:flex; justify-content:space-between; align-items:center; font-family:Orbitron, sans-serif; letter-spacing:2px; color:#10d8ff; text-shadow:0 0 24px rgba(16,216,255,0.3); }
           .alarm-picker { display:grid; grid-template-columns:1fr 1fr; gap:32px; margin:0; }
-          .picker-column { background:rgba(5, 8, 12, 0.6); border:1px solid rgba(26, 38, 50, 0.5); border-radius:24px; padding:32px; position:relative; overflow:hidden; backdrop-filter:blur(10px); }
-          .picker-label { text-align:center; color:#10d8ff; font-family:Orbitron, sans-serif; font-size:16px; font-weight:800; margin-bottom:24px; letter-spacing:3px; }
-          .picker-list { height:360px; overflow-y:auto; scroll-snap-type:y mandatory; display:grid; gap:12px; padding:150px 4px; scrollbar-width:none; scroll-behavior:smooth; }
-          .picker-option { min-height:80px; border:0; background:transparent; color:#3d4652; border-radius:16px; font-family:Orbitron, sans-serif; font-size:42px; font-weight:800; scroll-snap-align:center; transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor:pointer; width:100%; display:grid; place-items:center; }
-          .picker-option.active { color:#00080d; background:linear-gradient(135deg,#10d8ff,#168bff); transform:scale(1.1); box-shadow:0 0 50px rgba(16,216,255,0.5); }
-          .alarm-settings { border:0; padding:32px; display:flex; flex-direction:column; gap:32px; background:rgba(15, 23, 30, 0.4); border-radius:24px; border:1px solid rgba(26, 38, 50, 0.5); backdrop-filter:blur(10px); align-self: center; }
+          .picker-column { background:rgba(5, 8, 12, 0.8); border:1px solid rgba(16, 216, 255, 0.2); border-radius:24px; padding:32px; position:relative; overflow:hidden; backdrop-filter:blur(20px); box-shadow:0 24px 60px #000a; }
+          .picker-label { text-align:center; color:#10d8ff; font-family:Orbitron, sans-serif; font-size:18px; font-weight:800; margin-bottom:24px; letter-spacing:4px; opacity: 0.8; }
+          .picker-list { height:380px; overflow-y:auto; scroll-snap-type:y mandatory; display:grid; gap:12px; padding:150px 4px; scrollbar-width:none; scroll-behavior:smooth; }
+          .picker-option { min-height:80px; border:0; background:transparent; color:#3d4652; border-radius:16px; font-family:Orbitron, sans-serif; font-size:46px; font-weight:800; scroll-snap-align:center; transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor:pointer; width:100%; display:grid; place-items:center; }
+          .picker-option.active { color:#00080d; background:linear-gradient(135deg,#10d8ff,#168bff); transform:scale(1.1); box-shadow:0 0 50px rgba(16,216,255,0.6); }
+          .alarm-settings { border:0; padding:42px; display:flex; flex-direction:column; gap:32px; background:rgba(15, 23, 30, 0.6); border-radius:24px; border:1px solid rgba(255, 255, 255, 0.05); backdrop-filter:blur(20px); align-self: center; box-shadow:0 24px 60px #000a; }
           .days { display:grid; grid-template-columns:repeat(7,1fr); gap:12px; }
           .days span { text-align:center; color:#5d6672; font-size:16px; padding:20px 0; border-radius:12px; background:#111a24; border:1px solid #1a2632; font-weight:800; cursor:pointer; transition:all 0.2s; }
           .days span.active { color:#00080d; background:#10d8ff; border-color:#10d8ff; box-shadow:0 0 25px rgba(16,216,255,0.4); }
@@ -140,16 +142,47 @@ app.get('/', (req, res) => {
           .alarm-actions { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
           .alarm-actions button { min-height:64px; font-size:16px; font-weight:900; letter-spacing:1px; text-transform:uppercase; border-radius:12px; transition:all 0.2s; }
           
-          @media (max-width:980px) {
-            .alarm-hero { grid-template-columns:1fr; gap:12px; padding:12px; }
-            .alarm-hero > .tool-title { font-size:24px; margin-bottom:4px; }
-            .alarm-settings { align-self: stretch; padding:12px; gap:12px; }
-            .picker-list { height:180px; padding:60px 4px; }
-            .picker-option { min-height:50px; font-size:24px; }
-            .days span { padding:10px 0; font-size:12px; }
-            .field { gap:6px; font-size:12px; }
-            .field input { padding:10px; font-size:14px; }
-            .alarm-actions button { min-height:44px; font-size:13px; }
+          @media (max-width:1100px) {
+            .app-shell { grid-template-columns: 240px minmax(0, 1fr); }
+            .tools-grid { grid-template-columns: 1fr; }
+            .system-log-container, .routine-grid { grid-column: span 1; }
+          }
+          
+          @media (max-width:980px) { 
+            body { overflow:auto; padding-bottom:0; } 
+            .app-shell { height:auto; min-height:100vh; grid-template-columns:1fr; } 
+            .sidebar { display:none; } 
+            .chat-pane { min-height:100vh; grid-template-rows:72px 1fr; background:#111318; } 
+            .page { padding:20px 16px; } 
+            .tools-grid { grid-template-columns: 1fr !important; gap: 16px; width: 100%; }
+            .tool-card.device-card { grid-column: auto !important; width: 100% !important; min-height: 200px; }
+            .routine-grid { grid-column: auto !important; grid-template-columns: repeat(2, 1fr) !important; gap: 10px; width: 100%; }
+            .routine-grid button:last-child { grid-column: span 2 !important; }
+            .system-log-container { grid-column: auto !important; height: 220px; width: 100%; }
+            .topbar { position:sticky; top:0; z-index:6; height:72px; padding:0 16px; justify-content:flex-start; background:#111318f2; backdrop-filter:blur(16px); } 
+            .topbar b { font-family:Inter, system-ui, sans-serif; font-size:18px; color:#f4f7fb; }
+            .mobile-menu-toggle { display:grid; place-items:center; width:44px; height:44px; border-radius:10px; background:#1a212c; border:1px solid #2c3b4c; color:#10d8ff; margin-right: 12px; }
+            .mobile-top-logo { display:block; width:34px; height:34px; border-radius:9px; object-fit:cover; border:1px solid #2b3b4c; box-shadow:0 0 18px rgba(16,216,255,.24); margin-right: 12px; }
+            #clearButton { display:none !important; }
+            
+            .alarm-page.active { padding: 20px; }
+            .alarm-hero { grid-template-columns: 1fr !important; gap: 32px; padding: 0; }
+            .alarm-hero > .tool-title { font-size: 32px; margin-bottom: 0; }
+            .alarm-settings { align-self: stretch !important; padding: 24px; gap: 24px; }
+            .picker-list { height: 220px !important; padding: 80px 4px !important; }
+            .picker-option { min-height: 58px !important; font-size: 32px !important; }
+
+            .settings-list { grid-template-columns: 1fr; }
+            .settings-row { min-height: unset; flex-direction: column; align-items: flex-start; gap: 12px; }
+
+            .mobile-nav { position:fixed; inset:0; z-index:100; background:rgba(0,0,0,0.5); display:none; backdrop-filter:blur(8px); }
+            .mobile-nav.open { display:block; }
+            .mobile-nav .drawer { width:280px; height:100%; background:#080b11; border-right:1px solid #1a2632; padding:32px 20px; display:flex; flex-direction:column; gap:16px; animation: slide-in 0.3s ease-out; }
+            @keyframes slide-in { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+            .mobile-nav button { text-align:left; padding:14px 18px; border-radius:8px; font-weight:800; color:#858b97; background:transparent; border:0; font-size:16px; }
+            .mobile-nav button.active { background:linear-gradient(90deg,#1d222a,#15191f); color:#10d8ff; box-shadow:inset 3px 0 #10d8ff; }
+            .mobile-drawer-brand { display:flex; align-items:center; gap:12px; margin-bottom:24px; }
+            .mobile-drawer-bottom { margin-top:auto; display:flex; flex-direction:column; gap:10px; border-top:1px solid #1a2632; padding-top:20px; }
           }
           .settings-list { display:grid; grid-template-columns:1fr 1fr; gap:24px; max-width:1120px; }
           .settings-row { border:1px solid #293846; background:linear-gradient(120deg,#11161d,#0a0f15); border-radius:12px; padding:26px; display:flex; align-items:center; justify-content:space-between; gap:16px; min-height:150px; box-shadow:0 18px 44px #0008; }
@@ -210,6 +243,7 @@ app.get('/', (req, res) => {
             <button class="nav-item" data-page="alarm" onclick="showPage('alarm')">Scheduler</button>
             <button class="nav-item" data-page="settings" onclick="showPage('settings')">Settings</button>
             <div class="side-bottom">
+              <div class="ram-stat"><span>ESP HEAP</span><b id="ramValSidebar">-- KB</b></div>
               <div class="pill" id="espStatus" style="border-color:#551111;color:#ff5555;background:#1a0505;">ESP Offline</div>
               <div class="pill" id="status">Cloud ready</div>
               <button class="dark" onclick="lockAgain()">LOCK</button>
@@ -260,7 +294,6 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
                 </article>
                 <div class="system-log-container">
                   <div class="log-title"><span>System Activity Log</span><span id="log-status" style="font-size:10px;opacity:0.6">Streaming...</span></div>
-                  <div id="heapIndicator" style="font-size:10px;color:var(--muted);margin-bottom:8px;font-family:Share Tech Mono, monospace;">RAM: -- / -- KB</div>
                   <div class="log-content" id="systemLog">
                     <div class="log-line">System initialized and ready for simulation.</div>
                   </div>
@@ -286,7 +319,7 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
             <section class="page" id="settingsPage">
               <div class="settings-list">
                 <div class="settings-row"><div><b>Remote Dashboard</b><div class="sub">Vercel remote control from inside or outside network</div></div><span class="state-chip on">SYNC ACTIVE</span></div>
-                <div class="settings-row"><div><b>Telemetry Polling</b><div class="sub">ESP checks cloud about every 2 seconds</div></div><span class="state-chip on">2 SEC</span></div>
+                <div class="settings-row"><div><b>Telemetry Polling</b><div class="sub">ESP checks cloud about every 500ms</div></div><span class="state-chip on">0.5 SEC</span></div>
                 <div class="settings-row"><div><b>Local Edge Dashboard</b><div class="sub">IP address shows firmware dashboard, so upload sketch after local UI changes</div></div><span class="state-chip">LOCAL</span></div>
                 <button class="dark mono" onclick="clearPending()">CLEAR PENDING COMMANDS</button>
               </div>
@@ -294,14 +327,17 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
           </section>
         </main>
         <nav class="mobile-nav" id="mobileNav">
-          <div class="mobile-drawer-brand"><div class="logo-mark"><img src="/assets/logo.png" alt="Smart Room logo"></div><div><b>KEMI OS</b><div class="sub mono">Online</div></div></div>
-          <button class="active" data-page="chat" onclick="showPage('chat')">AI Assistant</button>
-          <button data-page="tools" onclick="showPage('tools')">Devices</button>
-          <button data-page="alarm" onclick="showPage('alarm')">Scheduler</button>
-          <button data-page="settings" onclick="showPage('settings')">Settings</button>
-          <div class="mobile-drawer-bottom">
-            <div class="pill">Cloud ready</div>
-            <button class="dark" onclick="lockAgain()">LOCK</button>
+          <div class="drawer">
+            <div class="mobile-drawer-brand"><div class="logo-mark"><img src="/assets/logo.png" alt="Smart Room logo"></div><div><b>KEMI OS</b><div class="sub mono">Online</div></div></div>
+            <button class="active" data-page="chat" onclick="showPage('chat')">AI Assistant</button>
+            <button data-page="tools" onclick="showPage('tools')">Devices</button>
+            <button data-page="alarm" onclick="showPage('alarm')">Scheduler</button>
+            <button data-page="settings" onclick="showPage('settings')">Settings</button>
+            <div class="mobile-drawer-bottom">
+              <div class="ram-stat"><span>ESP HEAP</span><b id="ramValMobile">-- KB</b></div>
+              <div class="pill" id="statusMob">Cloud ready</div>
+              <button class="dark" onclick="lockAgain()">LOCK</button>
+            </div>
           </div>
         </nav>
         <div class="modal" id="alarmModal">
@@ -381,6 +417,7 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
           }
           function setStatus(text) {
             document.getElementById('status').textContent = text;
+            if (document.getElementById('statusMob')) document.getElementById('statusMob').textContent = text;
           }
           function scrollToBottom(force = false) {
             const threshold = 150;
@@ -531,6 +568,7 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
             setChip(rgbState, state.rgb === true, 'ON', 'OFF');
             setChip(doorState, state.door === true, 'OPEN', 'CLOSED');
             setChip(tvState, state.tv === true, 'ON', 'OFF');
+            setChip(alarmState, state.alarmEnabled === true, 'ACTIVE', 'OFF');
 
             // Visual enhancements for device cards
             document.getElementById('card-lamp')?.classList.toggle('active-glow', state.lamp === true);
@@ -548,8 +586,9 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
             if (state.freeHeap && state.maxHeap) {
               const free = Math.round(state.freeHeap / 1024);
               const total = Math.round(state.maxHeap / 1024);
-              const heapEl = document.getElementById('heapIndicator');
-              if (heapEl) heapEl.textContent = 'RAM: ' + free + ' KB / ' + total + ' KB FREE';
+              const text = free + ' / ' + total + ' KB';
+              if (window.ramValSidebar) ramValSidebar.textContent = text;
+              if (window.ramValMobile) ramValMobile.textContent = text;
             }
 
             if (!alarmEditing && Number.isFinite(Number(state.alarmHour)) && Number.isFinite(Number(state.alarmMinute))) {
