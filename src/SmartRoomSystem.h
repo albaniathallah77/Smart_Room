@@ -216,6 +216,12 @@ private:
       return false;
     }
 
+    if (!_manualHotspotMode && WiFi.status() == WL_CONNECTED && WiFi.SSID() == ssid && _wifiPassword == password) {
+      updateWifiState();
+      Serial.println("WiFi switch ignored: already connected");
+      return true;
+    }
+
     String previousSsid = _wifiSsid;
     String previousPassword = _wifiPassword;
     _wifiSsid = ssid;
@@ -265,6 +271,18 @@ private:
   }
 
   void setWifiMode(bool hotspotMode) {
+    if (hotspotMode && _manualHotspotMode && _setupApActive) {
+      updateWifiState();
+      Serial.println("WiFi mode already hotspot setup");
+      return;
+    }
+
+    if (!hotspotMode && !_manualHotspotMode && WiFi.status() == WL_CONNECTED) {
+      updateWifiState();
+      Serial.println("WiFi mode already station");
+      return;
+    }
+
     _manualHotspotMode = hotspotMode;
     if (hotspotMode) {
       WiFi.disconnect(false);

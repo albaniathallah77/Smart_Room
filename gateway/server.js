@@ -1337,6 +1337,8 @@ async function queueCommands(commands, source = 'remote', message = '') {
     throw new Error('Supabase env belum lengkap.');
   }
 
+  await deleteSupersededCommands(commands);
+
   const rows = commands.map((command) => ({
     payload: command,
     source,
@@ -1355,6 +1357,33 @@ async function queueCommands(commands, source = 'remote', message = '') {
   if (error) throw error;
   await saveDeviceEvent(message, commands);
   return data || [];
+}
+
+async function deleteSupersededCommands(commands) {
+  const devicesToReplace = new Set(
+    commands
+      .filter((command) => command.device === 'wifi' || command.device === 'network')
+      .map(() => 'wifi')
+  );
+
+  if (!devicesToReplace.size) {
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from('commands')
+    .select('id, payload, executed')
+    .eq('executed', false)
+    .limit(100);
+
+  if (error) throw error;
+
+  const deleteIds = (data || [])
+    .map(normalizeQueuedCommand)
+    .filter((row) => devicesToReplace.has(String(row.payload?.device || '').toLowerCase()))
+    .map((row) => row.id);
+
+  await deleteCommandIds(deleteIds);
 }
 
 async function deleteCommandIds(ids) {
