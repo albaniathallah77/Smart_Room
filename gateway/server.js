@@ -106,20 +106,19 @@ app.get('/', (req, res) => {
           .color-control input[type=color] { width:100%; }
           .mobile-nav { display:none; }
           .mobile-drawer-brand, .mobile-drawer-bottom { display:none; }
-          .alarm-page { max-width:1120px; margin:0 auto; padding-top:40px; }
-          .alarm-hero { border:1px solid #0a5974; background:radial-gradient(circle at 76% 0,rgba(16,216,255,.14),transparent 26%), linear-gradient(120deg,#0b1119,#061018); border-radius:18px; padding:40px; box-shadow:0 28px 80px #000b, 0 0 40px rgba(16,216,255,.11), inset 0 1px rgba(255,255,255,.06); display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:start; }
-          .alarm-hero > .tool-title { grid-column: 1 / -1; margin-bottom: -20px; }
-          .alarm-picker { display:grid; grid-template-columns:1fr 1fr; gap:22px; margin:24px 0; }
-          .picker-column { background:#05080d; color:#e9fbff; border:1px solid #0b88ad; border-radius:12px; padding:16px 14px; min-width:0; box-shadow:inset 0 1px #52eaff18, 0 18px 46px #0009; }
-          .picker-label { text-align:center; color:#00e3ff; font-family:Orbitron, Inter, sans-serif; font-size:14px; font-weight:800; margin-bottom:14px; }
-          .picker-list { height:260px; overflow-y:auto; scroll-snap-type:y mandatory; display:grid; gap:10px; padding:60px 4px; scrollbar-width:none; scroll-behavior:smooth; -webkit-overflow-scrolling: touch; }
-          .picker-list::-webkit-scrollbar { display:none; }
-          .picker-option { min-height:64px; margin:0; border:0; background:transparent; color:#3d4652; border-radius:12px; font-family:Orbitron, Inter, sans-serif; font-size:32px; font-weight:800; scroll-snap-align:center; transition:all .25s cubic-bezier(0.4, 0, 0.2, 1); cursor:pointer; user-select:none; }
-          .picker-option:hover { color:#7fefff; background:rgba(16,216,255,.05); }
-          .picker-option.active { color:#00080d; background:linear-gradient(135deg,#12e6ff,#168bff); transform:scale(1.15); box-shadow:0 0 40px rgba(16,216,255,.5), inset 0 1px rgba(255,255,255,.4); }
-          .alarm-hidden { display:none; }
-          .alarm-settings { border:0; padding-top:0; display:grid; gap:18px; align-self: center; }
-          .alarm-actions { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+          .alarm-page { width: 100%; max-width: none; padding: 0; height: 100%; display: flex; flex-direction: column; }
+          .alarm-hero { border: 0; background: transparent; border-radius: 0; padding: 48px; box-shadow: none; display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: start; width: 100%; max-width: 1400px; margin: 0 auto; flex: 1; }
+          .alarm-hero > .tool-title { grid-column: 1 / -1; font-size: 48px; margin-bottom: 20px; }
+          .alarm-picker { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin: 0; }
+          .picker-column { background: rgba(5, 8, 13, 0.6); color: #e9fbff; border: 1px solid rgba(11, 136, 173, 0.4); border-radius: 24px; padding: 24px; min-width: 0; box-shadow: 0 24px 60px rgba(0,0,0,0.3); backdrop-filter: blur(12px); }
+          .picker-list { height: 400px; overflow-y: auto; scroll-snap-type: y mandatory; display: grid; gap: 15px; padding: 160px 4px; scrollbar-width: none; scroll-behavior: smooth; }
+          .picker-option { min-height: 80px; font-size: 42px; }
+          .alarm-settings { border: 0; padding: 24px; display: grid; gap: 32px; align-self: center; background: rgba(21, 25, 31, 0.4); border-radius: 24px; border: 1px solid rgba(43, 54, 69, 0.5); backdrop-filter: blur(10px); }
+          .days span { padding: 18px 0; font-size: 18px; border-radius: 12px; }
+          .field { font-size: 16px; gap: 12px; }
+          .field input { padding: 16px; font-size: 18px; border-radius: 12px; }
+          .alarm-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+          .alarm-actions button { min-height: 60px; font-size: 18px; border-radius: 12px; }
           .settings-list { display:grid; grid-template-columns:1fr 1fr; gap:24px; max-width:1120px; }
           .settings-row { border:1px solid #293846; background:linear-gradient(120deg,#11161d,#0a0f15); border-radius:12px; padding:26px; display:flex; align-items:center; justify-content:space-between; gap:16px; min-height:150px; box-shadow:0 18px 44px #0008; }
           .tools-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; }
@@ -415,14 +414,7 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
             const selectedMinute = Number(alarmMinute.value) || 0;
             const isInitial = hourPicker.children.length === 0;
             
-            if (!isInitial && !alarmEditing) {
-              updatePickerActiveOnly('hour', selectedHour);
-              updatePickerActiveOnly('minute', selectedMinute);
-              hourPicker.querySelector('.picker-option[data-loop="' + (selectedHour + 24) + '"]')?.scrollIntoView({ block:'center', behavior:'smooth' });
-              minutePicker.querySelector('.picker-option[data-loop="' + (selectedMinute + 60) + '"]')?.scrollIntoView({ block:'center', behavior:'smooth' });
-              return;
-            }
-            if (!isInitial && alarmEditing) {
+            if (!isInitial) {
               updatePickerActiveOnly('hour', selectedHour);
               updatePickerActiveOnly('minute', selectedMinute);
               if (arguments[0] === 'force_scroll') {
