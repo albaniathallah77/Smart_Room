@@ -31,12 +31,18 @@ app.get('/', (req, res) => {
           .sub { color:#9be6ff; margin-top:8px; font-size:14px; line-height:1.35; }
           .mono { font-family:"Share Tech Mono", ui-monospace, monospace; letter-spacing:1px; text-transform:uppercase; }
           .pill { border:1px solid #244151; color:#b7dcff; padding:10px 12px; border-radius:7px; background:linear-gradient(180deg,#101923,#0a1118); white-space:nowrap; font-size:13px; font-family:"Share Tech Mono", ui-monospace, monospace; box-shadow:inset 0 1px rgba(255,255,255,.04); }
+          .pill.busy { color:#031018; border-color:#13e0ff; background:linear-gradient(135deg,#13e0ff,#168bff); box-shadow:0 0 24px rgba(16,216,255,.28); }
+          .pill.busy::before { content:""; display:inline-block; width:10px; height:10px; margin-right:8px; border-radius:50%; border:2px solid rgba(3,16,24,.28); border-top-color:#031018; vertical-align:-1px; animation:spin .75s linear infinite; }
+          .pill.done { color:#00150c; border-color:#35e886; background:#35e886; }
           .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:12px; }
           .card { border:1px solid var(--line); background:linear-gradient(120deg,rgba(28,33,41,.96),rgba(14,18,24,.96)); border-radius:8px; padding:18px; box-shadow:0 20px 44px #0009, inset 0 1px rgba(255,255,255,.04); }
           button, input { border:1px solid #2a394a; background:#0b1119; color:var(--text); border-radius:7px; padding:12px 14px; font:inherit; min-height:44px; outline:none; }
           input:focus { border-color:#68cfff; box-shadow:0 0 0 3px rgba(16,216,255,.13); }
           button { cursor:pointer; width:100%; margin-top:8px; font-weight:900; letter-spacing:.4px; transition:transform .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease; }
           button:hover { transform:translateY(-1px); border-color:#79caff; }
+          button.loading { position:relative; color:transparent !important; pointer-events:none; opacity:.94; }
+          button.loading::after { content:""; position:absolute; left:50%; top:50%; width:18px; height:18px; margin:-9px 0 0 -9px; border-radius:50%; border:2px solid rgba(255,255,255,.35); border-top-color:#fff; animation:spin .75s linear infinite; }
+          @keyframes spin { to { transform:rotate(360deg); } }
           .primary { background:linear-gradient(135deg,#12e6ff,#168bff); border-color:#33e8ff; color:#02070b; box-shadow:0 14px 32px rgba(10,157,255,.26), inset 0 1px rgba(255,255,255,.35); }
           .blue { background:linear-gradient(135deg,#147dff,#1c5dff); border-color:#48a8ff; color:white; box-shadow:0 12px 28px rgba(24,124,255,.24); }
           .dark { background:#090d12; border-color:#334457; color:#edf6ff; }
@@ -509,9 +515,32 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
             }
             if (name !== 'chat') checkEspStatus();
           }
-          function setStatus(text) {
-            document.getElementById('status').textContent = text;
-            if (document.getElementById('statusMob')) document.getElementById('statusMob').textContent = text;
+          function setStatus(text, mode = '') {
+            const inferred = mode || (/sending|queued|switching|scan|clearing|merekam|waiting/i.test(text) ? 'busy' : (/done|ready|cleared|online|connected/i.test(text) ? 'done' : ''));
+            [document.getElementById('status'), document.getElementById('statusMob')].filter(Boolean).forEach((item) => {
+              item.textContent = text;
+              item.classList.remove('busy', 'done');
+              if (inferred) item.classList.add(inferred);
+            });
+          }
+          function activeButtonFallback() {
+            return document.activeElement && document.activeElement.tagName === 'BUTTON' ? document.activeElement : null;
+          }
+          function setButtonLoading(button, loading, text = 'SENDING') {
+            if (!button) return;
+            if (loading) {
+              button.dataset.originalText = button.dataset.originalText || button.textContent;
+              button.textContent = text;
+              button.disabled = true;
+              button.classList.add('loading');
+            } else {
+              button.disabled = false;
+              button.classList.remove('loading');
+              if (button.dataset.originalText) {
+                button.textContent = button.dataset.originalText;
+                delete button.dataset.originalText;
+              }
+            }
           }
           function scrollToBottom(force = false) {
             const threshold = 150;
@@ -748,26 +777,37 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
             if (logContent.children.length > 50) logContent.removeChild(logContent.lastChild);
           }
 
-          async function queue(command) {
+          async function queue(command, button = null, loadingText = 'SENDING') {
             if (!unlocked()) return;
+            const commandButton = button || activeButtonFallback();
+            setButtonLoading(commandButton, true, loadingText);
             addLog('QUEUING: ' + (command.device || 'sys') + ' -> ' + (command.state || 'action'), 'cmd');
             setStatus('Sending...');
-            const response = await fetch('/remote/command', {
-              method:'POST',
-              headers:{'Content-Type':'application/json'},
-              body:JSON.stringify({pin:pinValue(), command})
-            });
-            const result = await response.json().catch(() => ({}));
-            if (response.ok && result.ok) {
-              setStatus('Queued');
-              const id = result.queued?.[0]?.id;
-              if (id) {
-                addLog('COMMAND ISSUED: ID ' + id.substring(0,8) + '...', 'success');
-                trackCommand(id);
+            try {
+              const response = await fetch('/remote/command', {
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body:JSON.stringify({pin:pinValue(), command})
+              });
+              const result = await response.json().catch(() => ({}));
+              if (response.ok && result.ok) {
+                setStatus('Queued');
+                const id = result.queued?.[0]?.id;
+                if (id) {
+                  addLog('COMMAND ISSUED: ID ' + id.substring(0,8) + '...', 'success');
+                  trackCommand(id, commandButton);
+                } else {
+                  setButtonLoading(commandButton, false);
+                }
+              } else {
+                addLog('ERROR: ' + (result.error || 'Failed'), 'error');
+                setStatus(result.error || 'Failed');
+                setButtonLoading(commandButton, false);
               }
-            } else {
-              addLog('ERROR: ' + (result.error || 'Failed'), 'error');
-              setStatus(result.error || 'Failed');
+            } catch (error) {
+              addLog('ERROR: Network failed', 'error');
+              setStatus('Send failed');
+              setButtonLoading(commandButton, false);
             }
           }
 
@@ -775,18 +815,14 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
             const button = document.getElementById('scanWifiButton');
             const strongest = document.getElementById('wifiStrongestInfo');
             if (button) {
-              button.disabled = true;
-              button.textContent = 'SCANNING';
+              setButtonLoading(button, true, 'SCANNING');
             }
             if (strongest) strongest.textContent = 'Scan requested. Waiting ESP result...';
             setStatus('WiFi scan queued');
-            await queue({device:'wifi', state:'scan'});
+            await queue({device:'wifi', state:'scan'}, button, 'SCANNING');
             [1500, 3500, 6000].forEach((delay) => setTimeout(checkEspStatus, delay));
             setTimeout(() => {
-              if (button) {
-                button.disabled = false;
-                button.textContent = 'SCAN';
-              }
+              setButtonLoading(button, false);
             }, 6500);
           }
 
@@ -799,24 +835,20 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
               return;
             }
             if (button) {
-              button.disabled = true;
-              button.textContent = 'SENT';
+              setButtonLoading(button, true, 'CONNECTING');
             }
             setStatus('WiFi switch queued');
-            await queue({device:'wifi', state:'connect', ssid, password});
+            await queue({device:'wifi', state:'connect', ssid, password}, button, 'CONNECTING');
             [2500, 6000, 10000].forEach((delay) => setTimeout(checkEspStatus, delay));
             setTimeout(() => {
-              if (button) {
-                button.disabled = false;
-                button.textContent = 'CONNECT';
-              }
+              setButtonLoading(button, false);
             }, 10000);
           }
 
           async function setWifiModeCloud(mode) {
             const state = mode === 'hotspot' ? 'hotspot' : 'wifi';
             setStatus(state === 'hotspot' ? 'Switching to hotspot' : 'Switching to WiFi');
-            await queue({device:'wifi', state});
+            await queue({device:'wifi', state}, activeButtonFallback(), 'SWITCHING');
             [1500, 3500, 6000].forEach((delay) => setTimeout(checkEspStatus, delay));
           }
 
@@ -837,7 +869,7 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
                setTimeout(function() { queue({device:'tv', state:'off'}) }, 2400);
              }
            }
-          function trackCommand(id) {
+          function trackCommand(id, button = null) {
             let checks = 0;
             const timer = setInterval(async () => {
               checks++;
@@ -851,15 +883,20 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
                 if (result.status === 'done') {
                   addLog('ESP32 ACKNOWLEDGED: Command executed successfully', 'success');
                   setStatus('Sent to ESP / Done');
+                  setButtonLoading(button, false);
                   clearInterval(timer);
                   checkEspStatus();
                 } else if (checks > 20) {
                   addLog('TIMEOUT: ESP32 did not respond in time', 'error');
                   setStatus('Queued, waiting ESP');
+                  setButtonLoading(button, false);
                   clearInterval(timer);
                 }
               } catch (error) {
-                if (checks > 20) clearInterval(timer);
+                if (checks > 20) {
+                  setButtonLoading(button, false);
+                  clearInterval(timer);
+                }
               }
             }, 800);
           }
@@ -1579,14 +1616,16 @@ app.post('/device/poll', async (req, res) => {
       .select('id, payload, source, message, created_at')
       .eq('executed', false)
       .order('created_at', { ascending: true })
-      .limit(5);
+      .limit(25);
 
     const [statusRes, { data, error }] = await Promise.all([p1, p2]);
 
     if (error) throw error;
-    const commands = (data || [])
+    let commands = (data || [])
       .map(normalizeQueuedCommand)
       .filter((row) => row.payload && typeof row.payload === 'object');
+
+    commands = await compactWifiCommands(commands);
 
     res.json({ ok: true, commands });
   } catch (error) {
@@ -1594,6 +1633,30 @@ app.post('/device/poll', async (req, res) => {
     res.status(500).json({ ok: false, error: error.message });
   }
 });
+
+async function compactWifiCommands(commands) {
+  const wifiRows = commands.filter((row) => {
+    const device = String(row.payload?.device || '').toLowerCase();
+    return device === 'wifi' || device === 'network';
+  });
+
+  if (wifiRows.length <= 1) {
+    return commands.slice(0, 5);
+  }
+
+  const keep = wifiRows[wifiRows.length - 1];
+  const deleteIds = wifiRows.filter((row) => row.id !== keep.id).map((row) => row.id);
+  await deleteCommandIds(deleteIds);
+
+  return commands
+    .filter((row) => {
+      const device = String(row.payload?.device || '').toLowerCase();
+      return device !== 'wifi' && device !== 'network';
+    })
+    .concat(keep)
+    .sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')))
+    .slice(0, 5);
+}
 
 app.get('/device/status', async (req, res) => {
   const status = {
