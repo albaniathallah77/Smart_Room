@@ -77,6 +77,7 @@ private:
   unsigned long _doorOpenedAt = 0;
   unsigned long _lastWifiReconnectAt = 0;
   unsigned long _lastWifiStateAt = 0;
+  unsigned long _lastWifiScanAt = 0;
   bool _wifiWasConnected = false;
   bool _setupApActive = false;
   bool _manualHotspotMode = false;
@@ -301,6 +302,14 @@ private:
   }
 
   void scanWifiStrength() {
+    unsigned long now = millis();
+    if (_lastWifiScanAt > 0 && now - _lastWifiScanAt < 15000) {
+      Serial.println("WiFi scan ignored: wait before scanning again");
+      updateWifiState();
+      return;
+    }
+    _lastWifiScanAt = now;
+
     bool restoreHotspotOnly = _manualHotspotMode;
     if (restoreHotspotOnly) {
       WiFi.mode(WIFI_AP_STA);
