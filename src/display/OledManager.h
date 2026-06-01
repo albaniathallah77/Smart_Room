@@ -6,6 +6,7 @@
 #include <Adafruit_SSD1306.h>
 #include <time.h>
 #include "CatAnimationFrames.h"
+#include "StikmanAnimationFrames.h"
 #include "WalkAnimationFrames.h"
 #include "../SmartRoomState.h"
 
@@ -38,6 +39,14 @@ public:
     if (state.catMode) {
       if (millis() - _lastRenderAt < OledCatAnimation::FRAME_DELAY_MS) return;
       renderCatScene(_animationFrame++);
+      _lastRenderAt = millis();
+      _lastTvOn = true;
+      return;
+    }
+
+    if (state.stikmanMode) {
+      if (millis() - _lastRenderAt < OledStikmanAnimation::FRAME_DELAY_MS) return;
+      renderStikmanScene(_animationFrame++);
       _lastRenderAt = millis();
       _lastTvOn = true;
       return;
@@ -207,6 +216,16 @@ private:
     _display.drawBitmap(0, 0, OledCatAnimation::CAT_FRAMES[frameIndex],
                         OledCatAnimation::FRAME_WIDTH,
                         OledCatAnimation::FRAME_HEIGHT,
+                        SSD1306_WHITE);
+    _display.display();
+  }
+
+  void renderStikmanScene(uint8_t frame) {
+    const uint8_t frameIndex = frame % OledStikmanAnimation::FRAME_COUNT;
+    _display.clearDisplay();
+    _display.drawBitmap(0, 0, OledStikmanAnimation::STIKMAN_FRAMES[frameIndex],
+                        OledStikmanAnimation::FRAME_WIDTH,
+                        OledStikmanAnimation::FRAME_HEIGHT,
                         SSD1306_WHITE);
     _display.display();
   }

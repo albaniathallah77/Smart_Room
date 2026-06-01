@@ -61,6 +61,7 @@ public:
     doc["tv"] = state.tvOn;
     doc["fightMode"] = state.fightMode;
     doc["catMode"] = state.catMode;
+    doc["stikmanMode"] = state.stikmanMode;
     doc["alarmEnabled"] = state.alarm.enabled;
     doc["alarmRinging"] = state.alarm.ringing;
     doc["alarmHour"] = state.alarm.hour;

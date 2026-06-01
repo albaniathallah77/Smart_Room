@@ -15,6 +15,7 @@ enum class RoomActionType {
   StopAlarm,
   SetFightMode,
   SetCatMode,
+  SetStikmanMode,
   ScanWifi,
   SetWifiCredentials
 };
@@ -64,6 +65,11 @@ public:
       }
       if (state == "cat" || state == "kucing") {
         action.type = RoomActionType::SetCatMode;
+        action.enabled = true;
+        return true;
+      }
+      if (state == "stikman" || state == "stickman") {
+        action.type = RoomActionType::SetStikmanMode;
         action.enabled = true;
         return true;
       }
@@ -122,6 +128,12 @@ public:
 
     if (text == "cat" || hasAny(text, "animasi cat", "cat animation", "kucing", "mode cat")) {
       action.type = RoomActionType::SetCatMode;
+      action.enabled = true;
+      return true;
+    }
+
+    if (text == "stikman" || hasAny(text, "animasi stikman", "animasi stickman", "mode stikman", "mode stickman")) {
+      action.type = RoomActionType::SetStikmanMode;
       action.enabled = true;
       return true;
     }
