@@ -9,6 +9,7 @@
 #include "StikmanAnimationFrames.h"
 #include "KacauAnimationFrames.h"
 #include "KenzieAnimationFrames.h"
+#include "JokenAnimationFrames.h"
 #include "WalkAnimationFrames.h"
 #include "../SmartRoomState.h"
 
@@ -65,6 +66,14 @@ public:
     if (state.kenzieMode) {
       if (millis() - _lastRenderAt < OledKenzieAnimation::FRAME_DELAY_MS) return;
       renderKenzieScene(_animationFrame++);
+      _lastRenderAt = millis();
+      _lastTvOn = true;
+      return;
+    }
+
+    if (state.jokenMode) {
+      if (millis() - _lastRenderAt < OledJokenAnimation::FRAME_DELAY_MS) return;
+      renderJokenScene(_animationFrame++);
       _lastRenderAt = millis();
       _lastTvOn = true;
       return;
@@ -264,6 +273,16 @@ private:
     _display.drawBitmap(0, 0, OledKenzieAnimation::KENZIE_FRAMES[frameIndex],
                         OledKenzieAnimation::FRAME_WIDTH,
                         OledKenzieAnimation::FRAME_HEIGHT,
+                        SSD1306_WHITE);
+    _display.display();
+  }
+
+  void renderJokenScene(uint8_t frame) {
+    const uint8_t frameIndex = frame % OledJokenAnimation::FRAME_COUNT;
+    _display.clearDisplay();
+    _display.drawBitmap(0, 0, OledJokenAnimation::JOKEN_FRAMES[frameIndex],
+                        OledJokenAnimation::FRAME_WIDTH,
+                        OledJokenAnimation::FRAME_HEIGHT,
                         SSD1306_WHITE);
     _display.display();
   }

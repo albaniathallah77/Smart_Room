@@ -103,6 +103,7 @@ public:
     doc["stikmanMode"] = state.stikmanMode;
     doc["kacauMode"] = state.kacauMode;
     doc["kenzieMode"] = state.kenzieMode;
+    doc["jokenMode"] = state.jokenMode;
     doc["aiOnline"] = state.aiOnline;
     doc["aiStatus"] = state.lastAiStatus;
     doc["alarmEnabled"] = state.alarm.enabled;
@@ -255,7 +256,7 @@ private:
     <article class="card"><h2>Desk Lamp <span class="state" id="lamp">--</span></h2><button class="primary" onclick="send({device:'lamp',state:'on'})">ON</button><button class="dark" onclick="send({device:'lamp',state:'off'})">OFF</button></article>
     <article class="card"><h2>RGB Room <span class="state" id="rgb">--</span></h2><div class="row"><input id="color" type="color" value="#10ddea"><button class="blue" onclick="rgbColor()">SET</button></div><button class="primary" onclick="send({device:'rgb',state:'on'})">ON</button><button class="dark" onclick="send({device:'rgb',state:'off'})">OFF</button></article>
     <article class="card"><h2>Smart Door <span class="state" id="door">--</span></h2><button class="primary" onclick="send({device:'door',state:'open'})">OPEN</button><button class="dark" onclick="send({device:'door',state:'close'})">CLOSE</button></article>
-    <article class="card"><h2>Smart TV <span class="state" id="tv">--</span></h2><div class="row"><button class="primary" onclick="send({device:'tv',state:'on'})">ON</button><button class="blue" onclick="send({device:'tv',state:'fight'})">FIGHT</button></div><div class="row"><button class="blue" onclick="send({device:'tv',state:'cat'})">CAT</button><button class="blue" onclick="send({device:'tv',state:'stikman'})">STIKMAN</button></div><div class="row"><button class="blue" onclick="send({device:'tv',state:'kacau'})">KACAU</button><button class="blue" onclick="send({device:'tv',state:'kenzie'})">KENZIE</button></div><button class="dark" onclick="send({device:'tv',state:'off'})">OFF</button></article>
+    <article class="card"><h2>Smart TV <span class="state" id="tv">--</span></h2><div class="row"><button class="primary" onclick="send({device:'tv',state:'on'})">ON</button><button class="blue" onclick="send({device:'tv',state:'fight'})">FIGHT</button></div><div class="row"><button class="blue" onclick="send({device:'tv',state:'cat'})">CAT</button><button class="blue" onclick="send({device:'tv',state:'stikman'})">STIKMAN</button></div><div class="row"><button class="blue" onclick="send({device:'tv',state:'kacau'})">KACAU</button><button class="blue" onclick="send({device:'tv',state:'kenzie'})">KENZIE</button></div><div class="row"><button class="blue" onclick="send({device:'tv',state:'joken'})">JOKEN</button><button class="dark" onclick="send({device:'tv',state:'off'})">OFF</button></div></article>
     <article class="card alarm-card">
       <h2>Alarm <span class="state" id="alarm">--</span></h2>
       <input class="alarm-hidden" id="alarmHour" type="number" min="0" max="23" value="06">
@@ -340,7 +341,7 @@ private:
     lamp.textContent = s.lamp ? 'ON' : 'OFF';
     rgb.textContent = s.rgb ? 'ON' : 'OFF';
     door.textContent = s.door ? 'OPEN' : 'CLOSED';
-    tv.textContent = s.tv ? (s.kenzieMode ? 'KENZIE' : (s.kacauMode ? 'KACAU' : (s.stikmanMode ? 'STIKMAN' : (s.catMode ? 'CAT' : (s.fightMode ? 'FIGHT' : 'ON'))))) : 'OFF';
+    tv.textContent = s.tv ? (s.jokenMode ? 'JOKEN' : (s.kenzieMode ? 'KENZIE' : (s.kacauMode ? 'KACAU' : (s.stikmanMode ? 'STIKMAN' : (s.catMode ? 'CAT' : (s.fightMode ? 'FIGHT' : 'ON')))))) : 'OFF';
     wifiState.textContent = s.wifiConnected ? 'ONLINE' : 'OFFLINE';
     wifiMode.textContent = s.wifiMode === 'hotspot' ? 'HOTSPOT' : (s.wifiMode === 'offline' ? 'OFFLINE' : 'WIFI');
     hotspotMode.textContent = s.wifiSetupApActive ? `AP ${s.wifiSetupIp || '192.168.4.1'}` : 'HOTSPOT OFF';

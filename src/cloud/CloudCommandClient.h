@@ -64,6 +64,7 @@ public:
     doc["stikmanMode"] = state.stikmanMode;
     doc["kacauMode"] = state.kacauMode;
     doc["kenzieMode"] = state.kenzieMode;
+    doc["jokenMode"] = state.jokenMode;
     doc["alarmEnabled"] = state.alarm.enabled;
     doc["alarmRinging"] = state.alarm.ringing;
     doc["alarmHour"] = state.alarm.hour;
