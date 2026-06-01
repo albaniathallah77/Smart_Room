@@ -121,27 +121,32 @@ app.get('/', (req, res) => {
           .color-control input[type=color] { width:100%; }
           .mobile-nav { display:none; }
           .mobile-drawer-brand, .mobile-drawer-bottom { display:none; }
-          .alarm-page { display:none; padding:20px; }
-          .alarm-page.active { display:grid; place-items:center; min-height:100%; }
-          .alarm-hero { width:min(440px,100%); background:linear-gradient(145deg, #0f171e, #070b0f); border:1px solid #1a2632; border-radius:24px; padding:32px; box-shadow:0 40px 100px rgba(0,0,0,0.6), inset 0 1px rgba(255,255,255,0.05); display:flex; flex-direction:column; gap:24px; }
-          .alarm-hero > .tool-title { grid-column:auto; font-size:32px; margin-bottom:0; display:flex; justify-content:space-between; align-items:center; font-family:Orbitron, sans-serif; letter-spacing:1px; }
-          .alarm-picker { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin:0; }
-          .picker-column { background:#05080c; border:1px solid #16222e; border-radius:16px; padding:16px 8px; position:relative; overflow:hidden; }
-          .picker-label { text-align:center; color:#10d8ff; font-family:Orbitron, sans-serif; font-size:13px; font-weight:800; margin-bottom:12px; letter-spacing:2px; }
-          .picker-list { height:220px; overflow-y:auto; scroll-snap-type:y mandatory; display:grid; gap:8px; padding:80px 4px; scrollbar-width:none; scroll-behavior:smooth; }
-          .picker-option { min-height:56px; border:0; background:transparent; color:#3d4652; border-radius:10px; font-family:Orbitron, sans-serif; font-size:26px; font-weight:800; scroll-snap-align:center; transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor:pointer; width:100%; display:grid; place-items:center; }
-          .picker-option.active { color:#00080d; background:#10d8ff; transform:scale(1.05); box-shadow:0 0 30px rgba(16,216,255,0.6); }
-          .alarm-settings { border:0; padding:0; display:flex; flex-direction:column; gap:24px; background:transparent; backdrop-filter:none; }
-          .days { display:grid; grid-template-columns:repeat(7,1fr); gap:8px; }
-          .days span { text-align:center; color:#5d6672; font-size:14px; padding:14px 0; border-radius:10px; background:#111a24; border:1px solid #1a2632; font-weight:800; cursor:pointer; transition:all 0.2s; }
-          .days span.active { color:#00080d; background:#10d8ff; border-color:#10d8ff; box-shadow:0 0 20px rgba(16,216,255,0.4); }
-          .field { display:grid; gap:10px; color:#9aa3b2; font-family:"Share Tech Mono", monospace; text-transform:uppercase; font-size:13px; letter-spacing:1px; }
-          .field input { width:100%; background:#05080c; border:1px solid #1a2632; border-radius:8px; padding:14px; color:var(--text); font-family:Inter, sans-serif; font-size:15px; }
-          .alarm-actions { display:flex; flex-direction:column; gap:12px; }
-          .alarm-actions button { min-height:52px; font-size:15px; font-weight:900; letter-spacing:1px; text-transform:uppercase; border-radius:10px; transition:all 0.2s; }
-          .alarm-actions .primary { background:linear-gradient(135deg,#12e6ff,#168bff); border:0; color:#02070b; box-shadow:0 10px 20px rgba(16,216,255,0.2); }
-          .alarm-actions .dark { background:#0d1218; border:1px solid #1a2632; color:#edf2ff; }
-          .alarm-actions button:hover { transform:translateY(-2px); filter:brightness(1.1); }
+          .alarm-page { display:none; padding:0; }
+          .alarm-page.active { display:flex; flex-direction:column; min-height:100%; width:100%; }
+          .alarm-hero { width:100%; max-width:1400px; margin:0 auto; background:transparent; border:0; border-radius:0; padding:48px; box-shadow:none; display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:start; flex:1; }
+          .alarm-hero > .tool-title { grid-column: 1 / -1; font-size:48px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; font-family:Orbitron, sans-serif; letter-spacing:1px; color:#10d8ff; }
+          .alarm-picker { display:grid; grid-template-columns:1fr 1fr; gap:32px; margin:0; }
+          .picker-column { background:rgba(5, 8, 12, 0.6); border:1px solid rgba(26, 38, 50, 0.5); border-radius:24px; padding:32px; position:relative; overflow:hidden; backdrop-filter:blur(10px); }
+          .picker-label { text-align:center; color:#10d8ff; font-family:Orbitron, sans-serif; font-size:16px; font-weight:800; margin-bottom:24px; letter-spacing:3px; }
+          .picker-list { height:360px; overflow-y:auto; scroll-snap-type:y mandatory; display:grid; gap:12px; padding:150px 4px; scrollbar-width:none; scroll-behavior:smooth; }
+          .picker-option { min-height:80px; border:0; background:transparent; color:#3d4652; border-radius:16px; font-family:Orbitron, sans-serif; font-size:42px; font-weight:800; scroll-snap-align:center; transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor:pointer; width:100%; display:grid; place-items:center; }
+          .picker-option.active { color:#00080d; background:linear-gradient(135deg,#10d8ff,#168bff); transform:scale(1.1); box-shadow:0 0 50px rgba(16,216,255,0.5); }
+          .alarm-settings { border:0; padding:32px; display:flex; flex-direction:column; gap:32px; background:rgba(15, 23, 30, 0.4); border-radius:24px; border:1px solid rgba(26, 38, 50, 0.5); backdrop-filter:blur(10px); align-self: center; }
+          .days { display:grid; grid-template-columns:repeat(7,1fr); gap:12px; }
+          .days span { text-align:center; color:#5d6672; font-size:16px; padding:20px 0; border-radius:12px; background:#111a24; border:1px solid #1a2632; font-weight:800; cursor:pointer; transition:all 0.2s; }
+          .days span.active { color:#00080d; background:#10d8ff; border-color:#10d8ff; box-shadow:0 0 25px rgba(16,216,255,0.4); }
+          .field { display:grid; gap:14px; color:#9aa3b2; font-family:"Share Tech Mono", monospace; text-transform:uppercase; font-size:14px; letter-spacing:1px; }
+          .field input { width:100%; background:#05080c; border:1px solid #1a2632; border-radius:12px; padding:20px; color:var(--text); font-family:Inter, sans-serif; font-size:18px; }
+          .alarm-actions { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+          .alarm-actions button { min-height:64px; font-size:16px; font-weight:900; letter-spacing:1px; text-transform:uppercase; border-radius:12px; transition:all 0.2s; }
+          
+          @media (max-width:980px) {
+            .alarm-hero { grid-template-columns:1fr; gap:32px; padding:24px; }
+            .alarm-hero > .tool-title { font-size:32px; }
+            .alarm-settings { align-self: stretch; padding:24px; }
+            .picker-list { height:260px; padding:100px 4px; }
+            .picker-option { min-height:60px; font-size:32px; }
+          }
           .settings-list { display:grid; grid-template-columns:1fr 1fr; gap:24px; max-width:1120px; }
           .settings-row { border:1px solid #293846; background:linear-gradient(120deg,#11161d,#0a0f15); border-radius:12px; padding:26px; display:flex; align-items:center; justify-content:space-between; gap:16px; min-height:150px; box-shadow:0 18px 44px #0008; }
           .tools-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; }
