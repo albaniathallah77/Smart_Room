@@ -523,7 +523,7 @@ private:
     const colorEl = document.getElementById('color');
     if (!colorEl) return;
     const hex = colorEl.value.slice(1);
-    send({device:'rgb', r:parseInt(hex.slice(0,2),16), g:parseInt(hex.slice(2,4),16), b:parseInt(hex.slice(4,6),16)});
+    send({device:'rgb', state:'color', color:colorEl.value, r:parseInt(hex.slice(0,2),16), g:parseInt(hex.slice(2,4),16), b:parseInt(hex.slice(4,6),16)});
   }
   function setAlarm() {
     const hour = Math.max(0, Math.min(23, Number(alarmHour.value) || 0));

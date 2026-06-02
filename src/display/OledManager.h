@@ -11,6 +11,7 @@
 #include "KenzieAnimationFrames.h"
 #include "JokenAnimationFrames.h"
 #include "WalkAnimationFrames.h"
+#include "StartupLogoBitmap.h"
 #include "../SmartRoomState.h"
 
 class OledManager {
@@ -36,6 +37,31 @@ public:
   void loop(const SmartRoomState& state) {
     if (!_available) {
       return;
+    }
+
+    const uint8_t oledMode = currentOledMode(state);
+    if (oledMode == 0) {
+      _activeOledMode = 0;
+      _splashActive = false;
+    } else if (oledMode != _activeOledMode) {
+      _activeOledMode = oledMode;
+      _animationFrame = 0;
+      _splashActive = !state.alarm.ringing;
+      _splashStartedAt = millis();
+      if (_splashActive) {
+        renderStartupLogo();
+        _lastRenderAt = millis();
+        _lastTvOn = true;
+        return;
+      }
+    }
+
+    if (_splashActive) {
+      if (millis() - _splashStartedAt < OledStartupLogo::SPLASH_MS) {
+        return;
+      }
+      _splashActive = false;
+      _lastRenderAt = 0;
     }
 
     // PRIORITAS 1: mode animasi khusus (harus di paling atas)
@@ -152,8 +178,22 @@ private:
   bool _lastDoorOpen = false;
   uint8_t _mochiScene = 0;
   uint8_t _animationFrame = 0;
+  uint8_t _activeOledMode = 0;
+  bool _splashActive = false;
   unsigned long _lastRenderAt = 0;
   unsigned long _lastMochiAt = 0;
+  unsigned long _splashStartedAt = 0;
+
+  uint8_t currentOledMode(const SmartRoomState& state) const {
+    if (!state.tvOn) return 0;
+    if (state.catMode) return 1;
+    if (state.stikmanMode) return 2;
+    if (state.kacauMode) return 3;
+    if (state.kenzieMode) return 4;
+    if (state.jokenMode) return 5;
+    if (state.fightMode) return 6;
+    return 7;
+  }
 
   const char* mochiLabel(uint8_t scene) {
     switch (scene) {
@@ -180,6 +220,15 @@ private:
   void renderDoorStill(bool open) {
     _display.clearDisplay();
     drawDoorScene(open ? 4 : 0);
+    _display.display();
+  }
+
+  void renderStartupLogo() {
+    _display.clearDisplay();
+    _display.drawBitmap(0, 0, OledStartupLogo::LOGO,
+                        OledStartupLogo::WIDTH,
+                        OledStartupLogo::HEIGHT,
+                        SSD1306_WHITE);
     _display.display();
   }
 

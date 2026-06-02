@@ -100,9 +100,18 @@ public:
     if (device == "rgb") {
       if (doc.containsKey("r") || doc.containsKey("color")) {
         action.type = RoomActionType::SetRgbColor;
-        action.color.r = doc["r"] | 90;
-        action.color.g = doc["g"] | 160;
-        action.color.b = doc["b"] | 255;
+        if (doc.containsKey("color")) {
+          String hex = doc["color"] | "";
+          if (!parseHexColor(hex, action.color)) {
+            action.color.r = doc["r"] | 90;
+            action.color.g = doc["g"] | 160;
+            action.color.b = doc["b"] | 255;
+          }
+        } else {
+          action.color.r = doc["r"] | 90;
+          action.color.g = doc["g"] | 160;
+          action.color.b = doc["b"] | 255;
+        }
         action.enabled = true;
         return true;
       }
@@ -260,6 +269,31 @@ public:
   }
 
 private:
+  bool parseHexColor(String hex, RgbColor& color) {
+    hex.trim();
+    if (hex.startsWith("#")) {
+      hex.remove(0, 1);
+    }
+
+    if (hex.length() != 6) {
+      return false;
+    }
+
+    for (uint8_t i = 0; i < hex.length(); i++) {
+      if (!isHexadecimalDigit(hex[i])) {
+        return false;
+      }
+    }
+
+    uint32_t value = strtoul(hex.c_str(), nullptr, 16);
+    color = RgbColor(
+      static_cast<uint8_t>((value >> 16) & 0xFF),
+      static_cast<uint8_t>((value >> 8) & 0xFF),
+      static_cast<uint8_t>(value & 0xFF)
+    );
+    return true;
+  }
+
   bool parseTime(const String& text, uint8_t& hour, uint8_t& minute) {
     int start = -1;
     for (int i = 0; i < text.length(); i++) {

@@ -936,7 +936,7 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
             }, 800);
           }
           function demoMode() {
-            queue({device:'rgb', r:0, g:220, b:255});
+            queue({device:'rgb', state:'color', r:0, g:220, b:255});
             setTimeout(() => queue({device:'tv', state:'on'}), 700);
             setTimeout(() => queue({device:'door', state:'open'}), 1400);
           }
@@ -944,7 +944,7 @@ Halo, aku siap bantu kontrol Smart Room. Kamu bisa ketik atau tekan voice untuk 
             const colorEl = document.getElementById('color');
             if (!colorEl) return;
             const hex = colorEl.value.slice(1);
-            queue({device:'rgb', r:parseInt(hex.slice(0,2),16), g:parseInt(hex.slice(2,4),16), b:parseInt(hex.slice(4,6),16)});
+            queue({device:'rgb', state:'color', color:colorEl.value, r:parseInt(hex.slice(0,2),16), g:parseInt(hex.slice(2,4),16), b:parseInt(hex.slice(4,6),16)});
           }
           function openAlarmSheet() {
             alarmHourSheet.value = alarmHour.value;
@@ -1937,12 +1937,17 @@ function normalizeCommand(command) {
   }
 
   if (device === 'rgb' || device === 'lampu_kamar') {
+    const color = parseHexColor(command.color);
+    if (color) {
+      return { device: 'rgb', state: 'color', color: command.color, ...color };
+    }
+
     const r = clampColor(command.r);
     const g = clampColor(command.g);
     const b = clampColor(command.b);
 
     if (r !== null && g !== null && b !== null) {
-      return { device: 'rgb', r, g, b };
+      return { device: 'rgb', state: 'color', r, g, b };
     }
 
     if (state === 'on' || state === 'nyala' || state === 'hidup') return { device: 'rgb', state: 'on' };
@@ -1961,6 +1966,24 @@ function normalizeCommand(command) {
   }
 
   return null;
+}
+
+function parseHexColor(value) {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const hex = value.trim().replace(/^#/, '');
+  if (!/^[0-9a-fA-F]{6}$/.test(hex)) {
+    return null;
+  }
+
+  const number = Number.parseInt(hex, 16);
+  return {
+    r: (number >> 16) & 255,
+    g: (number >> 8) & 255,
+    b: number & 255,
+  };
 }
 
 function clampColor(value) {
