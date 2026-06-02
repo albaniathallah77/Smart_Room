@@ -9,6 +9,7 @@
 #include "StikmanAnimationFrames.h"
 #include "KacauAnimationFrames.h"
 #include "KenzieAnimationFrames.h"
+#include "HappyAnimationFrames.h"
 #include "WalkAnimationFrames.h"
 #include "StartupLogoBitmap.h"
 #include "../SmartRoomState.h"
@@ -91,6 +92,14 @@ public:
     if (state.kenzieMode) {
       if (millis() - _lastRenderAt < OledKenzieAnimation::FRAME_DELAY_MS) return;
       renderKenzieScene(_animationFrame++);
+      _lastRenderAt = millis();
+      _lastTvOn = true;
+      return;
+    }
+
+    if (state.happyMode) {
+      if (millis() - _lastRenderAt < OledHappyAnimation::FRAME_DELAY_MS) return;
+      renderHappyScene(_animationFrame++);
       _lastRenderAt = millis();
       _lastTvOn = true;
       return;
@@ -181,7 +190,8 @@ private:
     if (state.stikmanMode) return 2;
     if (state.kacauMode) return 3;
     if (state.kenzieMode) return 4;
-    if (state.fightMode) return 5;
+    if (state.happyMode) return 5;
+    if (state.fightMode) return 6;
     return 7;
   }
 
@@ -312,6 +322,16 @@ private:
     _display.drawBitmap(0, 0, OledKenzieAnimation::KENZIE_FRAMES[frameIndex],
                         OledKenzieAnimation::FRAME_WIDTH,
                         OledKenzieAnimation::FRAME_HEIGHT,
+                        SSD1306_WHITE);
+    _display.display();
+  }
+
+  void renderHappyScene(uint8_t frame) {
+    const uint8_t frameIndex = frame % OledHappyAnimation::FRAME_COUNT;
+    _display.clearDisplay();
+    _display.drawBitmap(0, 0, OledHappyAnimation::HAPPY_FRAMES[frameIndex],
+                        OledHappyAnimation::FRAME_WIDTH,
+                        OledHappyAnimation::FRAME_HEIGHT,
                         SSD1306_WHITE);
     _display.display();
   }

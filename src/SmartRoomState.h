@@ -38,6 +38,7 @@ struct SmartRoomState {
   bool stikmanMode = false;
   bool kacauMode = false;
   bool kenzieMode = false;
+  bool happyMode = false;
   bool wifiConnected = false;
   bool wifiSetupApActive = false;
   String wifiSsid = "";

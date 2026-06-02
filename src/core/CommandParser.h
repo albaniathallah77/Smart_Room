@@ -18,6 +18,7 @@ enum class RoomActionType {
   SetStikmanMode,
   SetKacauMode,
   SetKenzieMode,
+  SetHappyMode,
   ScanWifi,
   SetWifiCredentials,
   SetWifiMode
@@ -83,6 +84,11 @@ public:
       }
       if (state == "kenzie") {
         action.type = RoomActionType::SetKenzieMode;
+        action.enabled = true;
+        return true;
+      }
+      if (state == "happy" || state == "senang") {
+        action.type = RoomActionType::SetHappyMode;
         action.enabled = true;
         return true;
       }
@@ -178,6 +184,12 @@ public:
 
     if (text == "kenzie" || hasAny(text, "animasi kenzie", "mode kenzie")) {
       action.type = RoomActionType::SetKenzieMode;
+      action.enabled = true;
+      return true;
+    }
+
+    if (text == "happy" || hasAny(text, "animasi happy", "mode happy", "animasi senang", "mode senang")) {
+      action.type = RoomActionType::SetHappyMode;
       action.enabled = true;
       return true;
     }
