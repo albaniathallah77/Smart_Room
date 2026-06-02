@@ -542,7 +542,7 @@ private:
     send({device:'alarm', enabled:false});
   }
   function demoMode() {
-    send({device:'rgb', r:0, g:220, b:255});
+    send({device:'rgb', state:'color', r:0, g:220, b:255});
     setTimeout(() => send({device:'tv', state:'on'}), 700);
     setTimeout(() => send({device:'door', state:'open'}), 1400);
   }
